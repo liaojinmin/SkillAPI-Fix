@@ -52,12 +52,14 @@ import com.sucy.skill.language.NotificationNodes;
 import com.sucy.skill.language.RPGFilter;
 import com.sucy.skill.language.SkillNodes;
 import com.sucy.skill.log.Logger;
+import me.neon.libs.utils.MetaKt;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
+import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 
@@ -743,11 +745,67 @@ public abstract class Skill implements IconHolder
     /**
      * Applies skill damage to the target, launching the skill damage event
      *
-     * @param target target to receive the damage
-     * @param damage amount of damage to deal
-     * @param source source of the damage (skill caster)
+     * @param target         target to receive the damage
+     * @param damage         amount of damage to deal
+     * @param source         source of the damage (skill caster)
      * @param classification type of damage to deal
      */
+    public void damage(LivingEntity target, double damage, LivingEntity source, String classification) {
+        damage(target, damage, source, classification,true);
+    }
+    public void damage(LivingEntity target, double damage, LivingEntity source, String classification, boolean knockback) {
+        if (target instanceof TempEntity) {
+            return;
+        }
+        SkillDamageEvent event = new SkillDamageEvent(this, source, target, damage, classification);
+        Bukkit.getPluginManager().callEvent(event);
+        if (!event.isCancelled()) {
+            if (source != null) {
+                MetaKt.setMeta(target, "SkillAPI-skill", this);
+                MetaKt.setMeta(target, "SkillAPI-classification", classification);
+                skillDamage = true;
+                target.setNoDamageTicks(0);
+                if (knockback) {
+                    target.damage(event.getDamage(), source);
+                } else {
+                    target.damage(event.getDamage());
+                }
+
+                skillDamage = false;
+                MetaKt.removeMeta(target, "SkillAPI-skill");
+                MetaKt.removeMeta(target, "SkillAPI-classification");
+            } else {
+                skillDamage = true;
+                //Modified code from com.rit.sucy.version.VersionManager.damage() (MCCore)
+                {
+                    // Allow damage to occur
+                    int ticks = target.getNoDamageTicks();
+                    target.setNoDamageTicks(0);
+
+                    if (VersionManager.isVersionAtMost(VersionManager.V1_5_2)) {
+                        // 1.5.2 and earlier used integer values
+                        if (knockback) {
+                            target.damage((int) damage, source);
+                        } else {
+                            target.damage((int) damage);
+                        }
+                    } else {
+                        // 1.6.2 and beyond use double values
+                        if (knockback) {
+                            target.damage(damage, source);
+                        } else {
+                            target.damage(damage);
+                        }
+                    }
+
+                    // Reset damage timer to before the damage was applied
+                    target.setNoDamageTicks(ticks);
+                }
+                skillDamage = false;
+            }
+        }
+    }
+    /*
     public void damage(LivingEntity target, double damage, LivingEntity source, String classification) {
         if (target instanceof TempEntity) return;
 
@@ -773,6 +831,8 @@ public abstract class Skill implements IconHolder
             }
         }
     }
+
+     */
 
     /**
      * Applies skill damage to the target, launching the skill damage event

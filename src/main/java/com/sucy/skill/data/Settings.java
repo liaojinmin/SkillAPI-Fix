@@ -1637,4 +1637,8 @@ public class Settings {
         skillDisabledRegions = ImmutableSet.copyOf(data.getList(WG_SKILLS));
         expDisabledRegions = ImmutableSet.copyOf(data.getList(WG_EXP));
     }
+
+    public boolean isAttributeMobEnabled() {
+        return true;
+    }
 }

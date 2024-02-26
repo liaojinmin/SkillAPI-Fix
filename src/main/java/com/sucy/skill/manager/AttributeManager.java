@@ -154,6 +154,7 @@ public class AttributeManager {
     public String normalize(String key) {
         final Attribute attribute = lookup.get(key.toLowerCase());
         if (attribute == null) { throw new IllegalArgumentException("Invalid attribute - " + key); }
+       // System.out.println("key: "+key);
         return attribute.getKey();
     }
 

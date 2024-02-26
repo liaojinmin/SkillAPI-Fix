@@ -26,7 +26,9 @@
  */
 package com.sucy.skill.dynamic.mechanic;
 
+import com.sucy.skill.api.event.value.ValueMechanicChangeEvent;
 import com.sucy.skill.dynamic.DynamicSkill;
+import org.bukkit.Bukkit;
 import org.bukkit.entity.LivingEntity;
 
 import java.util.HashMap;
@@ -63,6 +65,9 @@ public class ValueSetMechanic extends MechanicComponent {
         double value = parseValues(caster, VALUE, level, 1);
         HashMap<String, Object> data = DynamicSkill.getCastData(caster);
         data.put(key, value);
+        Bukkit.getPluginManager().callEvent(
+                new ValueMechanicChangeEvent(ValueMechanicChangeEvent.ValueAction.SET, caster, key, value)
+        );
         return true;
     }
 }

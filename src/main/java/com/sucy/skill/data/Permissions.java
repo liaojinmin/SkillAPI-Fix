@@ -35,6 +35,8 @@ public class Permissions
 
     public static final String BASIC  = ROOT + "basic";
     public static final String BACKUP = ROOT + "backup";
+    public static final String MIGRATE = ROOT + "migrate";
+    public static final String AttributeAction = ROOT + "AttributeAction";
     public static final String EXP    = ROOT + "exp";
     public static final String LVL    = ROOT + "level";
     public static final String MANA   = ROOT + "mana";

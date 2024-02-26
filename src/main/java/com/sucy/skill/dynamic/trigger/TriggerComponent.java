@@ -2,9 +2,10 @@ package com.sucy.skill.dynamic.trigger;
 
 import com.sucy.skill.dynamic.ComponentType;
 import com.sucy.skill.dynamic.EffectComponent;
-import com.sucy.skill.util.Lists;
 import org.bukkit.entity.LivingEntity;
 
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 /**
@@ -20,7 +21,7 @@ public class TriggerComponent extends EffectComponent {
     }
 
     public boolean trigger(final LivingEntity caster, final LivingEntity target, final int level) {
-        return execute(caster, level, Lists.asList(target));
+        return execute(caster, level, new ArrayList<>(Collections.singletonList(target)));
     }
 
     @Override

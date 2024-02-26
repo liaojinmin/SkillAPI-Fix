@@ -62,8 +62,10 @@ public class CmdManager
     {
         ConfigurableCommand root = new ConfigurableCommand(api, "class", SenderType.ANYONE);
         root.addSubCommands(
-            new ConfigurableCommand(api, "bind", SenderType.PLAYER_ONLY, new CmdBind(), "Binds a skill", "<skill>", Permissions.BASIC),
-            new ConfigurableCommand(api, "cast", SenderType.PLAYER_ONLY, new CmdCast(), "Casts a skill", "<skill>", Permissions.BASIC),
+                new ConfigurableCommand(api, "attAction", SenderType.ANYONE, new CmdAttributeAction(), "临时属性", "", Permissions.AttributeAction),
+
+                new ConfigurableCommand(api, "bind", SenderType.PLAYER_ONLY, new CmdBind(), "Binds a skill", "<skill>", Permissions.BASIC),
+                new ConfigurableCommand(api, "cast", SenderType.PLAYER_ONLY, new CmdCast(), "Casts a skill", "<skill>", Permissions.BASIC),
             new ConfigurableCommand(api, "changeclass", SenderType.ANYONE, new CmdChangeClass(), "Swaps classes", "<player> <group> <class>", Permissions.FORCE),
             new ConfigurableCommand(api, "clearbind", SenderType.PLAYER_ONLY, new CmdClearBinds(), "Clears skill binds", "", Permissions.BASIC),
             new ConfigurableCommand(api, "customize", SenderType.PLAYER_ONLY, new CmdCustomize(), "Opens GUI editor", "", Permissions.GUI),
@@ -98,6 +100,8 @@ public class CmdManager
         }
         if (SkillAPI.getSettings().isUseSql())
         {
+            root.addSubCommand(new ConfigurableCommand(api, "save", SenderType.ANYONE, new CmdSave(), "安全的保存数据", "", "save"));
+            root.addSubCommand(new ConfigurableCommand(api, "migrate", SenderType.ANYONE, new CmdMigrate(), "迁移yaml数据", "", Permissions.MIGRATE));
             root.addSubCommand(new ConfigurableCommand(api, "backup", SenderType.ANYONE, new CmdBackup(), "Backs up SQL data", "", Permissions.BACKUP));
         }
         if (SkillAPI.getSettings().isSkillBarEnabled())

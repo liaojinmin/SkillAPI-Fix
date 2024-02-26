@@ -78,24 +78,6 @@ public class PluginChecker
         return Bukkit.getPluginManager().isPluginEnabled("PlaceholderAPI");
     }
 
-    /**
-     * Checks whether or not bungee is present
-     *
-     * @return true if present, false otherwise
-     */
-    public static boolean isBungeeActive()
-    {
-        try
-        {
-            Class.forName("net.md_5.bungee.Util");
-            return true;
-        }
-        catch (Exception ex)
-        {
-            return false;
-        }
-    }
-
     public static boolean isMythicMobsActive() {
         return Bukkit.getPluginManager().isPluginEnabled("MythicMobs");
     }

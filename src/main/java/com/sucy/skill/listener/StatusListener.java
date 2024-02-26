@@ -107,10 +107,11 @@ public class StatusListener extends SkillAPIListener
      * @param event event details
      */
     @EventHandler(priority = EventPriority.HIGHEST)
-    public void onMove(PlayerMoveEvent event)
-    {
-        if (((event.getPlayer()).isOnGround() || event.getTo().getY() > event.getFrom().getY()) && check(event, event.getPlayer(), event.getPlayer(), StatusFlag.STUN, StatusFlag.ROOT, StatusFlag.CHANNELING))
-        {
+    public void onMove(PlayerMoveEvent event) {
+        if ((event.getPlayer().isOnGround()
+                || event.getTo().getY() > event.getFrom().getY())
+                && check(event, event.getPlayer(), event.getPlayer(), StatusFlag.STUN, StatusFlag.ROOT, StatusFlag.CHANNELING)
+        ) {
             event.getPlayer().setVelocity(ZERO);
         }
     }
@@ -266,15 +267,11 @@ public class StatusListener extends SkillAPIListener
      */
     private boolean check(Cancellable event, LivingEntity entity, LivingEntity receiver, String... flags)
     {
-        for (String flag : flags)
-        {
-            if (FlagManager.hasFlag(entity, flag))
-            {
-                if (receiver instanceof Player)
-                {
+        for (String flag : flags) {
+            if (FlagManager.hasFlag(entity, flag)) {
+                if (receiver instanceof Player) {
                     Player player = (Player) receiver;
-                    if (checkTime(player))
-                    {
+                    if (checkTime(player)) {
                         TitleManager.show(
                             player,
                             TitleType.STATUS,
@@ -283,7 +280,6 @@ public class StatusListener extends SkillAPIListener
                         );
                     }
                 }
-
                 event.setCancelled(true);
                 return true;
             }

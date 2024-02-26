@@ -67,9 +67,7 @@ public class CmdForceCast implements IFunction
         if (args.length < 2)
         {
             CommandManager.displayUsage(cmd, sender);
-        }
-        else
-        {
+        } else {
             Player player = VersionManager.getPlayer(args[0]);
             if (player == null)
             {

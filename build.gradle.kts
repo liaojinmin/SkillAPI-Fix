@@ -8,6 +8,7 @@ plugins {
 
 
 repositories {
+    mavenLocal()
     mavenCentral()
     maven("https://oss.sonatype.org/content/repositories/snapshots")
     maven("https://repo.tabooproject.org/repository/releases")
@@ -16,6 +17,9 @@ repositories {
     maven("https://repo.rosewooddev.io/repository/public/")
     maven("https://repo.opencollab.dev/maven-snapshots/")
     maven("https://jitpack.io")
+    maven {
+        url = uri("https://mvn.lumine.io/repository/maven-public/")
+    }
 }
 
 apply<JavaPlugin>()
@@ -42,21 +46,22 @@ tasks {
         // hikari
         relocate("com.zaxxer.hikari", "com.zaxxer.hikari_4_0_3_skillapi")
     }
-
     build {
         dependsOn(shadowJar)
     }
 }
 
-subprojects {
-
-}
 
 dependencies {
 
     implementation("com.zaxxer:HikariCP:4.0.3") {
         exclude("org.slf4j", "slf4j-api")
     }
+
+    implementation("com.alibaba.fastjson2:fastjson2:2.0.31")
+
+    compileOnly("me.neon.libs:NeonLibs:1.0.0-local")
+
    // compileOnly(kotlin("stdlib"))
 
     // Libraries

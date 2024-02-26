@@ -28,6 +28,7 @@ public class LandTrigger implements Trigger<PlayerLandEvent> {
     @Override
     public boolean shouldTrigger(final PlayerLandEvent event, final int level, final Settings settings) {
         final double minDistance = settings.getDouble("min-distance", 0);
+        //System.out.println("触发状态: "+(event.getDistance() >= minDistance));
         return event.getDistance() >= minDistance;
     }
 

@@ -36,28 +36,30 @@ import com.sucy.skill.api.player.PlayerClass;
 import com.sucy.skill.api.player.PlayerData;
 import com.sucy.skill.api.player.PlayerSkill;
 import com.sucy.skill.api.skills.Skill;
+import com.sucy.skill.api.util.BuffManager;
+import com.sucy.skill.api.util.Combat;
+import com.sucy.skill.api.util.FlagManager;
 import com.sucy.skill.data.PlayerStats;
 import com.sucy.skill.data.Settings;
-import com.sucy.skill.data.io.ConfigIO;
 import com.sucy.skill.data.io.FakePlayer;
 import com.sucy.skill.data.io.IOManager;
-import com.sucy.skill.data.io.SQLIO;
+import com.sucy.skill.data.io.SQLImpl;
 import com.sucy.skill.dynamic.DynamicClass;
 import com.sucy.skill.dynamic.DynamicSkill;
 import com.sucy.skill.gui.tool.GUITool;
-import com.sucy.skill.hook.BungeeHook;
-import com.sucy.skill.hook.PluginChecker;
+import com.sucy.skill.hook.PlaceholderAPIHook;
+import com.sucy.skill.hook.mechanic.MythicListener;
 import com.sucy.skill.listener.*;
 import com.sucy.skill.packet.PacketInjector;
 import com.sucy.skill.task.CooldownTask;
 import com.sucy.skill.task.GUITask;
 import com.sucy.skill.task.ManaTask;
-import com.sucy.skill.task.SaveTask;
+import com.sucy.skill.task.MobAttributeTask;
 import com.sucy.skill.thread.MainThread;
-import com.sucy.skill.listener.*;
 import com.sucy.skill.manager.*;
 import org.bukkit.Bukkit;
 import org.bukkit.OfflinePlayer;
+import org.bukkit.attribute.Attribute;
 import org.bukkit.entity.Player;
 import org.bukkit.event.HandlerList;
 import org.bukkit.metadata.FixedMetadataValue;
@@ -67,9 +69,9 @@ import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.scheduler.BukkitRunnable;
 import org.bukkit.scheduler.BukkitTask;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
+import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.function.Consumer;
 
 /**
  * <p>The com class of the plugin which has the accessor methods into most of the API.</p>
@@ -80,7 +82,7 @@ public class SkillAPI extends JavaPlugin {
 
     private final HashMap<String, Skill>          skills  = new HashMap<>();
     private final HashMap<String, RPGClass>       classes = new HashMap<>();
-    private final HashMap<String, PlayerAccounts> players = new HashMap<>();
+    private final ConcurrentHashMap<String, PlayerAccounts> players = new ConcurrentHashMap<>();
     private final ArrayList<String>               groups  = new ArrayList<>();
 
     private final List<SkillAPIListener> listeners = new ArrayList<>();
@@ -95,10 +97,14 @@ public class SkillAPI extends JavaPlugin {
     private AttributeManager attributeManager;
 
     private MainThread mainThread;
+
     private BukkitTask manaTask;
+
 
     private boolean loaded = false;
     private boolean disabling = false;
+
+
 
     /**
      * <p>Enables SkillAPI, setting up listeners, managers, and loading data. This
@@ -121,14 +127,15 @@ public class SkillAPI extends JavaPlugin {
         language.trim();
         language.save();
 
-        // Hook plugins
-        if (PluginChecker.isBungeeActive()) { BungeeHook.init(this); }
 
         // Set up managers
         comboManager = new ComboManager();
         registrationManager = new RegistrationManager(this);
         cmd = new CmdManager(this);
-        io = settings.isUseSql() ? new SQLIO(this) : new ConfigIO(this);
+
+        io = new SQLImpl(this);
+      //  io = settings.isUseSql() ? new SQLImpl(this) : new ConfigIO(this);
+
         PlayerStats.init();
         ClassBoardManager.registerText();
         if (settings.isAttributesEnabled()) { attributeManager = new AttributeManager(this); }
@@ -166,7 +173,10 @@ public class SkillAPI extends JavaPlugin {
         listen(new DeathListener(), !VersionManager.isVersionAtLeast(11000));
         listen(new LingeringPotionListener(), VersionManager.isVersionAtLeast(VersionManager.V1_9_0));
         listen(new ExperienceListener(), settings.yieldsEnabled());
-
+        // MM 事件
+        listen(new MobListener(), settings.isAttributeMobEnabled());
+        listen(new MythicListener(), true);
+        MainThread.register(new MobAttributeTask());
         // Set up tasks
         if (settings.isManaEnabled()) {
             if (VersionManager.isVersionAtLeast(11400)) {
@@ -181,14 +191,11 @@ public class SkillAPI extends JavaPlugin {
             }
         }
         if (settings.isSkillBarCooldowns()) { MainThread.register(new CooldownTask()); }
-        if (settings.isAutoSave()) { MainThread.register(new SaveTask(this)); }
+     //   if (settings.isAutoSave()) { MainThread.register(new SaveTask(this)); }
         MainThread.register(new GUITask(this));
 
         GUITool.init();
 
-        // Load player data
-        players.putAll(io.loadAll());
-        for (PlayerAccounts accounts : players.values()) { accounts.getActiveData().init(accounts.getPlayer()); }
 
         // Must initialize listeners AFTER player data is loaded since the
         // player objects would otherwise change and mess a lot of things up.
@@ -196,8 +203,9 @@ public class SkillAPI extends JavaPlugin {
             listener.init();
         }
 
-        ResourceManager.copyQuestsModule();
-        ResourceManager.copyPlaceholdersModule();
+      //  ResourceManager.copyQuestsModule();
+      //  ResourceManager.copyPlaceholdersModule();
+        PlaceholderAPIHook.init();
 
         loaded = true;
     }
@@ -231,18 +239,26 @@ public class SkillAPI extends JavaPlugin {
             manaTask = null;
         }
 
-        for (SkillAPIListener listener : listeners) { listener.cleanup(); }
+        for (SkillAPIListener listener : listeners) {
+            listener.cleanup();
+        }
         listeners.clear();
 
-        // Clear scoreboards
+        // 清理 计分板
         ClassBoardManager.clearAll();
 
-        // Clear skill bars and stop passives before disabling
+        /*
         for (Player player : VersionManager.getOnlinePlayers()) {
             MainListener.unload(player);
         }
+         */
 
-        io.saveAll();
+        //io.saveAll();
+
+        // 关闭连接池
+        if (io instanceof SQLImpl) {
+            ((SQLImpl) io).close();
+        }
 
         skills.clear();
         classes.clear();
@@ -271,12 +287,15 @@ public class SkillAPI extends JavaPlugin {
      *
      * @throws IllegalStateException if SkillAPI isn't enabled
      */
-    private static SkillAPI singleton() {
+    public static SkillAPI singleton() {
         if (singleton == null) {
             throw new IllegalStateException(
                     "Cannot use SkillAPI methods before it is enabled - add it to your plugin.yml as a dependency");
         }
         return singleton;
+    }
+    public static IOManager getIoManager() {
+        return singleton.io;
     }
 
     /**
@@ -308,7 +327,7 @@ public class SkillAPI extends JavaPlugin {
 
     /**
      * Retrieves the attribute manager for SkillAPI
-     *
+     
      * @return attribute manager
      */
     public static AttributeManager getAttributeManager() {
@@ -450,6 +469,18 @@ public class SkillAPI extends JavaPlugin {
      */
     public static PlayerData getPlayerData(OfflinePlayer player) {
         if (player == null) { return null; }
+        PlayerAccounts accounts = getPlayerAccountData(player);
+        if (accounts == null) {
+            return null;
+        }
+        return accounts.getActiveData();
+    }
+
+    public static PlayerData getPlayerData(UUID uuid) {
+        OfflinePlayer player = Bukkit.getOfflinePlayer(uuid);
+        if (!player.isOnline()) {
+            return null;
+        }
         return getPlayerAccountData(player).getActiveData();
     }
 
@@ -462,22 +493,52 @@ public class SkillAPI extends JavaPlugin {
      * @param player player to load the data for
      */
     public static PlayerAccounts loadPlayerData(OfflinePlayer player) {
-        if (player == null) { return null; }
+        if (player == null) {
+            return null;
+        }
 
         // Already loaded for some reason, no need to load again
         String id = new VersionPlayer(player).getIdString();
-        if (singleton().players.containsKey(id)) { return singleton.players.get(id); }
-
+        if (singleton().players.containsKey(id)) {
+            return singleton.players.get(id);
+        }
         // Load the data
         return doLoad(player);
     }
 
     private static PlayerAccounts doLoad(OfflinePlayer player) {
+        String key = player.getUniqueId().toString();
+        if (singleton.players.containsKey(key)) {
+            return singleton.players.get(key);
+        }
         // Load the data
         PlayerAccounts data = singleton.io.loadData(player);
         singleton.players.put(player.getUniqueId().toString(), data);
         return data;
     }
+
+    public static void asyncLoad(OfflinePlayer player, Consumer<PlayerData> func, int delay) {
+        SkillAPI skillAPI = singleton();
+        Bukkit.getScheduler().runTaskLaterAsynchronously(skillAPI, () -> {
+        //    System.out.println("开始加载玩家数据...");
+            long timer = System.currentTimeMillis();
+            String key = player.getUniqueId().toString();
+
+            PlayerAccounts data = skillAPI.io.loadData(player);
+            if (data != null) {
+                skillAPI.players.remove(key);
+             //   System.out.println("   插入到缓存 by "+player.getName());
+                skillAPI.players.put(key, data);
+                PlayerData data1 = data.getActiveData();
+                if (data1 != null) {
+                    Bukkit.getScheduler().runTask(skillAPI, () -> func.accept(data1));
+                }
+            }
+          //  System.out.println("数据加载完成耗时 -> "+(System.currentTimeMillis() - timer));
+        }, delay);
+    }
+
+
 
     /**
      * Used to fake player data until SQL data is loaded when both SQL and the SQL delay are enabled.
@@ -486,7 +547,7 @@ public class SkillAPI extends JavaPlugin {
      * @param player player to fake data for
      */
     public static void initFakeData(final OfflinePlayer player) {
-        singleton().players.computeIfAbsent(player.getUniqueId().toString(), id -> new FakePlayer(player));
+        singleton().players.putIfAbsent(player.getUniqueId().toString(), new FakePlayer(player));
     }
 
     /**
@@ -495,6 +556,8 @@ public class SkillAPI extends JavaPlugin {
      */
     public static void reloadPlayerData(final Player player) {
         doLoad(player);
+      //  System.out.println("非法的数据加载请求 玩家 "+player.getName()+" 已拒绝加载....");
+       // System.out.println("  拒绝方法 -> reloadPlayerData()");
     }
 
     /**
@@ -503,7 +566,7 @@ public class SkillAPI extends JavaPlugin {
      * with the com server loop.
      */
     public static void saveData() {
-        singleton().io.saveAll();
+       // singleton().io.saveAll();
     }
 
     /**
@@ -520,28 +583,38 @@ public class SkillAPI extends JavaPlugin {
         return singleton != null && player != null && singleton.players.containsKey(new VersionPlayer(player).getIdString());
     }
 
-    /**
-     * Unloads player data from memory, saving it to the config
-     * first and then removing it from the map.
-     *
-     * @param player player to unload data for
-     */
-    public static void unloadPlayerData(final OfflinePlayer player) {
-        unloadPlayerData(player, false);
-    }
 
-    public static void unloadPlayerData(final OfflinePlayer player, final boolean skipSaving) {
-        if (singleton == null || player == null || singleton.disabling || !singleton.players.containsKey(new VersionPlayer(player).getIdString())) {
-            return;
-        }
+    public static void unloadPlayerData(final Player player) {
+        if (singleton == null || player == null) return;
+        Optional.ofNullable(singleton.players.get(player.getUniqueId().toString()))
+                .ifPresent(it -> {
 
-        singleton.getServer().getScheduler().runTaskAsynchronously(singleton, () -> {
-            PlayerAccounts accounts = getPlayerAccountData(player);
-            if (!skipSaving) {
-                singleton.io.saveData(accounts);
-            }
-            singleton.players.remove(new VersionPlayer(player).getIdString());
-        });
+                    Bukkit.getScheduler().runTaskAsynchronously(singleton, () -> {
+                       // System.out.println("    准备储存数据 by " +player.getName());
+                        try {
+                            singleton.io.saveByGeek(it);
+                          //  System.out.println("    储存完成 by " +player.getName());
+                        } catch (Exception e) {
+                            e.printStackTrace();
+                        }
+                    });
+
+                    if (SkillAPI.getSettings().isWorldEnabled(player.getWorld())) {
+                        PlayerData data = it.getActiveData();
+                        if (data != null) {
+                            data.record(player);
+                            data.stopPassives(player);
+                        }
+                    }
+                    FlagManager.clearFlags(player);
+                    BuffManager.clearData(player);
+                    Combat.clearData(player);
+                    DynamicSkill.clearCastData(player);
+
+                    player.setDisplayName(player.getName());
+                    player.getAttribute(Attribute.GENERIC_MAX_HEALTH).setBaseValue(20);
+                    player.setWalkSpeed(0.2f);
+                });
     }
 
     /**
@@ -554,14 +627,21 @@ public class SkillAPI extends JavaPlugin {
      * @return the class data of the player
      */
     public static PlayerAccounts getPlayerAccountData(OfflinePlayer player) {
-        if (player == null) { return null; }
+        if (player == null) {
+            return null;
+        }
 
         String id = new VersionPlayer(player).getIdString();
         if (!singleton().players.containsKey(id)) {
             PlayerAccounts data = loadPlayerData(player);
             singleton.players.put(id, data);
             return data;
-        } else { return singleton.players.get(id); }
+          //  System.out.println("非法的数据加载请求 玩家 "+player.getName()+" 已拒绝加载....");
+           // System.out.println("  拒绝方法 -> getPlayerAccountData()");
+          //  return null;
+        } else {
+            return singleton.players.get(id);
+        }
     }
 
     /**
@@ -570,7 +650,7 @@ public class SkillAPI extends JavaPlugin {
      *
      * @return all SkillAPI player data
      */
-    public static HashMap<String, PlayerAccounts> getPlayerAccountData() {
+    public static ConcurrentHashMap<String, PlayerAccounts> getPlayerAccountData() {
         return singleton().players;
     }
 

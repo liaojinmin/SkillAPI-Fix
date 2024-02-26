@@ -26,6 +26,7 @@
  */
 package com.sucy.skill.dynamic.mechanic;
 
+import com.sucy.skill.SkillAPI;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
@@ -58,26 +59,35 @@ public class CommandMechanic extends MechanicComponent {
         if (targets.size() == 0 || !settings.has(COMMAND)) {
             return false;
         }
-
         String command = settings.getString(COMMAND);
         String type = settings.getString(TYPE).toLowerCase();
-        boolean worked = false;
         for (LivingEntity t : targets) {
             if (t instanceof Player) {
                 Player p = (Player) t;
-                worked = true;
-
                 command = filter(caster, p, command);
                 if (type.equals("op")) {
                     boolean op = p.isOp();
-                    p.setOp(true);
-                    Bukkit.getServer().dispatchCommand(p, command);
-                    p.setOp(op);
-                } else { Bukkit.getServer().dispatchCommand(Bukkit.getConsoleSender(), command); }
+                    String finalCommand = command;
+                    Bukkit.getScheduler().runTask(SkillAPI.singleton(), () -> {
+                        try {
+                            p.setOp(true);
+                            Bukkit.getServer().dispatchCommand(p, finalCommand);
+                        } catch (Exception ex) {
+                            ex.printStackTrace();
+                        } finally {
+                            p.setOp(op);
+                        }
+                    });
+                } else {
+                    String finalCommand = command;
+                    Bukkit.getScheduler().runTask(SkillAPI.singleton(), () ->
+                            Bukkit.getServer().dispatchCommand(Bukkit.getConsoleSender(), finalCommand)
+                    );
+                }
             }
         }
 
-        return worked;
+        return true;
 
     }
 }

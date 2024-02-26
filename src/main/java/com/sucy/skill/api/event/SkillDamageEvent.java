@@ -87,6 +87,7 @@ public class SkillDamageEvent extends Event implements Cancellable
      */
     public LivingEntity getTarget()
     {
+
         return target;
     }
 

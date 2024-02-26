@@ -26,6 +26,7 @@
  */
 package com.sucy.skill.cast;
 
+import com.alibaba.fastjson2.JSONObject;
 import com.rit.sucy.config.parse.DataSection;
 import com.sucy.skill.SkillAPI;
 import com.sucy.skill.api.player.PlayerData;
@@ -502,18 +503,32 @@ public class PlayerCastBars implements InventoryHolder
             add(bar, key, config.getInt(key));
     }
 
+    public void load(JSONObject config, boolean hover) {
+        if (config == null)
+            return;
+        HashMap<Integer, String> bar = hover ? hoverBar : instantBar;
+        for (String key : config.keySet())
+            add(bar, key, config.getIntValue(key));
+    }
+
     /**
      * Saves data to the config
      *
      * @param config config data
      * @param hover  whether or not it's for the hover bar
      */
-    public void save(DataSection config, boolean hover)
-    {
+    public void save(DataSection config, boolean hover) {
         HashMap<Integer, String> bar = hover ? hoverBar : instantBar;
         for (Map.Entry<Integer, String> entry : bar.entrySet())
             config.set(entry.getValue(), entry.getKey());
     }
+
+    public void save(JSONObject config, boolean hover) {
+        HashMap<Integer, String> bar = hover ? hoverBar : instantBar;
+        for (Map.Entry<Integer, String> entry : bar.entrySet())
+            config.put(entry.getValue(), entry.getKey());
+    }
+
 
     /**
      * Added to satisfy InventoryHolder, though doesn't do anything

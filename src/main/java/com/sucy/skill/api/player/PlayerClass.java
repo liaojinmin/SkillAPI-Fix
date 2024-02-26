@@ -83,8 +83,7 @@ public class PlayerClass
         this.points = SkillAPI.getSettings().getGroupSettings(classData.getGroup()).getStartingPoints();
         this.exp = 0;
 
-        for (Skill skill : classData.getSkills())
-        {
+        for (Skill skill : classData.getSkills()) {
             player.giveSkill(skill, this);
         }
     }
@@ -121,8 +120,7 @@ public class PlayerClass
      *
      * @return the current experience of the class towards the next level
      */
-    public double getExp()
-    {
+    public double getExp() {
         return exp;
     }
 
@@ -142,8 +140,7 @@ public class PlayerClass
      *
      * @return total accumulated experience for the class
      */
-    public double getTotalExp()
-    {
+    public double getTotalExp() {
         double exp = this.exp;
         for (int i = 1; i < level; i++)
             exp += classData.getRequiredExp(i);
@@ -156,8 +153,7 @@ public class PlayerClass
      *
      * @return current level of the class
      */
-    public int getLevel()
-    {
+    public int getLevel() {
         return level;
     }
 
@@ -167,8 +163,7 @@ public class PlayerClass
      *
      * @return number of available skill points
      */
-    public int getPoints()
-    {
+    public int getPoints() {
         return points;
     }
 
@@ -323,18 +318,18 @@ public class PlayerClass
      * @param source type of the source of the experience
      * @param showMessage whether or not to show the configured message if enabled
      */
-    public void giveExp(double amount, ExpSource source, boolean showMessage)
-    {
-        // Cannot give a non-positive amount of exp
-        if (amount <= 0 || level >= classData.getMaxLevel())
-        {
-            return;
-        }
+    public void giveExp(double amount, ExpSource source, boolean showMessage) {
+        if (amount <= 0) return;
 
         // Call an event for the experience gained
         PlayerExperienceGainEvent event = new PlayerExperienceGainEvent(this, amount, source);
         event.setCancelled(!classData.receivesExp(source));
         Bukkit.getPluginManager().callEvent(event);
+
+        // Cannot give a non-positive amount of exp
+        if (level >= classData.getMaxLevel()) {
+            return;
+        }
 
         int rounded = (int)Math.ceil(event.getExp());
 
@@ -492,9 +487,9 @@ public class PlayerClass
      *
      * @param exp experience to set to
      */
-    public void setExp(double exp)
-    {
-        this.exp = Math.max(Math.min(exp, getRequiredExp() - 1), 0);
+    public void setExp(double exp) {
+        this.exp = exp;
+     //   this.exp = Math.max(Math.min(exp, getRequiredExp() - 1), 0);
     }
 
     /**

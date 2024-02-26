@@ -27,7 +27,12 @@
 package com.sucy.skill.dynamic.mechanic;
 
 import com.sucy.skill.SkillAPI;
+import com.sucy.skill.api.attribute.AttributeAPI;
+import com.sucy.skill.api.attribute.mob.MobAttribute;
+import com.sucy.skill.api.attribute.mob.MobAttributeData;
+import com.sucy.skill.api.event.TempAttributeAddEvent;
 import com.sucy.skill.api.player.PlayerData;
+import org.bukkit.Bukkit;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.Plugin;
@@ -37,6 +42,7 @@ import org.bukkit.scheduler.BukkitTask;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 
 /**
  * Applies a flag to each target
@@ -60,8 +66,10 @@ public class AttributeMechanic extends MechanicComponent {
      */
     @Override
     public boolean execute(LivingEntity caster, int level, List<LivingEntity> targets) {
+
+        System.out.println("execute 属性触发者: "+caster.getName());
         String key = settings.getString(KEY, "");
-        if (targets.size() == 0 || SkillAPI.getAttributeManager().getAttribute(key) == null) {
+        if (targets.size() == 0) {
             return false;
         }
 
@@ -70,29 +78,56 @@ public class AttributeMechanic extends MechanicComponent {
         final double seconds = parseValues(caster, SECONDS, level, 3.0);
         final boolean stackable = settings.getString(STACKABLE, "false").equalsIgnoreCase("true");
         final int ticks = (int) (seconds * 20);
-
-        boolean worked = false;
         for (LivingEntity target : targets) {
-            if (target instanceof Player) {
-                worked = true;
-                final PlayerData data = SkillAPI.getPlayerData((Player) target);
+            TempAttributeAddEvent event = AttributeAPI.tempAttribute(target, key, amount, ticks);
+            Bukkit.getPluginManager().callEvent(event);
+            if (!event.isCancelled()) {
+                if (SkillAPI.getAttributeManager().getAttribute(key) == null) {
+                    return false;
+                }
+                if (event.getCaster() instanceof Player) {
+                    final PlayerData data = SkillAPI.getPlayerData((Player) event.getCaster());
 
-                if (casterTasks.containsKey(data.getPlayerName()) && !stackable) {
-                    final AttribTask old = casterTasks.remove(data.getPlayerName());
-                    if (amount != old.amount) { data.addBonusAttributes(key, amount - old.amount); }
-                    old.cancel();
-                } else { data.addBonusAttributes(key, amount); }
+                    if (casterTasks.containsKey(data.getPlayerName()) && !stackable) {
+                        final AttribTask old = casterTasks.remove(data.getPlayerName());
+                        if (event.getValue() != old.amount) {
+                            data.addBonusAttributes(event.getAttribute(), (int) (event.getValue() - old.amount));
+                        }
+                        old.cancel();
+                    } else {
+                        data.addBonusAttributes(event.getAttribute(), (int) event.getValue());
+                    }
 
-                final AttribTask task = new AttribTask(caster.getEntityId(), data, key, amount);
-                casterTasks.put(data.getPlayerName(), task);
-                if (ticks >= 0) {
-                    SkillAPI.schedule(task, ticks);
+                    final AttribTask task = new AttribTask(caster.getEntityId(), data, event.getAttribute(), (int) event.getValue());
+                    casterTasks.put(data.getPlayerName(), task);
+                    if (event.getTick() >= 0) {
+                        SkillAPI.schedule(task, (int) event.getTick());
+                    }
+                } else {
+                    final MobAttributeData data = MobAttribute.getData(event.getCaster().getUniqueId(), true);
+                    System.out.println("属性触发者: "+event.getCaster().getName());
+                    assert data != null;
+                    UUID taskID = UUID.randomUUID();
+                    if (casterTasks.containsKey(data.getUuid().toString()) && !stackable) {
+                        final AttribTask old = casterTasks.remove(data.getUuid().toString());
+                        if (event.getValue() != old.amount) {
+                            data.tempAddAttribute(taskID.toString(), event.getAttribute(), event.getValue() - old.amount);
+                        }
+                        old.cancel();
+                    } else {
+                        data.tempAddAttribute(taskID.toString(), event.getAttribute(), event.getValue());
+                    }
+
+                    final AttribTask task = new AttribTask(caster.getEntityId(), data, taskID, event.getAttribute(), (int) event.getValue());
+                    casterTasks.put(data.getUuid().toString(), task);
+                    if (event.getTick() >= 0) {
+                        SkillAPI.schedule(task, (int) event.getTick());
+                    }
                 }
             }
         }
-        return worked;
+        return true;
     }
-
     @Override
     public String getKey() {
         return "attribute";
@@ -107,18 +142,31 @@ public class AttributeMechanic extends MechanicComponent {
     }
 
     private class AttribTask extends BukkitRunnable {
-        private PlayerData data;
-        private String     attrib;
-        private int        amount;
-        private int        id;
+        private final PlayerData data;
+        private final MobAttributeData mob;
+        private final UUID taskID;
+        private final String     attrib;
+        private final int        amount;
+        private final int        id;
         private boolean running = false;
         private boolean stopped = false;
+
+        AttribTask(int id, MobAttributeData mob, UUID taskID, String attrib, int amount) {
+            this.id = id;
+            this.data = null;
+            this.mob = mob;
+            this.attrib = attrib;
+            this.amount = amount;
+            this.taskID = taskID;
+        }
 
         AttribTask(int id, PlayerData data, String attrib, int amount) {
             this.id = id;
             this.data = data;
+            this.mob = null;
             this.attrib = attrib;
             this.amount = amount;
+            this.taskID = UUID.randomUUID();
         }
 
         public void stop() {

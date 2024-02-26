@@ -167,21 +167,18 @@ public class ItemListener extends SkillAPIListener
         if (!SkillAPI.getSettings().isWorldEnabled(event.getEntity().getWorld()))
             return;
 
-        if (event.getDamager() instanceof Player)
-        {
+        if (event.getDamager() instanceof Player) {
             Player player = (Player) event.getDamager();
-            if (!SkillAPI.getPlayerData(player).getEquips().canHit())
-            {
+            if (!SkillAPI.getPlayerData(player).getEquips().canHit()) {
                 SkillAPI.getLanguage().sendMessage(ErrorNodes.CANNOT_USE, player, FilterType.COLOR);
                 event.setCancelled(true);
             }
         }
-        if (event.getEntity() instanceof Player && VersionManager.isVersionAtLeast(VersionManager.V1_9_0))
-        {
+        if (event.getEntity() instanceof Player && VersionManager.isVersionAtLeast(VersionManager.V1_9_0)) {
             Player player = (Player) event.getEntity();
+
             final boolean blocking = event.getDamage(EntityDamageEvent.DamageModifier.BLOCKING) < 0;
-            if (blocking && !SkillAPI.getPlayerData(player).getEquips().canBlock())
-            {
+            if (blocking && !SkillAPI.getPlayerData(player).getEquips().canBlock()) {
                 SkillAPI.getLanguage().sendMessage(ErrorNodes.CANNOT_USE, event.getEntity(), FilterType.COLOR);
                 event.setDamage(EntityDamageEvent.DamageModifier.BLOCKING, 0);
             }

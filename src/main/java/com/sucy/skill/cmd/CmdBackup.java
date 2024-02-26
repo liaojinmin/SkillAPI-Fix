@@ -34,7 +34,6 @@ import com.rit.sucy.sql.direct.SQLDatabase;
 import com.rit.sucy.sql.direct.SQLTable;
 import com.sucy.skill.SkillAPI;
 import com.sucy.skill.data.Settings;
-import com.sucy.skill.data.io.SQLIO;
 import org.bukkit.command.CommandSender;
 import org.bukkit.plugin.Plugin;
 import org.bukkit.scheduler.BukkitRunnable;
@@ -49,8 +48,7 @@ import java.sql.ResultSet;
 /**
  * Backs up SQL data into local config files
  */
-public class CmdBackup implements IFunction
-{
+public class CmdBackup implements IFunction {
     private static final String BACKUP = "backup";
     private static final String FAILED = "failed";
     private static final String DONE   = "done";
@@ -74,8 +72,7 @@ public class CmdBackup implements IFunction
     /**
      * The task for backing up SQL data
      */
-    private class BackupTask extends BukkitRunnable
-    {
+    private class BackupTask extends BukkitRunnable {
         private final ConfigurableCommand cmd;
         private final SkillAPI            api;
         private final CommandSender       sender;
@@ -83,8 +80,7 @@ public class CmdBackup implements IFunction
         /**
          * @param api SkillAPI reference
          */
-        BackupTask(SkillAPI api, ConfigurableCommand cmd, CommandSender sender)
-        {
+        BackupTask(SkillAPI api, ConfigurableCommand cmd, CommandSender sender) {
             this.api = api;
             this.cmd = cmd;
             this.sender = sender;
@@ -94,8 +90,7 @@ public class CmdBackup implements IFunction
          * Runs the backup task, backing up the entire SQL database locally
          */
         @Override
-        public void run()
-        {
+        public void run() {
             Settings settings = SkillAPI.getSettings();
             int count = 0;
             SQLDatabase database = new SQLDatabase(api, settings.getSQLHost(), settings.getSQLPort(), settings.getSQLDatabase(), settings.getSQLUser(), settings.getSQLPass());
@@ -111,8 +106,8 @@ public class CmdBackup implements IFunction
                 // Go through every entry, saving it to disk
                 while (query.next())
                 {
-                    String sqlYaml = query.getString(SQLIO.DATA);
-                    String yaml = YAMLParser.parseText(sqlYaml, SQLIO.STRING).toString();
+                    String sqlYaml = query.getString("data");
+                    String yaml = YAMLParser.parseText(sqlYaml, '√').toString();
                     String name = query.getString("Name");
 
                     FileOutputStream out = new FileOutputStream(new File(file, name + ".yml"));

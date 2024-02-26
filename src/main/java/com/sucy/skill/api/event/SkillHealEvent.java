@@ -26,6 +26,8 @@
  */
 package com.sucy.skill.api.event;
 
+import com.sucy.skill.api.skills.Skill;
+import com.sucy.skill.dynamic.DynamicSkill;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.event.Cancellable;
 import org.bukkit.event.Event;
@@ -42,6 +44,7 @@ public class SkillHealEvent extends Event implements Cancellable
     private LivingEntity healer;
     private LivingEntity target;
     private double       damage;
+    private Skill skill;
     private boolean      cancelled;
 
     /**
@@ -53,6 +56,15 @@ public class SkillHealEvent extends Event implements Cancellable
      */
     public SkillHealEvent(LivingEntity healer, LivingEntity target, double damage)
     {
+        this.healer = healer;
+        this.target = target;
+        this.damage = damage;
+        this.cancelled = false;
+    }
+
+
+    public SkillHealEvent(LivingEntity healer, LivingEntity target, Skill skill, double damage) {
+        this.skill = skill;
         this.healer = healer;
         this.target = target;
         this.damage = damage;

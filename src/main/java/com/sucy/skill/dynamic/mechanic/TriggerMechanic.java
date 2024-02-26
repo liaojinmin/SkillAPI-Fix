@@ -59,8 +59,8 @@ public class TriggerMechanic extends MechanicComponent {
     public boolean execute(
             final LivingEntity caster, final int level, final List<LivingEntity> targets) {
 
-        final int ticks = (int)(20 * parseValues(caster, DURATION, level, 5));
-
+       // 将主动延时删除改为被动式，防止重复触发时刚好移除上下文导致触发器失效。
+       // final int ticks = (int)(20 * parseValues(caster, DURATION, level, 5));
         boolean worked = false;
         for (final LivingEntity target : targets) {
             if (!stackable && CASTER_MAP.containsKey(target.getEntityId()))
@@ -69,11 +69,14 @@ public class TriggerMechanic extends MechanicComponent {
             if (!CASTER_MAP.containsKey(target.getEntityId())) {
                 CASTER_MAP.put(target.getEntityId(), new ArrayList<>());
             }
-            triggerHandler.init(target, level);
-
             final Context context = new Context(caster, level);
+            triggerHandler.init(target, level, new StopTask(target, context));
+
+           // final Context context = new Context(caster, level);
+
             CASTER_MAP.get(target.getEntityId()).add(context);
-            SkillAPI.schedule(new StopTask(target, context), ticks);
+
+           // SkillAPI.schedule(new StopTask(target, context), ticks);
             worked = true;
         }
         return worked;
@@ -124,7 +127,7 @@ public class TriggerMechanic extends MechanicComponent {
             else
                 contexts = CASTER_MAP.get(target.getEntityId());
 
-            final List<LivingEntity> targetList = new ArrayList<LivingEntity>();
+            final List<LivingEntity> targetList = new ArrayList<>();
             targetList.add(target);
 
             for (final Context context : contexts) {

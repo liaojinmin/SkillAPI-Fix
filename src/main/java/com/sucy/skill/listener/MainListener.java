@@ -32,15 +32,18 @@ import com.sucy.skill.SkillAPI;
 import com.sucy.skill.api.enums.ExpSource;
 import com.sucy.skill.api.event.PhysicalDamageEvent;
 import com.sucy.skill.api.event.PlayerLevelUpEvent;
+import com.sucy.skill.api.player.PlayerAccounts;
 import com.sucy.skill.api.player.PlayerData;
 import com.sucy.skill.api.skills.Skill;
 import com.sucy.skill.api.util.BuffManager;
 import com.sucy.skill.api.util.Combat;
 import com.sucy.skill.api.util.FlagManager;
 import com.sucy.skill.data.Permissions;
+import com.sucy.skill.data.formula.operator.Log;
 import com.sucy.skill.dynamic.DynamicSkill;
 import com.sucy.skill.dynamic.mechanic.ImmunityMechanic;
 import com.sucy.skill.hook.CitizensHook;
+import com.sucy.skill.log.Logger;
 import com.sucy.skill.manager.ClassBoardManager;
 import org.bukkit.Bukkit;
 import org.bukkit.OfflinePlayer;
@@ -67,8 +70,7 @@ import java.util.function.Consumer;
  * such as loading/clearing data, controlling experience gains, and
  * enabling/disabling passive abilities.
  */
-public class MainListener extends SkillAPIListener
-{
+public class MainListener extends SkillAPIListener {
     private static final List<Consumer<Player>> JOIN_HANDLERS = new ArrayList<>();
     private static final List<Consumer<Player>> CLEAR_HANDLERS = new ArrayList<>();
 
@@ -87,6 +89,7 @@ public class MainListener extends SkillAPIListener
         JOIN_HANDLERS.clear();
     }
 
+
     /**
      * Loads player data asynchronously when a player tries to log in
      *
@@ -95,18 +98,28 @@ public class MainListener extends SkillAPIListener
     @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
     public void onLogin(AsyncPlayerPreLoginEvent event) {
         final OfflinePlayer player;
+
         if (VersionManager.isVersionAtLeast(VersionManager.V1_7_5)) {
             player = Bukkit.getOfflinePlayer(event.getUniqueId());
         } else {
             player = VersionManager.getOfflinePlayer(event.getName());
         }
-
-        if (SkillAPI.getSettings().isUseSql() && SkillAPI.getSettings().getSqlDelay() > 0) {
+        final int delay = SkillAPI.getSettings().getSqlDelay();
+        if (delay > 0) {
             SkillAPI.initFakeData(player);
-        } else {
-            SkillAPI.loadPlayerData(player);
         }
+        SkillAPI.asyncLoad(player, it -> {
+            Player p = Bukkit.getPlayer(player.getUniqueId());
+            if (p == null) return;
+            // 同步任务
+            it.init(p);
+            it.autoLevel();
+            it.updateScoreboard();
+            JOIN_HANDLERS.forEach(handler -> handler.accept(p));
+        }, delay);
     }
+
+
 
     /**
      * Starts passives and applies class data when a player logs in.
@@ -116,25 +129,23 @@ public class MainListener extends SkillAPIListener
         final Player player = event.getPlayer();
         if (player.hasMetadata("NPC") || !SkillAPI.getSettings().isWorldEnabled(player.getWorld()))
             return;
+        init(player);
 
-        final int delay = SkillAPI.getSettings().getSqlDelay();
-        if (SkillAPI.getSettings().isUseSql() && delay > 0) {
-            final BukkitTask task = SkillAPI.schedule(() -> {
-                try {
-                    SkillAPI.reloadPlayerData(player);
-                    init(player);
-                } finally {
-                    loadingPlayers.remove(event.getPlayer().getUniqueId());
-                }
-            }, delay);
-            loadingPlayers.put(event.getPlayer().getUniqueId(), task);
-        } else {
-            init(player);
-        }
+        /*
+        SkillAPI.asyncLoad(player, it -> {
+            // 同步任务
+            it.init(player);
+            it.autoLevel();
+            it.updateScoreboard();
+            JOIN_HANDLERS.forEach(handler -> handler.accept(player));
+        }, delay);
+
+         */
     }
 
     private void init(final Player player) {
         final PlayerData data = SkillAPI.getPlayerData(player);
+        if (data == null) return;
         data.init(player);
         data.autoLevel();
         data.updateScoreboard();
@@ -146,9 +157,9 @@ public class MainListener extends SkillAPIListener
      *
      * @param event event details
      */
-    @EventHandler(priority = EventPriority.MONITOR)
-    public void onQuit(PlayerQuitEvent event)
-    {
+    @EventHandler(priority = EventPriority.LOWEST)
+    public void onQuit(PlayerQuitEvent event) {
+        //System.out.println("PlayerQuitEvent -> 储存玩家 "+ event.getPlayer().getName() +"数据");
         unload(event.getPlayer());
     }
 
@@ -157,37 +168,10 @@ public class MainListener extends SkillAPIListener
      *
      * @param player player to unload
      */
-    public static void unload(Player player)
-    {
+    public static void unload(Player player) {
         if (CitizensHook.isNPC(player))
             return;
-
-        boolean skipSaving = false;
-        if (loadingPlayers.containsKey(player.getUniqueId())) {
-            loadingPlayers.remove(player.getUniqueId()).cancel();
-            skipSaving = true;
-        }
-
-        PlayerData data = SkillAPI.getPlayerData(player);
-        if (SkillAPI.getSettings().isWorldEnabled(player.getWorld()))
-        {
-            data.record(player);
-            data.stopPassives(player);
-        }
-
-        FlagManager.clearFlags(player);
-        BuffManager.clearData(player);
-        Combat.clearData(player);
-        DynamicSkill.clearCastData(player);
-
-        player.setDisplayName(player.getName());
-        if (VersionManager.isVersionAtLeast(VersionManager.V1_9_0)) {
-            player.getAttribute(Attribute.GENERIC_MAX_HEALTH).setBaseValue(20);
-        } else {
-            player.setMaxHealth(20);
-        }
-        player.setWalkSpeed(0.2f);
-        SkillAPI.unloadPlayerData(player, skipSaving);
+        SkillAPI.unloadPlayerData(player);
     }
 
     /**
@@ -240,8 +224,7 @@ public class MainListener extends SkillAPIListener
      * @param event event details
      */
     @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
-    public void onBreak(BlockBreakEvent event)
-    {
+    public void onBreak(BlockBreakEvent event) {
         if (event.getPlayer().hasMetadata("NPC"))
             return;
 
@@ -256,8 +239,7 @@ public class MainListener extends SkillAPIListener
      * @param event event details
      */
     @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
-    public void onSmelt(FurnaceExtractEvent event)
-    {
+    public void onSmelt(FurnaceExtractEvent event) {
         Player player = event.getPlayer();
         if (SkillAPI.getSettings().isUseOrbs() && player != null && SkillAPI.getSettings().isWorldEnabled(player.getWorld()))
             SkillAPI.getPlayerData(player).giveExp(event.getExpToDrop(), ExpSource.SMELT);

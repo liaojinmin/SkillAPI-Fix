@@ -74,4 +74,5 @@ public class TauntMechanic extends MechanicComponent
         }
         return taunted;
     }
+
 }

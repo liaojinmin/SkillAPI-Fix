@@ -13,6 +13,7 @@ public class GroundCondition extends ConditionComponent {
     boolean test(final LivingEntity caster, final int level, final LivingEntity target) {
         final boolean onGround = target.isOnGround();
         final boolean wantOnGround = settings.getString(type, "on ground").equalsIgnoreCase("on ground");
+    //    System.out.println("GroundCondition onGround: "+onGround+" wantOnGround: "+wantOnGround);
         return onGround == wantOnGround;
     }
 

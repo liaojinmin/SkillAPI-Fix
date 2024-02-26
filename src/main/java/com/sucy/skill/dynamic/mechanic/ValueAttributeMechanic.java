@@ -27,6 +27,7 @@
 package com.sucy.skill.dynamic.mechanic;
 
 import com.sucy.skill.SkillAPI;
+import com.sucy.skill.api.attribute.AttributeAPI;
 import com.sucy.skill.dynamic.DynamicSkill;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
@@ -59,15 +60,20 @@ public class ValueAttributeMechanic extends MechanicComponent
     @Override
     public boolean execute(LivingEntity caster, int level, List<LivingEntity> targets)
     {
-        if (!settings.has(KEY) || !settings.has(ATTR) || !(targets.get(0) instanceof Player))
-        {
+        if (!settings.has(KEY) || !settings.has(ATTR)) {
             return false;
         }
 
         String key = settings.getString(KEY);
         String attr = settings.getString(ATTR);
         HashMap<String, Object> data = DynamicSkill.getCastData(caster);
-        data.put(key, (double) SkillAPI.getPlayerData((Player) targets.get(0)).getAttribute(attr));
+        if (targets.isEmpty()) {
+            data.put(key, 0.0);
+            return true;
+        }
+        int attribute = AttributeAPI.getAttribute(targets.get(0), attr);
+        data.put(key, (double) attribute);
+       // data.put(key, (double) SkillAPI.getPlayerData((Player) targets.get(0)).getAttribute(attr));
         return true;
     }
 }

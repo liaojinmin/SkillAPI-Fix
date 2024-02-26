@@ -26,16 +26,25 @@
  */
 package com.sucy.skill.api.player;
 
+import com.alibaba.fastjson2.JSONObject;
+import com.alibaba.fastjson2.JSONWriter;
+import com.rit.sucy.config.parse.DataSection;
 import com.rit.sucy.version.VersionPlayer;
 import com.sucy.skill.SkillAPI;
 import com.sucy.skill.api.event.PlayerAccountChangeEvent;
+import com.sucy.skill.data.io.IOManager;
 import com.sucy.skill.listener.AttributeListener;
+import com.sucy.skill.log.Logger;
 import com.sucy.skill.manager.ClassBoardManager;
+import com.sucy.skill.manager.ComboManager;
 import org.bukkit.Bukkit;
+import org.bukkit.Material;
 import org.bukkit.OfflinePlayer;
 import org.bukkit.entity.Player;
 
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Map;
 
 /**
  * Represents the collection of accounts owned by a single player.
@@ -225,6 +234,128 @@ public class PlayerAccounts {
             } else {
                 active = event.getNewID();
             }
+        }
+    }
+
+    public String toJson() {
+        try {
+            JSONObject json = new JSONObject();
+            json.put(IOManager.LIMIT, getAccountLimit());
+            json.put(IOManager.ACTIVE, getActiveId());
+            json.put(IOManager.HEALTH, getActiveData().getLastHealth());
+            json.put(IOManager.MANA, getActiveData().getMana());
+
+            JSONObject accounts = new JSONObject();
+            for (Map.Entry<Integer, PlayerData> entry : getAllData().entrySet()) {
+                JSONObject account = new JSONObject();
+                PlayerData playerData = entry.getValue();
+
+                // 保存职业
+                JSONObject classes = new JSONObject();
+                for (PlayerClass c : playerData.getClasses()) {
+                    JSONObject c1 = new JSONObject();
+                  //  System.out.println("---=== UNLOAD "+getPlayerName()+"===---");
+                 //   System.out.println("    CLASSES -> "+c.getData().getName());
+                    c1.put(IOManager.LEVEL, c.getLevel());
+                  //  System.out.println("    LEVEL -> "+c.getLevel());
+                    c1.put(IOManager.POINTS, c.getPoints());
+                //    System.out.println("    POINTS -> "+c.getPoints());
+                    c1.put(IOManager.EXP, c.getExp());
+                //    System.out.println("    EXP -> "+c.getExp());
+                    classes.put(c.getData().getName(), c1);
+                }
+                account.put(IOManager.CLASSES, classes);
+
+
+                // 保存技能
+                JSONObject skill = new JSONObject();
+                for (PlayerSkill s : playerData.getSkills()) {
+                    JSONObject s1 = new JSONObject();
+                    s1.put(IOManager.LEVEL, s.getLevel());
+                    s1.put(IOManager.POINTS, s.getPoints());
+                    if (s.isOnCooldown()) {
+                        s1.put(IOManager.COOLDOWN, s.getCooldown());
+                    }
+                    skill.put(s.getData().getName(), s1);
+                }
+                account.put(IOManager.SKILLS, skill);
+
+                // Save binds
+                JSONObject bind = new JSONObject();
+                for (Map.Entry<Material, PlayerSkill> b : playerData.getBinds().entrySet()) {
+                    if (b.getKey() == null || b.getValue() == null) continue;
+                    bind.put(b.getKey().name(), b.getValue().getData().getName());
+                }
+                account.put(IOManager.BINDS, bind);
+
+                // Save skill bar
+                if ((SkillAPI.getSettings().isSkillBarEnabled() || SkillAPI.getSettings().isUsingCombat()) && playerData.getSkillBar() != null) {
+                    JSONObject skillBar = new JSONObject();
+                    PlayerSkillBar bar = playerData.getSkillBar();
+                    skillBar.put(IOManager.ENABLED, bar.isEnabled());
+                    skillBar.put(IOManager.SLOTS, new ArrayList<>(bar.getData().keySet()));
+                    for (Map.Entry<Integer, String> slotEntry : bar.getData().entrySet()) {
+                        if (slotEntry.getValue().equals(IOManager.UNASSIGNED)) {
+                            continue;
+                        }
+                        skillBar.put(slotEntry.getValue(), slotEntry.getKey());
+                    }
+                    account.put(IOManager.SKILL_BAR, skillBar);
+                }
+
+                // Save combos
+                if (SkillAPI.getSettings().isCustomCombosAllowed()) {
+                    JSONObject combos = new JSONObject();
+                    PlayerCombos comboData = playerData.getComboData();
+                    if (comboData != null) {
+                        ComboManager cm = SkillAPI.getComboManager();
+                        HashMap<Integer, String> comboMap = comboData.getSkillMap();
+                        for (Map.Entry<Integer, String> combo : comboMap.entrySet()) {
+                            combos.put(combo.getValue(), cm.getSaveString(combo.getKey()));
+                        }
+                        account.put(IOManager.COMBOS, combos);
+                    }
+                }
+
+                // Save attributes
+                if (SkillAPI.getSettings().isAttributesEnabled()) {
+                    account.put(IOManager.ATTRIB_POINTS, playerData.getAttributePoints());
+                    if (!playerData.getAttributeData().isEmpty()) {
+                        JSONObject attribs = new JSONObject();
+                        attribs.putAll(playerData.getAttributeData());
+                        account.put(IOManager.ATTRIBS, attribs);
+                    }
+                }
+
+                // Save cast bars
+                if (SkillAPI.getSettings().isCastEnabled()) {
+                    JSONObject ho = new JSONObject();
+                    playerData.getCastBars().save(ho, true);
+                    account.put(IOManager.HOVER, ho);
+                    JSONObject in = new JSONObject();
+                    playerData.getCastBars().save(in, false);
+                    account.put(IOManager.INSTANT, in);
+                }
+
+                // save HUNGER
+                account.put(IOManager.HUNGER, playerData.getHungerValue());
+
+                // 扩展数据
+                /*
+                if (playerData.getExtraData().size() > 0) {
+                    account.put(IOManager.EXTRA, playerData.getExtraData());
+                }
+                 */
+
+                // 添加职业
+                accounts.put(String.valueOf(entry.getKey()), account);
+            }
+            json.put(IOManager.ACCOUNTS, accounts);
+            return json.toJSONString();
+        } catch (Exception ex) {
+            Logger.bug("Failed to save player data for " + getPlayer().getName());
+            ex.printStackTrace();
+            return null;
         }
     }
 }

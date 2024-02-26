@@ -28,6 +28,7 @@ package com.sucy.skill.listener;
 
 import com.rit.sucy.version.VersionManager;
 import com.sucy.skill.SkillAPI;
+import com.sucy.skill.api.attribute.AttributeAPI;
 import com.sucy.skill.api.enums.ExpSource;
 import com.sucy.skill.api.enums.ManaSource;
 import com.sucy.skill.api.event.*;
@@ -194,6 +195,32 @@ public class AttributeListener extends SkillAPIListener
      * @param event event details
      */
     @EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
+    public void onPhysicalDamage(PhysicalDamageEvent event) {
+        // Physical Damage
+        double newAmount = AttributeAPI.scaleStat(event.getDamager(), AttributeManager.PHYSICAL_DAMAGE, event.getDamage());
+        if (event.isProjectile()) {
+            newAmount = AttributeAPI.scaleStat(event.getDamager(), AttributeManager.PROJECTILE_DAMAGE, newAmount);
+        } else {
+            newAmount = AttributeAPI.scaleStat(event.getDamager(), AttributeManager.MELEE_DAMAGE, newAmount);
+        }
+        event.setDamage(newAmount);
+        if (newAmount <= 0) {
+            event.setCancelled(true);
+        }
+        // Physical Defense
+        double newAmountD = AttributeAPI.scaleStat(event.getTarget(), AttributeManager.PHYSICAL_DEFENSE, event.getDamage());
+        if (event.isProjectile()) {
+            newAmountD = AttributeAPI.scaleStat(event.getTarget(), AttributeManager.PROJECTILE_DEFENSE, newAmountD);
+        } else {
+            newAmountD = AttributeAPI.scaleStat(event.getTarget(), AttributeManager.MELEE_DEFENSE, newAmountD);
+        }
+        if (newAmountD <= 0) {
+            event.setCancelled(true);
+        }
+        event.setDamage(newAmountD);
+    }
+    /*
+    @EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
     public void onPhysicalDamage(PhysicalDamageEvent event)
     {
         // Physical Damage
@@ -233,11 +260,35 @@ public class AttributeListener extends SkillAPIListener
         }
     }
 
+     */
+
     /**
      * Apply skill damage/defense attribute buffs
      *
      * @param event event details
      */
+    @EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
+    public void onSkillDamage(final SkillDamageEvent event) {
+        // Skill Damage
+        if (event.getClassification().equalsIgnoreCase(PHYSICAL)) {
+            event.setDamage(AttributeAPI.scaleStat(event.getDamager(), AttributeManager.PHYSICAL_DAMAGE, event.getDamage()));
+        } else {
+            final String classified = AttributeManager.SKILL_DAMAGE + "-" + event.getClassification();
+            final double firstPass = AttributeAPI.scaleStat(event.getDamager(), classified, event.getDamage());
+            final double newAmount = AttributeAPI.scaleStat(event.getDamager(), AttributeManager.SKILL_DAMAGE, firstPass);
+            event.setDamage(newAmount);
+        }
+        // Skill Defense
+        if (event.getClassification().equalsIgnoreCase(PHYSICAL)) {
+            event.setDamage(AttributeAPI.scaleStat(event.getTarget(), AttributeManager.PHYSICAL_DEFENSE, event.getDamage()));
+        } else {
+            final String classified = AttributeManager.SKILL_DEFENSE + "-" + event.getClassification();
+            final double firstPass = AttributeAPI.scaleStat(event.getTarget(), classified, event.getDamage());
+            final double newAmount = AttributeAPI.scaleStat(event.getTarget(), AttributeManager.SKILL_DEFENSE, firstPass);
+            event.setDamage(newAmount);
+        }
+    }
+    /*
     @EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
     public void onSkillDamage(final SkillDamageEvent event)
     {
@@ -279,6 +330,8 @@ public class AttributeListener extends SkillAPIListener
             }
         }
     }
+
+     */
 
     @EventHandler(priority = EventPriority.HIGH)
     public void onDamage(final EntityDamageEvent event) {

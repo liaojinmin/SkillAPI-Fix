@@ -39,6 +39,7 @@ import com.sucy.skill.hook.DisguiseHook;
 import com.sucy.skill.hook.PluginChecker;
 import com.sucy.skill.hook.VaultHook;
 import org.bukkit.Bukkit;
+import org.bukkit.Location;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
@@ -54,8 +55,10 @@ import org.bukkit.event.inventory.InventoryPickupItemEvent;
 import org.bukkit.event.player.PlayerMoveEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
 
+import java.text.DecimalFormat;
 import java.util.HashMap;
 import java.util.UUID;
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * The listener for handling events related to dynamic mechanics
@@ -71,7 +74,9 @@ public class MechanicListener extends SkillAPIListener
     public static final String SPEED_KEY         = "sapiSpeedKey";
     public static final String DISGUISE_KEY      = "sapiDisguiseKey";
 
-    private static HashMap<UUID, Double> flying = new HashMap<UUID, Double>();
+    private static final HashMap<UUID, Integer> flying = new HashMap<>();
+    private static final DecimalFormat df = new DecimalFormat("#0.00");
+
 
     /**
      * Cleans up listener data on shutdown
@@ -82,32 +87,32 @@ public class MechanicListener extends SkillAPIListener
         flying.clear();
     }
 
+    private final ConcurrentHashMap<UUID, Long> interval = new ConcurrentHashMap<>();
     /**
      * Checks for landing on the ground
      *
      * @param event event details
      */
     @EventHandler
-    public void onMove(PlayerMoveEvent event)
-    {
+    public void onMove(PlayerMoveEvent event) {
         if (event.getPlayer().hasMetadata("NPC"))
             return;
+        final Player player = event.getPlayer();
 
-        boolean inMap = flying.containsKey(event.getPlayer().getUniqueId());
-        if (inMap == ((Entity) event.getPlayer()).isOnGround())
-        {
-            if (inMap)
-            {
-                double maxHeight = flying.remove(event.getPlayer().getUniqueId());
-                Bukkit.getPluginManager().callEvent(new PlayerLandEvent(event.getPlayer(), maxHeight - event.getPlayer().getLocation().getY()));
+        boolean inMap = flying.containsKey(player.getUniqueId());
+        if (inMap == player.isOnGround()) {
+            if (inMap) {
+                double maxHeight = flying.remove(player.getUniqueId());
+            //    player.sendMessage("你落地了 ");
+                Bukkit.getPluginManager().callEvent(
+                        new PlayerLandEvent(player, Double.parseDouble(df.format(maxHeight - player.getLocation().getY())))
+                );
+            } else {
+                flying.put(player.getUniqueId(), player.getLocation().getBlockY());
             }
-            else
-                flying.put(event.getPlayer().getUniqueId(), event.getPlayer().getLocation().getY());
-        }
-        else if (inMap)
-        {
-            double y = flying.get(event.getPlayer().getUniqueId());
-            flying.put(event.getPlayer().getUniqueId(), Math.max(y, event.getPlayer().getLocation().getY()));
+        } else if (inMap) {
+            int y = flying.get(player.getUniqueId());
+            flying.put(player.getUniqueId(), Math.max(y, player.getLocation().getBlockY()));
         }
     }
 
@@ -215,8 +220,7 @@ public class MechanicListener extends SkillAPIListener
         if (event.getDamager() instanceof Projectile)
         {
             Projectile p = (Projectile) event.getDamager();
-            if (p.hasMetadata(P_CALL) && event.getEntity() instanceof LivingEntity)
-            {
+            if (p.hasMetadata(P_CALL) && event.getEntity() instanceof LivingEntity) {
                 ((ProjectileMechanic) SkillAPI.getMeta(p, P_CALL))
                     .callback(p, (LivingEntity) event.getEntity());
                 event.setCancelled(true);

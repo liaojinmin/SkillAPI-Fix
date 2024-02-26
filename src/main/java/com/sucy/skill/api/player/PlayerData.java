@@ -33,6 +33,7 @@ import com.rit.sucy.player.TargetHelper;
 import com.rit.sucy.version.VersionManager;
 import com.rit.sucy.version.VersionPlayer;
 import com.sucy.skill.SkillAPI;
+import com.sucy.skill.api.attribute.AttributeAPI;
 import com.sucy.skill.api.classes.RPGClass;
 import com.sucy.skill.api.event.*;
 import com.sucy.skill.api.enums.*;
@@ -66,6 +67,7 @@ import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
 
 import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 
 import static com.sucy.skill.api.event.PlayerSkillCastFailedEvent.Cause.*;
 
@@ -78,12 +80,21 @@ import static com.sucy.skill.api.event.PlayerSkillCastFailedEvent.Cause.*;
  * try to instantaite your own PlayerData object.
  */
 public class PlayerData {
-    private final HashMap<String, PlayerClass>   classes     = new HashMap<>();
-    private final HashMap<String, PlayerSkill>   skills      = new HashMap<>();
-    private final HashMap<Material, PlayerSkill> binds       = new HashMap<>();
-    private final HashMap<String, Integer>       attributes  = new HashMap<>();
-    private final HashMap<String, Integer>       bonusAttrib = new HashMap<>();
 
+    private final HashMap<String, PlayerClass>   classes     = new HashMap<>();
+
+    private final HashMap<String, PlayerSkill>   skills      = new HashMap<>();
+
+    private final HashMap<Material, PlayerSkill> binds       = new HashMap<>();
+
+    public final HashMap<String, Integer>       attributes  = new HashMap<>();
+
+    public final HashMap<String, Integer>       bonusAttrib = new HashMap<>();
+
+    /**
+     * 临时属性 map
+     */
+    public final ConcurrentHashMap<String, ConcurrentHashMap<String, Integer>> addAttrib = new ConcurrentHashMap<>();
     private DataSection extraData = new DataSection();
     private OfflinePlayer  player;
     private PlayerSkillBar skillBar;
@@ -272,8 +283,20 @@ public class PlayerData {
      */
     public HashMap<String, Integer> getAttributes() {
         HashMap<String, Integer> map = new HashMap<>();
-        for (String key : SkillAPI.getAttributeManager().getKeys()) { map.put(key, getAttribute(key)); }
+        for (String key : SkillAPI.getAttributeManager().getKeys()) {
+            map.put(key, getAttribute(key));
+        }
         return map;
+    }
+
+    public int getAddAttribute(String key) {
+        int infos = 0;
+        for (ConcurrentHashMap<String, Integer> value : addAttrib.values()) {
+            if (value.containsKey(key)) {
+                infos += value.getOrDefault(key, 0);
+            }
+        }
+        return infos;
     }
 
     /**
@@ -296,6 +319,7 @@ public class PlayerData {
      *
      * @return number of total points
      */
+    /*
     public int getAttribute(String key) {
         key = key.toLowerCase();
         int total = 0;
@@ -305,6 +329,14 @@ public class PlayerData {
             total += playerClass.getData().getAttribute(key, playerClass.getLevel());
         }
         return Math.max(0, total);
+    }
+
+     */
+    public int getAttribute(String key) {
+        if (!getPlayer().isOnline()) {
+            return 0;
+        }
+        return AttributeAPI.getAttribute(getPlayer(), key);
     }
 
     /**
@@ -471,6 +503,11 @@ public class PlayerData {
      * @return modified value
      */
     public double scaleStat(final String stat, final double value) {
+        return AttributeAPI.scaleStat(getPlayer(), stat, value);
+    }
+
+    /*
+    public double scaleStat(final String stat, final double value) {
         final AttributeManager manager = SkillAPI.getAttributeManager();
         if (manager == null) { return value; }
 
@@ -486,6 +523,8 @@ public class PlayerData {
         }
         return modified;
     }
+
+     */
 
     /**
      * Scales a dynamic skill's value using global modifiers
@@ -1699,6 +1738,23 @@ public class PlayerData {
             if (skill.isUnlocked() && (skill.getData() instanceof PassiveSkill)) {
                 ((PassiveSkill) skill.getData()).initialize(player, skill.getLevel());
             }
+        }
+    }
+
+    private PlayerSkill passiveSkill;
+    public void startPassives(Player player, PlayerSkill skill) {
+      //  System.out.println("PlayerSkill "+skill.getData().getName());
+      //  System.out.println("PlayerSkill Class "+skill.getData().getClass());
+        if (skill.getData() instanceof PassiveSkill) {
+         //   System.out.println("skill 是被动技能 "+skill.getData().getName());
+            endPassives(player);
+            passiveSkill = skill;
+            ((PassiveSkill) passiveSkill.getData()).initialize(player, 1);
+        }
+    }
+    public void endPassives(Player player) {
+        if (passiveSkill != null) {
+            ((PassiveSkill) passiveSkill.getData()).stopEffects(player, passiveSkill.getLevel());
         }
     }
 

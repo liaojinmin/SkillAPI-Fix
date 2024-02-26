@@ -39,8 +39,7 @@ import org.bukkit.plugin.Plugin;
 /**
  * Command to toggle on/off the skill bar
  */
-public class CmdBar implements IFunction
-{
+public class CmdBar implements IFunction {
     private static final String NOT_PLAYER  = "not-player";
     private static final String NO_CLASS    = "no-class";
     private static final String IN_CREATIVE = "in-creative";

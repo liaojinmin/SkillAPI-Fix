@@ -2,6 +2,7 @@ package com.sucy.skill.dynamic;
 
 import com.sucy.skill.SkillAPI;
 import com.sucy.skill.api.enums.ManaCost;
+import com.sucy.skill.api.event.PlayerLandEvent;
 import com.sucy.skill.api.player.PlayerData;
 import com.sucy.skill.api.player.PlayerSkill;
 import com.sucy.skill.dynamic.trigger.Trigger;
@@ -15,6 +16,7 @@ import org.bukkit.event.Listener;
 
 import java.util.HashMap;
 import java.util.Objects;
+import java.util.function.Consumer;
 
 /**
  * SkillAPI © 2017
@@ -28,6 +30,8 @@ public class TriggerHandler implements Listener {
     private final String key;
     private final Trigger<?> trigger;
     private final TriggerComponent component;
+
+    private Runnable cleanup = null;
 
     public TriggerHandler(
             final DynamicSkill skill,
@@ -58,11 +62,19 @@ public class TriggerHandler implements Listener {
         return component;
     }
 
+    public void init(final LivingEntity entity, final int level, Runnable cleanup) {
+        this.cleanup = cleanup;
+        active.put(entity.getEntityId(), level);
+    }
+
     public void init(final LivingEntity entity, final int level) {
         active.put(entity.getEntityId(), level);
     }
 
     public void cleanup(final LivingEntity entity) {
+      //  if (skill.getName().equalsIgnoreCase("打刀平A1")) {
+          //  System.out.println("- 移除生物ID: "+entity.getEntityId()+" 名称: "+entity.getName() + " by 打刀平A1");
+       // }
         active.remove(entity.getEntityId());
         component.cleanUp(entity);
     }
@@ -79,10 +91,19 @@ public class TriggerHandler implements Listener {
 
     <T extends Event> void apply(final T event, final Trigger<T> trigger) {
         final LivingEntity caster = trigger.getCaster(event);
-        if (caster == null || !active.containsKey(caster.getEntityId())) { return; }
+        if (caster == null || !active.containsKey(caster.getEntityId())) {
+            return;
+        }
 
         final int level = active.get(caster.getEntityId());
-        if (!trigger.shouldTrigger(event, level, component.settings)) { return; }
+        if (!trigger.shouldTrigger(event, level, component.settings)) {
+            // 被动删除，如果有的话
+            if (cleanup != null) {
+                cleanup.run();
+                cleanup = null;
+            }
+            return;
+        }
 
         final LivingEntity target = trigger.getTarget(event, component.settings);
         trigger.setValues(event, DynamicSkill.getCastData(caster));
@@ -90,6 +111,12 @@ public class TriggerHandler implements Listener {
 
         if (event instanceof Cancellable) { skill.applyCancelled((Cancellable) event); }
         trigger.postProcess(event, skill);
+
+        // 被动删除，如果有的话
+        if (cleanup != null) {
+            cleanup.run();
+            cleanup = null;
+        }
     }
 
     boolean trigger(final LivingEntity user, final LivingEntity target, final int level) {

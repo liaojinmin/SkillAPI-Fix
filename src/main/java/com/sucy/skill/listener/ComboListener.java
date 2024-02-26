@@ -131,5 +131,5 @@ public class ComboListener extends SkillAPIListener {
         }
     }
 
-    private HashSet<UUID> onGround = new HashSet<UUID>();
+    private final HashSet<UUID> onGround = new HashSet<>();
 }
