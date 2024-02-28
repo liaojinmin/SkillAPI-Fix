@@ -391,9 +391,12 @@ public abstract class Skill implements IconHolder
      *
      * @return mana cost
      */
-    public double getManaCost(int level)
-    {
+    public double getManaCost(int level) {
         return settings.getAttr(SkillAttribute.MANA, level);
+    }
+
+    public long getManaTick(int level) {
+        return settings.getManaTick(level, 0);
     }
 
     /**

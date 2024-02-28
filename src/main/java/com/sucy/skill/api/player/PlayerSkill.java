@@ -172,9 +172,12 @@ public final class PlayerSkill
     /**
      * @return mana cost to use the skill
      */
-    public double getManaCost()
-    {
+    public double getManaCost() {
         return skill.getManaCost(level);
+    }
+
+    public long getManaTick() {
+        return skill.getManaTick(level);
     }
 
     /**

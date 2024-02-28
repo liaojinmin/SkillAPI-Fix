@@ -290,6 +290,12 @@ public class Settings {
         return getBase(key) + getScale(key) * (level - 1);
     }
 
+    public long getManaTick(int level, long defaultValue) {
+        if (settings.containsKey("mana-tick")) {
+            return Long.parseLong(String.valueOf(settings.get("mana-tick"))) * (level - 1);
+        } else return defaultValue;
+    }
+
     /**
      * <p>Gets the base value of an attribute</p>
      * <p>If the attribute is not set, this will return 0.</p>

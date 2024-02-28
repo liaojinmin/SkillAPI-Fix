@@ -132,13 +132,13 @@ public class SkillAPI extends JavaPlugin {
         comboManager = new ComboManager();
         registrationManager = new RegistrationManager(this);
         cmd = new CmdManager(this);
-
         io = new SQLImpl(this);
-      //  io = settings.isUseSql() ? new SQLImpl(this) : new ConfigIO(this);
 
         PlayerStats.init();
         ClassBoardManager.registerText();
-        if (settings.isAttributesEnabled()) { attributeManager = new AttributeManager(this); }
+        if (settings.isAttributesEnabled()) {
+            attributeManager = new AttributeManager(this);
+        }
 
         // Load classes and skills
         registrationManager.initialize();

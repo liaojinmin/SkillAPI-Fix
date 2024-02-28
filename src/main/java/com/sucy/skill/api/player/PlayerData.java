@@ -105,6 +105,7 @@ public class PlayerData {
     private String         menuClass;
     private double         mana;
     private double         maxMana;
+    private long           manaRestoreTick;
     private double         bonusHealth;
     private double         bonusMana;
     private double         lastHealth;
@@ -1482,6 +1483,7 @@ public class PlayerData {
      * Regenerates mana for the player based on the regen amounts of professed classes
      */
     public void regenMana() {
+        if (this.getManaRestoreTick() != 0) return;
         double amount = 0;
         for (PlayerClass c : classes.values()) {
             if (c.getData().hasManaRegen()) {
@@ -1571,6 +1573,19 @@ public class PlayerData {
                 mana = 0;
             }
         }
+    }
+
+    public void setManaRestoreTick(long tick) {
+        this.manaRestoreTick = System.currentTimeMillis() + tick;
+    }
+
+    public long getManaRestoreTick() {
+        long timer = System.currentTimeMillis();
+        if (timer >= this.manaRestoreTick) {
+            this.manaRestoreTick = 0;
+            return 0;
+        }
+        return this.manaRestoreTick - timer;
     }
 
     /**
@@ -1827,6 +1842,9 @@ public class PlayerData {
             // Make sure it isn't cancelled
             if (!event.isCancelled()) {
                 try {
+                    // 设置魔法值恢复等待时间
+                    setManaRestoreTick(skill.getManaTick());
+
                     if (((SkillShot) skill.getData()).cast(p, level)) {
                         return applyUse(p, skill, event.getManaCost());
                     } else {
@@ -1837,7 +1855,9 @@ public class PlayerData {
                     ex.printStackTrace();
                     return PlayerSkillCastFailedEvent.invoke(skill, EFFECT_FAILED);
                 }
-            } else { return PlayerSkillCastFailedEvent.invoke(skill, CANCELED); }
+            } else {
+                return PlayerSkillCastFailedEvent.invoke(skill, CANCELED);
+            }
         }
 
         // Target Skills
@@ -1853,6 +1873,9 @@ public class PlayerData {
             // Make sure it isn't cancelled
             if (!event.isCancelled()) {
                 try {
+                    // 设置魔法值恢复等待时间
+                    setManaRestoreTick(skill.getManaTick());
+
                     final boolean canAttack = !SkillAPI.getSettings().canAttack(p, target);
                     if (((TargetSkill) skill.getData()).cast(p, target, level, canAttack)) {
                         return applyUse(p, skill, event.getManaCost());

@@ -42,6 +42,8 @@ public class ManaMechanic extends MechanicComponent {
     private static final String TYPE  = "type";
     private static final String VALUE = "value";
 
+    private static final String TICK = "tick";
+
     @Override
     public String getKey() {
         return "mana";
@@ -60,7 +62,7 @@ public class ManaMechanic extends MechanicComponent {
     public boolean execute(LivingEntity caster, int level, List<LivingEntity> targets) {
         boolean percent = settings.getString(TYPE, "mana").toLowerCase().equals("percent");
         double value = parseValues(caster, VALUE, level, 1.0);
-
+        long tick = (long) parseValues(caster, TICK, level, 0);
         boolean worked = false;
         for (LivingEntity target : targets) {
             if (!(target instanceof Player)) {
@@ -81,6 +83,10 @@ public class ManaMechanic extends MechanicComponent {
                 data.giveMana(amount, ManaSource.SKILL);
             } else {
                 data.useMana(-amount, ManaCost.SKILL_EFFECT);
+            }
+
+            if (tick > 0) {
+                data.setManaRestoreTick(tick);
             }
         }
         return worked;
