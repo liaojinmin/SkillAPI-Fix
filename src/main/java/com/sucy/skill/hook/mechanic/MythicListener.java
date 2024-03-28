@@ -16,6 +16,9 @@ public class MythicListener extends SkillAPIListener {
         if (event.getMechanicName().equalsIgnoreCase("damageAtType")) {
             event.register(new MythicDamageMechanic(event.getContainer().getConfigLine(), event.getConfig()));
         }
+        if (event.getMechanicName().equalsIgnoreCase("timerAttribute")) {
+            event.register(new MythicAttributeMechanic(event.getContainer().getConfigLine(), event.getConfig()));
+        }
     }
 
 

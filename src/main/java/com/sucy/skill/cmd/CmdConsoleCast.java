@@ -31,6 +31,7 @@ import com.rit.sucy.commands.ConfigurableCommand;
 import com.rit.sucy.commands.IFunction;
 import com.rit.sucy.version.VersionManager;
 import com.sucy.skill.SkillAPI;
+import com.sucy.skill.api.player.PlayerData;
 import com.sucy.skill.api.skills.Skill;
 import com.sucy.skill.api.skills.SkillShot;
 import org.bukkit.ChatColor;
@@ -44,54 +45,44 @@ import java.util.regex.Pattern;
  * A command that makes a player cast a skill regardless
  * of them owning it or not and also ignores cooldown/mana costs.
  */
-public class CmdForceCast implements IFunction
-{
-    private static final Pattern INTEGER = Pattern.compile("-?[0-9]+");
+public class CmdConsoleCast implements IFunction {
+    private static final String NOT_SKILL    = "not-skill";
+    private static final String NOT_AVAILABLE = "not-available";
+    private static final String NOT_UNLOCKED = "not-unlocked";
+    private static final String DISABLED     = "world-disabled";
 
-    private static final String NOT_PLAYER    = "not-player";
-    private static final String WRONG_SKILL   = "wrong-skill";
-    private static final String INVALID_SKILL = "invalid-skill";
 
-    /**
-     * Runs the command
-     *
-     * @param cmd    command that was executed
-     * @param plugin plugin reference
-     * @param sender sender of the command
-     * @param args   argument list
-     */
     @Override
-    public void execute(ConfigurableCommand cmd, Plugin plugin, CommandSender sender, String[] args)
-    {
-        // Only players have profession options
-        if (args.length < 2) {
-            CommandManager.displayUsage(cmd, sender);
-        } else {
-            Player player = VersionManager.getPlayer(args[0]);
-            if (player == null) {
-                cmd.sendMessage(sender, NOT_PLAYER, ChatColor.RED + "That is not a valid player name");
-                return;
+    public void execute(ConfigurableCommand command, Plugin plugin, CommandSender sender, String[] args) {
+
+        if (args.length >= 2) {
+            Player targer = VersionManager.getPlayer(args[0]);
+            if (!SkillAPI.getSettings().isWorldEnabled(targer.getWorld())) {
+                command.sendMessage(sender, DISABLED, "&4此世界已禁用...");
             }
 
-            String name = args[1];
-            int level = 1;
+            PlayerData player = SkillAPI.getPlayerData(targer);
+            // Get the skill name
+            StringBuilder skill = new StringBuilder(args[1]);
             for (int i = 2; i < args.length; i++) {
-                if (i == args.length - 1 && SkillAPI.getSkill(name) != null && INTEGER.matcher(args[i]).matches()) {
-                    level = Integer.parseInt(args[i]);
-                }
-                else name += ' ' + args[i];
+                skill.append(" ").append(args[i]);
             }
 
-            Skill skill = SkillAPI.getSkill(name);
+            // Invalid skill
+            if (!SkillAPI.isSkillRegistered(skill.toString())) {
+                command.sendMessage(sender, NOT_SKILL, ChatColor.RED + "未知技能名称 "+skill+"...");
+            }
+            // Class mismatch
+            else if (!player.hasSkill(skill.toString())) {
+                command.sendMessage(sender, NOT_AVAILABLE, ChatColor.RED + "这个可能不适用你的职业...");
+            } else if (!player.hasSkill(skill.toString()) || player.getSkillLevel(skill.toString()) == 0) {
+                command.sendMessage(sender, NOT_UNLOCKED, ChatColor.RED + "等级不足...");
 
-            // Invalid class
-            if (skill == null) {
-                cmd.sendMessage(sender, INVALID_SKILL, ChatColor.RED + "That is not a valid skill");
-            } else if (skill instanceof SkillShot) {
-                ((SkillShot) skill).cast(player, level);
             } else {
-                cmd.sendMessage(sender, WRONG_SKILL, ChatColor.RED + "Skills must be skill shot skills or dynamic skills to be cast this way.");
+                player.cast(skill.toString());
             }
+        } else {
+            CommandManager.displayUsage(command, sender, 1);
         }
     }
 }

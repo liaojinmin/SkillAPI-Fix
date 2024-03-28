@@ -49,6 +49,7 @@ public class PlaceholderAPIHook extends PlaceholderExpansion {
         PLACEHOLDERS.put("value:", (p, key) -> formats(DynamicSkill.getCastData(p.getPlayer())));
         new PlaceholderAPIHook().register();
     }
+    // %sapi_mana%
     public String getIdentifier() {
         return "sapi";
     }

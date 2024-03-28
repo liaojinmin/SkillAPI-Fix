@@ -70,6 +70,7 @@ import org.bukkit.scheduler.BukkitRunnable;
 import org.bukkit.scheduler.BukkitTask;
 
 import java.util.*;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Consumer;
 
@@ -224,7 +225,9 @@ public class SkillAPI extends JavaPlugin {
     @Override
     public void onDisable() {
         // Validate instance
-        if (singleton != this) { throw new IllegalStateException("This is not a valid, enabled SkillAPI copy!"); }
+        if (singleton != this) {
+            throw new IllegalStateException("This is not a valid, enabled SkillAPI copy!");
+        }
 
         disabling = true;
 
@@ -247,13 +250,16 @@ public class SkillAPI extends JavaPlugin {
         // 清理 计分板
         ClassBoardManager.clearAll();
 
-        /*
+
+
+        // 禁用前清除技能栏并停止被动
         for (Player player : VersionManager.getOnlinePlayers()) {
             MainListener.unload(player);
         }
-         */
 
-        //io.saveAll();
+
+        // 保存数据
+        io.saveAll();
 
         // 关闭连接池
         if (io instanceof SQLImpl) {
@@ -520,21 +526,16 @@ public class SkillAPI extends JavaPlugin {
     public static void asyncLoad(OfflinePlayer player, Consumer<PlayerData> func, int delay) {
         SkillAPI skillAPI = singleton();
         Bukkit.getScheduler().runTaskLaterAsynchronously(skillAPI, () -> {
-        //    System.out.println("开始加载玩家数据...");
-            long timer = System.currentTimeMillis();
             String key = player.getUniqueId().toString();
-
             PlayerAccounts data = skillAPI.io.loadData(player);
             if (data != null) {
                 skillAPI.players.remove(key);
-             //   System.out.println("   插入到缓存 by "+player.getName());
                 skillAPI.players.put(key, data);
                 PlayerData data1 = data.getActiveData();
                 if (data1 != null) {
                     Bukkit.getScheduler().runTask(skillAPI, () -> func.accept(data1));
                 }
             }
-          //  System.out.println("数据加载完成耗时 -> "+(System.currentTimeMillis() - timer));
         }, delay);
     }
 
@@ -588,17 +589,15 @@ public class SkillAPI extends JavaPlugin {
         if (singleton == null || player == null) return;
         Optional.ofNullable(singleton.players.get(player.getUniqueId().toString()))
                 .ifPresent(it -> {
-
-                    Bukkit.getScheduler().runTaskAsynchronously(singleton, () -> {
-                       // System.out.println("    准备储存数据 by " +player.getName());
+                    CompletableFuture.runAsync(() -> {
+                        // System.out.println("    准备储存数据 by " +player.getName());
                         try {
                             singleton.io.saveByGeek(it);
-                          //  System.out.println("    储存完成 by " +player.getName());
+                            //  System.out.println("    储存完成 by " +player.getName());
                         } catch (Exception e) {
                             e.printStackTrace();
                         }
                     });
-
                     if (SkillAPI.getSettings().isWorldEnabled(player.getWorld())) {
                         PlayerData data = it.getActiveData();
                         if (data != null) {

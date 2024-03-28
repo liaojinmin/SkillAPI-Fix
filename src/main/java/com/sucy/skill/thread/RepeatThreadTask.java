@@ -57,8 +57,7 @@ public abstract class RepeatThreadTask implements IThreadTask
     @Override
     public boolean tick()
     {
-        if (++time % interval == 0 && time > 0)
-        {
+        if (++time % interval == 0 && time > 0) {
             run();
             time = 0;
         }

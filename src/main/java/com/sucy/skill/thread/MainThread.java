@@ -58,11 +58,16 @@ public class MainThread extends Thread {
         while (enabled) {
             try {
                 tasks.iterator();
-                while (tasks.hasNext()) { if (tasks.next().tick()) { tasks.remove(); } }
+                while (tasks.hasNext()) {
+                    if (tasks.next().tick()) {
+                        tasks.remove();
+                    }
+                }
 
                 long current = System.currentTimeMillis();
                 time += 50;
                 sleep(Math.max(1, time - current));
+
             } catch (ConcurrentModificationException ex) {
                 // Concurrent exceptions would happen infrequently
                 // but shouldn't be a concern. We'll just continue

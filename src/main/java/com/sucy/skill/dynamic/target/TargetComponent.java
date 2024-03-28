@@ -144,7 +144,6 @@ public abstract class TargetComponent extends EffectComponent {
         if (self) {
             list.add(caster);
         }
-
         return list;
     }
 
@@ -152,7 +151,6 @@ public abstract class TargetComponent extends EffectComponent {
         if (target instanceof TempEntity) {
             return true;
         }
-
         return target != caster && SkillAPI.getSettings().isValidTarget(target)
                 && (throughWall || !TargetHelper.isObstructed(from.getEyeLocation(), target.getEyeLocation()))
                 && (everyone || allies == SkillAPI.getSettings().isAlly(caster, target));

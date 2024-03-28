@@ -87,26 +87,16 @@ public class CmdProfess implements IFunction
                 if (target == null)
                 {
                     cmd.sendMessage(sender, INVALID_CLASS, ChatColor.RED + "That is not a valid class");
-                }
-
-                // Can profess
-                else if (data.canProfess(target))
-                {
+                } else if (data.canProfess(target)) {
                     data.profess(target);
                     cmd.sendMessage(sender, PROFESSED, ChatColor.DARK_GREEN + "You are now a " + ChatColor.GOLD + "{class}", RPGFilter.CLASS.setReplacement(target.getName()));
-                }
-
-                // Cannot profess
-                else
-                {
+                } else {
                     cmd.sendMessage(sender, CANNOT_PROFESS, ChatColor.RED + "You cannot profess to this class currently");
                 }
             }
         }
-
         // Console doesn't have profession options
-        else
-        {
+        else {
             cmd.sendMessage(sender, CANNOT_USE, ChatColor.RED + "This cannot be used by the console");
         }
     }

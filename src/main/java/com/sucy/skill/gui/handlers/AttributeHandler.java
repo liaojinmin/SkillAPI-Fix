@@ -33,7 +33,7 @@ import com.sucy.skill.manager.AttributeManager;
 import java.util.HashMap;
 
 public class AttributeHandler extends GUIHolder<AttributeManager.Attribute> {
-    private HashMap<String, Integer> start = new HashMap<String, Integer>();
+    private HashMap<String, Integer> start = new HashMap<>();
 
     @Override
     protected void onSetup() {

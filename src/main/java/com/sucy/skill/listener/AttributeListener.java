@@ -392,11 +392,10 @@ public class AttributeListener extends SkillAPIListener
      *
      * @param data player to update
      */
-    public static void updatePlayer(PlayerData data)
-    {
+    public static void updatePlayer(PlayerData data) {
         Player player = data.getPlayer();
-        if (player != null && SkillAPI.getSettings().isWorldEnabled(player.getWorld()))
-        {
+        if (player != null && SkillAPI.getSettings().isWorldEnabled(player.getWorld())) {
+
             double change = updateStat(data, AttributeManager.HEALTH, player.getMaxHealth(), 0, Double.MAX_VALUE);
             data.addMaxHealth(change);
 
@@ -424,8 +423,8 @@ public class AttributeListener extends SkillAPIListener
             final Object attribute,
             final String attribKey,
             final double min,
-            final double max) {
-
+            final double max)
+    {
         final AttributeInstance instance = player.getAttribute((Attribute) attribute);
         final double change = updateStat(data, attribKey, instance.getBaseValue(), min, max);
         instance.setBaseValue(instance.getBaseValue() + change);

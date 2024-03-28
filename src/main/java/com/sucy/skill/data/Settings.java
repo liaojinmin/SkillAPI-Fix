@@ -46,6 +46,9 @@ import com.sucy.skill.data.formula.value.CustomValue;
 import com.sucy.skill.dynamic.DynamicSkill;
 import com.sucy.skill.gui.tool.GUITool;
 import com.sucy.skill.log.Logger;
+import me.geek.team.GeekTeamPlus;
+import me.geek.team.common.TeamHandler;
+import me.geek.team.common.TeamManager;
 import org.bukkit.Material;
 import org.bukkit.World;
 import org.bukkit.entity.Animals;
@@ -361,12 +364,18 @@ public class Settings {
     public boolean canAttack(LivingEntity attacker, LivingEntity target) {
         if (attacker instanceof Player) {
             final Player player = (Player) attacker;
+            if (!player.getWorld().getPVP() && target instanceof Player) {
+                return false;
+            }
             if (target instanceof Animals && !(target instanceof Tameable)) {
                 if (passiveAlly || passiveWorlds.contains(attacker.getWorld().getName())) { return false; }
             } else if (target instanceof Monster) {
                 if (monsterEnemy || monsterWorlds.contains(attacker.getWorld().getName())) { return true; }
             } else if (target instanceof Player) {
-                if (playerAlly || playerWorlds.contains(attacker.getWorld().getName())) { return false; }
+
+                if (playerAlly || playerWorlds.contains(attacker.getWorld().getName())) {
+                    return false;
+                }
 
                 if (partiesAlly) {
                     final Parties parties = Parties.getPlugin(Parties.class);
@@ -374,8 +383,23 @@ public class Settings {
                     final Party p2 = parties.getJoinedParty((Player) target);
                     return p1 == null || p1 != p2;
                 }
+                try {
+                    // 检查 GeekTeamPlus 队伍
+                    TeamHandler teamHandler = TeamManager.INSTANCE.getTeamByPlayerID(player.getUniqueId());
+                    if (teamHandler != null) {
+                        if (teamHandler.getTeamPart().containPlayer(target.getUniqueId())) {
+                            return false;
+                        }
+                    }
+                } catch (NoClassDefFoundError ignored) {}
+
+                // 世界PVP设置，最后
+                if (!player.getWorld().getPVP()) {
+                    return false;
+                }
                 return combatProtection.canAttack(player, (Player) target);
             }
+
             return combatProtection.canAttack(player, target);
         } else if (attacker instanceof Tameable) {
             Tameable tameable = (Tameable) attacker;

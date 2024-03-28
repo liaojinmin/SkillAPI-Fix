@@ -34,6 +34,7 @@ import com.sucy.skill.api.player.PlayerClass;
 import com.sucy.skill.api.player.PlayerData;
 import com.sucy.skill.api.skills.Skill;
 import com.sucy.skill.listener.ItemListener;
+import com.sucy.skill.utils.AttributeParseUtils;
 import org.bukkit.ChatColor;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
@@ -188,8 +189,8 @@ public class PlayerEquips
     /**
      * Represents one available item's data
      */
-    private class EquipData
-    {
+    private class EquipData {
+
         private HashMap<String, Integer> skillReq;
         private HashMap<String, Integer> attrReq;
         private HashMap<String, Integer> attribs;
@@ -211,8 +212,7 @@ public class PlayerEquips
          *
          * @param item item to grab data from
          */
-        EquipData(ItemStack item)
-        {
+        EquipData(ItemStack item) {
             this.item = item;
             this.isArmor = PlayerEquips.this.isArmor(item);
 
@@ -220,8 +220,7 @@ public class PlayerEquips
                 return;
 
             List<String> lore = item.getItemMeta().getLore();
-            if (lore == null)
-                return;
+            if (lore == null) return;
 
             Settings settings = SkillAPI.getSettings();
             String classText = settings.getLoreClassText();
@@ -230,16 +229,15 @@ public class PlayerEquips
             boolean skills = settings.isCheckSkillLore();
             boolean attributes = settings.isAttributesEnabled();
 
-            for (String line : lore)
-            {
+            for (String line : lore) {
                 String lower = ChatColor.stripColor(line).toLowerCase();
 
-                // Level requirements
+                // Level requirements 等级要求
                 if (lower.startsWith(levelText)) {
                     levelReq = NumberParser.parseInt(lower.substring(levelText.length()));
                 }
 
-                // Class requirements
+                // Class requirements 职业要求
                 else if (lower.startsWith(classText)) {
                     List<String> required = Arrays.asList(lower.substring(classText.length()).split(", "));
                     if (classReq == null)
@@ -247,26 +245,19 @@ public class PlayerEquips
                     classReq.addAll(required);
                 }
 
-                // Excluded classes
+                // Excluded classes 排除职业
                 else if (lower.startsWith(excludeText)) {
                     List<String> excluded = Arrays.asList(lower.substring(excludeText.length()).split(", "));
                     if (classExc == null)
                         classExc = new HashSet<>();
                     classExc.addAll(excluded);
-                }
-                    
-                else
-                {
+                } else {
                     boolean done = false;
-
-                    // Skill requirements
-                    if (skills)
-                    {
-                        for (Skill skill : SkillAPI.getSkills().values())
-                        {
+                    // Skill requirements 技能要求
+                    if (skills) {
+                        for (Skill skill : SkillAPI.getSkills().values()) {
                             String text = settings.getSkillText(skill.getName());
-                            if (lower.startsWith(text))
-                            {
+                            if (lower.startsWith(text)) {
                                 done = true;
                                 if (skillReq == null)
                                     skillReq = new HashMap<>();
@@ -278,13 +269,11 @@ public class PlayerEquips
                     }
 
                     // Attribute requirements
-                    if (attributes && !done)
-                    {
-                        for (String attr : SkillAPI.getAttributeManager().getLookupKeys())
-                        {
+                    if (attributes && !done) {
+
+                        for (String attr : SkillAPI.getAttributeManager().getLookupKeys()) {
                             String text = settings.getAttrReqText(attr);
-                            if (lower.startsWith(text))
-                            {
+                            if (lower.startsWith(text)) {
                                 if (attrReq == null)
                                     attrReq = new HashMap<>();
 
@@ -294,14 +283,13 @@ public class PlayerEquips
                             }
 
                             text = settings.getAttrGiveText(attr);
-                            if (lower.startsWith(text))
-                            {
+                            if (lower.startsWith(text)) {
                                 if (attribs == null)
                                     attribs = new HashMap<>();
 
                                 String normalized = SkillAPI.getAttributeManager().normalize(attr);
-                                int current = attribs.containsKey(attr) ? attribs.get(attr) : 0;
-                                int extra = NumberParser.parseInt(lower.substring(text.length()).replace("%", ""));
+                                int current = attribs.getOrDefault(attr, 0);
+                                int extra = AttributeParseUtils.toInt(lower);
                                 attribs.put(normalized, current + extra);
                                 break;
                             }
@@ -314,8 +302,7 @@ public class PlayerEquips
         /**
          * Applies bonuse attributes for the item
          */
-        public void apply()
-        {
+        public void apply() {
             if (attribs != null)
                 for (Map.Entry<String, Integer> entry : attribs.entrySet())
                     player.addBonusAttributes(entry.getKey(), entry.getValue());
@@ -324,8 +311,7 @@ public class PlayerEquips
         /**
          * Reverts bonus attributes for the item
          */
-        void revert()
-        {
+        void revert() {
             if (attribs != null)
                 for (Map.Entry<String, Integer> entry : attribs.entrySet())
                     player.addBonusAttributes(entry.getKey(), -entry.getValue());
@@ -340,8 +326,7 @@ public class PlayerEquips
          *
          * @return true if conditions are met
          */
-        boolean isMet()
-        {
+        boolean isMet() {
             if (item == null) {
                 return true;
             }

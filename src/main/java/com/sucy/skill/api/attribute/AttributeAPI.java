@@ -38,7 +38,9 @@ public class AttributeAPI {
             return 0;
         }
         int total = 0;
+        // 去色
         key = ChatColor.stripColor(key).toLowerCase();
+
         if (entity instanceof Player && SkillAPI.getPlayerData((Player) entity) != null) {
             PlayerData data = SkillAPI.getPlayerData((Player) entity);
             if (data.attributes.containsKey(key)) {

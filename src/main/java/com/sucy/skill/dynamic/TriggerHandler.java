@@ -26,12 +26,13 @@ public class TriggerHandler implements Listener {
 
     private final HashMap<Integer, Integer> active = new HashMap<>();
 
+    private final HashMap<Integer, Runnable> cleanup = new HashMap<>();
+
     private final DynamicSkill skill;
     private final String key;
     private final Trigger<?> trigger;
     private final TriggerComponent component;
 
-    private Runnable cleanup = null;
 
     public TriggerHandler(
             final DynamicSkill skill,
@@ -63,7 +64,7 @@ public class TriggerHandler implements Listener {
     }
 
     public void init(final LivingEntity entity, final int level, Runnable cleanup) {
-        this.cleanup = cleanup;
+        this.cleanup.put(entity.getEntityId(), cleanup);
         active.put(entity.getEntityId(), level);
     }
 
@@ -96,11 +97,11 @@ public class TriggerHandler implements Listener {
         }
 
         final int level = active.get(caster.getEntityId());
+        final Runnable c = cleanup.remove(caster.getEntityId());
         if (!trigger.shouldTrigger(event, level, component.settings)) {
             // 被动删除，如果有的话
-            if (cleanup != null) {
-                cleanup.run();
-                cleanup = null;
+            if (c != null) {
+                c.run();
             }
             return;
         }
@@ -113,9 +114,8 @@ public class TriggerHandler implements Listener {
         trigger.postProcess(event, skill);
 
         // 被动删除，如果有的话
-        if (cleanup != null) {
-            cleanup.run();
-            cleanup = null;
+        if (c != null) {
+            c.run();
         }
     }
 

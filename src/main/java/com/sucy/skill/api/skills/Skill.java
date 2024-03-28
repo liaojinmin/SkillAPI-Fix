@@ -46,8 +46,6 @@ import com.sucy.skill.cast.IIndicator;
 import com.sucy.skill.data.Permissions;
 import com.sucy.skill.dynamic.TempEntity;
 import com.sucy.skill.gui.tool.IconHolder;
-import com.sucy.skill.hook.NoCheatHook;
-import com.sucy.skill.hook.PluginChecker;
 import com.sucy.skill.language.NotificationNodes;
 import com.sucy.skill.language.RPGFilter;
 import com.sucy.skill.language.SkillNodes;
@@ -59,7 +57,6 @@ import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
-import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 

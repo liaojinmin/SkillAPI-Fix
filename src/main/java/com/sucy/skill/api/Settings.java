@@ -292,8 +292,12 @@ public class Settings {
 
     public long getManaTick(int level, long defaultValue) {
         if (settings.containsKey("mana-tick")) {
-            return Long.parseLong(String.valueOf(settings.get("mana-tick"))) * (level - 1);
-        } else return defaultValue;
+           // System.out.println("返回 -> " + settings.get("mana-tick"));
+            return Long.parseLong(String.valueOf(settings.get("mana-tick")));
+        } else {
+          //  System.out.println("返回 -> 默认");
+            return defaultValue;
+        }
     }
 
     /**

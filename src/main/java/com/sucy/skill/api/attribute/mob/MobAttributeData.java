@@ -1,5 +1,6 @@
 package com.sucy.skill.api.attribute.mob;
 
+import com.sucy.skill.SkillAPI;
 import com.sucy.skill.api.attribute.AttributeAPI;
 import com.sucy.skill.api.event.AttributeEntityAddEvent;
 import org.bukkit.Bukkit;
@@ -8,6 +9,7 @@ import org.bukkit.entity.LivingEntity;
 
 import java.util.HashMap;
 import java.util.UUID;
+import java.util.concurrent.ConcurrentHashMap;
 
 
 /**
@@ -18,7 +20,11 @@ public class MobAttributeData {
     private UUID uuid;
     private HashMap<String, Double> map = new HashMap<>();
 
+    private final ConcurrentHashMap<String,  Double> timerMap = new ConcurrentHashMap<>();
+
     private final HashMap<String, HashMap<String, Double>> temp = new HashMap<>();
+
+
 
     public MobAttributeData(UUID uuid) {
         this.uuid = uuid;
@@ -31,19 +37,34 @@ public class MobAttributeData {
         }
         return (LivingEntity) entity;
     }
-
-    public void addAttribute(String attribute, double value) {
+    public void addAttribute(String attribute, double value, long timer) {
         LivingEntity livingEntity = getEntity();
         if (livingEntity == null) {
             return;
         }
         AttributeEntityAddEvent event = AttributeAPI.attributeEntityAdd(livingEntity, attribute, value);
-        if (map.containsKey(event.getAttribute())) {
-            double old = map.get(event.getAttribute());
-            map.put(event.getAttribute(), event.getValue() + old);
-            return;
+        if (timer <= 0) {
+            if (map.containsKey(event.getAttribute())) {
+                double old = map.get(event.getAttribute());
+                map.put(event.getAttribute(), event.getValue() + old);
+                return;
+            }
+            map.put(event.getAttribute(), Double.valueOf(event.getValue()));
+        } else {
+            if (timerMap.containsKey(event.getAttribute())) {
+                double old = timerMap.get(event.getAttribute());
+                timerMap.put(event.getAttribute(), event.getValue() + old);
+                return;
+            }
+            timerMap.put(event.getAttribute(), Double.valueOf(event.getValue()));
+            Bukkit.getScheduler().runTaskLater(SkillAPI.singleton(), () -> {
+                timerMap.remove(event.getAttribute());
+            }, timer);
         }
-        map.put(event.getAttribute(), Double.valueOf(event.getValue()));
+    }
+
+    public void addAttribute(String attribute, double value) {
+        addAttribute(attribute, value, -1);
     }
 
     public void tempAddAttribute(String taskID, String string, double value) {
@@ -68,6 +89,7 @@ public class MobAttributeData {
         for (HashMap<String, Double> value : temp.values()) {
             temps += value.getOrDefault(attribute, 0.0);
         }
+        temps += timerMap.getOrDefault(attribute, 0.0);
         return map.getOrDefault(attribute, 0.0) + temps;
     }
 

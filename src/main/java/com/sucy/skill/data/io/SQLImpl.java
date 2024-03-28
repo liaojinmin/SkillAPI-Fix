@@ -144,6 +144,7 @@ public class SQLImpl extends IOManager {
             if (accounts.getOfflinePlayer() == null || !accounts.getOfflinePlayer().isOnline()) {
                 continue;
             }
+            //if (accounts.getPlayer().)
             list.add(new Pair<>(key, accounts.toJson()));
         }
         updateAll(list);

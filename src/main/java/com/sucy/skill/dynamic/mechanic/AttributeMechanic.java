@@ -67,7 +67,7 @@ public class AttributeMechanic extends MechanicComponent {
     @Override
     public boolean execute(LivingEntity caster, int level, List<LivingEntity> targets) {
 
-        System.out.println("execute 属性触发者: "+caster.getName());
+      //  System.out.println("execute 属性触发者: "+caster.getName());
         String key = settings.getString(KEY, "");
         if (targets.size() == 0) {
             return false;
@@ -105,7 +105,7 @@ public class AttributeMechanic extends MechanicComponent {
                     }
                 } else {
                     final MobAttributeData data = MobAttribute.getData(event.getCaster().getUniqueId(), true);
-                    System.out.println("属性触发者: "+event.getCaster().getName());
+                 //   System.out.println("属性触发者: "+event.getCaster().getName());
                     assert data != null;
                     UUID taskID = UUID.randomUUID();
                     if (casterTasks.containsKey(data.getUuid().toString()) && !stackable) {
@@ -187,10 +187,19 @@ public class AttributeMechanic extends MechanicComponent {
 
         @Override
         public void run() {
-            data.addBonusAttributes(attrib, -amount);
-            if (tasks.containsKey(id)) {
-                tasks.get(id).remove(data.getPlayerName());
+            if (data != null) {
+                data.addBonusAttributes(attrib, -amount);
+                if (tasks.containsKey(id)) {
+                    tasks.get(id).remove(data.getPlayerName());
+                }
             }
+            if (mob != null) {
+                mob.tempRemove(taskID.toString());
+                if (tasks.containsKey(id)) {
+                    tasks.get(id).remove(mob.getUuid().toString());
+                }
+            }
+
             running = false;
         }
     }

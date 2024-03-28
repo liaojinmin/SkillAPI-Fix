@@ -66,5 +66,6 @@ dependencies {
 
     // Libraries
     compileOnly(fileTree("lib"))
+    compileOnly(fileTree("libs"))
 }
 

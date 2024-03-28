@@ -58,6 +58,7 @@ import com.sucy.skill.log.LogType;
 import com.sucy.skill.log.Logger;
 import com.sucy.skill.manager.AttributeManager;
 import com.sucy.skill.task.ScoreboardTask;
+import com.sun.tools.javac.comp.Todo;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.OfflinePlayer;
@@ -68,6 +69,7 @@ import org.bukkit.entity.Player;
 
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.atomic.AtomicLong;
 
 import static com.sucy.skill.api.event.PlayerSkillCastFailedEvent.Cause.*;
 
@@ -105,7 +107,7 @@ public class PlayerData {
     private String         menuClass;
     private double         mana;
     private double         maxMana;
-    private long           manaRestoreTick;
+    private AtomicLong     manaRestoreTick = new AtomicLong(0);
     private double         bonusHealth;
     private double         bonusMana;
     private double         lastHealth;
@@ -1402,7 +1404,11 @@ public class PlayerData {
             health = SkillAPI.getSettings().getDefaultHealth();
         }
         if (SkillAPI.getSettings().isModifyHealth()) { player.setMaxHealth(health); }
+
+
         mana = Math.min(mana, maxMana);
+
+       // System.out.println("updateHealthAndMana "+mana);
 
         // Health scaling is available starting with 1.6.2
         if (SkillAPI.getSettings().isOldHealth()) {
@@ -1445,10 +1451,13 @@ public class PlayerData {
      * @param amount amount of bonus mana to give
      */
     public void addMaxMana(double amount) {
+       // System.out.println("addMaxMana "+amount);
         bonusMana += amount;
         maxMana += amount;
         mana += amount;
     }
+
+
 
     /**
      * Retrieves the amount of mana the player currently has.
@@ -1483,7 +1492,11 @@ public class PlayerData {
      * Regenerates mana for the player based on the regen amounts of professed classes
      */
     public void regenMana() {
-        if (this.getManaRestoreTick() != 0) return;
+        if (this.getManaRestoreTick() > 0) {
+           // System.out.println("已停止恢复Mana... tick "+this.getManaRestoreTick());
+            return;
+        }
+
         double amount = 0;
         for (PlayerClass c : classes.values()) {
             if (c.getData().hasManaRegen()) {
@@ -1491,6 +1504,7 @@ public class PlayerData {
             }
         }
         if (amount > 0) {
+           // System.out.println("已恢复Mana... "+amount);
             giveMana(amount, ManaSource.REGEN);
         }
     }
@@ -1501,8 +1515,10 @@ public class PlayerData {
      * @param amount current mana
      */
     public void setMana(double amount) {
+       // System.out.println("setMana "+amount);
         this.mana = amount;
     }
+
 
     /**
      * Gives mana to the player from an unknown source. This will not
@@ -1511,6 +1527,7 @@ public class PlayerData {
      * @param amount amount of mana to give
      */
     public void giveMana(double amount) {
+       // System.out.println("giveMana "+amount);
         giveMana(amount, ManaSource.SPECIAL);
     }
 
@@ -1522,6 +1539,7 @@ public class PlayerData {
      * @param source source of the mana
      */
     public void giveMana(double amount, ManaSource source) {
+      //  System.out.println("giveMana "+amount + " source "+source.name());
         PlayerManaGainEvent event = new PlayerManaGainEvent(this, amount, source);
         Bukkit.getPluginManager().callEvent(event);
 
@@ -1576,16 +1594,31 @@ public class PlayerData {
     }
 
     public void setManaRestoreTick(long tick) {
-        this.manaRestoreTick = System.currentTimeMillis() + tick;
+        if (tick <= 0) {
+         //   System.out.println("取消设置 tick = 0");
+            return;
+        }
+
+        long timer = System.currentTimeMillis() + tick;
+
+        if (timer <= manaRestoreTick.get()) {
+          //  System.out.println("取消设置 timer "+timer);
+        //    System.out.println("取消设置 manaRestoreTick "+manaRestoreTick);
+            return;
+        }
+
+       // System.out.println("成功设置 -> "+timer);
+        this.manaRestoreTick.set(timer);
     }
 
     public long getManaRestoreTick() {
         long timer = System.currentTimeMillis();
-        if (timer >= this.manaRestoreTick) {
-            this.manaRestoreTick = 0;
+        long now = manaRestoreTick.get();
+        if (now > 0 && timer >= now) {
+            manaRestoreTick.set(0);
             return 0;
         }
-        return this.manaRestoreTick - timer;
+        return now - timer;
     }
 
     /**

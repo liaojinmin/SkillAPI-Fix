@@ -50,8 +50,8 @@ public class CmdMigrate implements IFunction {
     }
 
     public PlayerAccounts loadDataOld(String key, File file) {
-        System.out.println("key "+key);
-        System.out.println(" File "+file);
+      //  System.out.println("key "+key);
+      //  System.out.println(" File "+file);
         DataSection files = YAMLParser.parseFile(file);
         return ioManager.load(Bukkit.getOfflinePlayer(UUID.fromString(key)), files);
     }

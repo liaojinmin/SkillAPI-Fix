@@ -90,21 +90,14 @@ public class CmdForceProfess implements IFunction
             {
                 cmd.sendMessage(sender, INVALID_CLASS, ChatColor.RED + "That is not a valid class");
             }
-
             // Can profess
-            else if (data.canProfess(target))
-            {
+            else if (data.canProfess(target)) {
                 data.profess(target);
-                if (player.isOnline())
-                {
+                if (player.isOnline()) {
                     cmd.sendMessage(sender, SUCCESSS, ChatColor.GOLD + "{player}" + ChatColor.DARK_GREEN + " is now a " + ChatColor.GOLD + "{class}", Filter.PLAYER.setReplacement(player.getName()), RPGFilter.CLASS.setReplacement(target.getName()));
                     cmd.sendMessage((Player) player, PROFESSED, ChatColor.DARK_GREEN + "You are now a " + ChatColor.GOLD + "{class}", RPGFilter.CLASS.setReplacement(target.getName()));
                 }
-            }
-
-            // Cannot profess
-            else
-            {
+            } else {
                 cmd.sendMessage(sender, CANNOT_PROFESS, ChatColor.RED + "They cannot profess to this class currently");
             }
         }
