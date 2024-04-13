@@ -421,6 +421,9 @@ public class PlayerData {
     public void addBonusAttributes(String key, int amount) {
         key = SkillAPI.getAttributeManager().normalize(key);
         amount += bonusAttrib.getOrDefault(key, 0);
+        if (amount <= 0) {
+            amount = 0;
+        }
         bonusAttrib.put(key, amount);
         AttributeListener.updatePlayer(this);
     }

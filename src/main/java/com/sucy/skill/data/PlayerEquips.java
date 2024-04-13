@@ -40,6 +40,7 @@ import org.bukkit.Material;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.PlayerInventory;
+import org.jetbrains.annotations.Nullable;
 
 import java.util.Arrays;
 import java.util.HashMap;
@@ -52,23 +53,24 @@ import java.util.Set;
  * Handles keeping track of and applying attribute
  * bonuses and requirements for items.
  */
-public class PlayerEquips
-{
+public class PlayerEquips {
     private static final ItemStack TEMP = new ItemStack(Material.BEDROCK);
 
-    private PlayerData player;
+    private final EquipData empty  = new EquipData();
 
-    private EquipData empty  = new EquipData();
+    private final PlayerData player;
+
     private EquipData weapon = empty;
-    private EquipData[] other;
+    private final EquipData[] other;
+
+    private final HashMap<String, EquipData> expand = new HashMap<>();
 
     private int offhand = -1;
 
     /**
      * @param player player data reference
      */
-    public PlayerEquips(PlayerData player)
-    {
+    public PlayerEquips(PlayerData player) {
         this.player = player;
         other = new EquipData[SkillAPI.getSettings().getSlots().length];
         for (int i = 0; i < other.length; i++) {
@@ -81,13 +83,11 @@ public class PlayerEquips
     /**
      * @return true if the player can hit something, false otherwise
      */
-    public boolean canHit()
-    {
+    public boolean canHit() {
         return weapon.isMet();
     }
 
-    public boolean canBlock()
-    {
+    public boolean canBlock() {
         return offhand >= 0 && other[offhand].isMet();
     }
 
@@ -96,12 +96,36 @@ public class PlayerEquips
      *
      * @param player player to update for
      */
-    public void update(Player player)
-    {
+    public void update(Player player) {
         PlayerInventory inv = player.getInventory();
         weapon = swap(inv, inv.getHeldItemSlot(), weapon, true);
         for (int i = 0; i < other.length; i++)
             other[i] = swap(inv, SkillAPI.getSettings().getSlots()[i], other[i], i == offhand);
+
+        // 直接更新扩展槽位
+        expand.values().forEach(EquipData::apply);
+    }
+
+    @Nullable
+    public EquipData getExpandData(String key) {
+        return expand.get(key);
+    }
+
+    @Nullable
+    public EquipData removeExpandData(String key) {
+        return expand.remove(key);
+    }
+
+    @Nullable
+    public EquipData swap(String key, ItemStack itemStack) {
+        EquipData to = make(itemStack);
+        if (!to.isMet()) {
+            return null;
+        } else {
+            to.apply();
+            expand.put(key, to);
+            return to;
+        }
     }
 
     /**
@@ -113,11 +137,9 @@ public class PlayerEquips
      *
      * @return the used equip data
      */
-    private EquipData swap(PlayerInventory inv, int index, EquipData from, boolean weapon)
-    {
+    private EquipData swap(PlayerInventory inv, int index, EquipData from, boolean weapon) {
         EquipData to = make(inv.getItem(index));
-        if (Objects.equal(from.item, to.item))
-        {
+        if (Objects.equal(from.item, to.item)) {
             return to;
         }
 
@@ -127,9 +149,7 @@ public class PlayerEquips
 
         if (weapon && to.isArmor) {
             return to;
-        }
-        else if (!to.isMet())
-        {
+        } else if (!to.isMet()) {
             if (SkillAPI.getSettings().isDropWeapon() || !weapon) {
                 inv.setItem(index, TEMP);
                 for (ItemStack item : inv.addItem(to.item).values())
@@ -138,9 +158,7 @@ public class PlayerEquips
                 return empty;
             }
             return to;
-        }
-        else
-        {
+        } else {
             to.apply();
             return to;
         }
@@ -153,8 +171,7 @@ public class PlayerEquips
     /**
      * Clears the weapon slot
      */
-    public void clearWeapon()
-    {
+    public void clearWeapon() {
         if (weapon.isMet() && !weapon.isArmor) {
             weapon.revert();
         }
@@ -166,8 +183,7 @@ public class PlayerEquips
      *
      * @param inv inventory data
      */
-    public void updateWeapon(PlayerInventory inv)
-    {
+    public void updateWeapon(PlayerInventory inv) {
         weapon = swap(inv, inv.getHeldItemSlot(), weapon, true);
     }
 
@@ -178,8 +194,7 @@ public class PlayerEquips
      *
      * @return item data
      */
-    private EquipData make(ItemStack item)
-    {
+    private EquipData make(ItemStack item) {
         if (item == null)
             return empty;
         else
@@ -268,7 +283,7 @@ public class PlayerEquips
                         }
                     }
 
-                    // Attribute requirements
+                    // Attribute requirements 属性要求
                     if (attributes && !done) {
 
                         for (String attr : SkillAPI.getAttributeManager().getLookupKeys()) {

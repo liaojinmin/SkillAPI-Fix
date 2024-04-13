@@ -35,8 +35,7 @@ import java.util.List;
 /**
  * Interrupts any channels that may be being performed by the targets
  */
-public class InterruptMechanic extends MechanicComponent
-{
+public class InterruptMechanic extends MechanicComponent {
     @Override
     public String getKey() {
         return "interrupt";
@@ -52,13 +51,10 @@ public class InterruptMechanic extends MechanicComponent
      * @return true if applied to something, false otherwise
      */
     @Override
-    public boolean execute(LivingEntity caster, int level, List<LivingEntity> targets)
-    {
+    public boolean execute(LivingEntity caster, int level, List<LivingEntity> targets) {
         boolean worked = false;
-        for (LivingEntity target : targets)
-        {
-            if (FlagManager.hasFlag(target, StatusFlag.CHANNEL))
-            {
+        for (LivingEntity target : targets) {
+            if (FlagManager.hasFlag(target, StatusFlag.CHANNEL)) {
                 FlagManager.removeFlag(target, StatusFlag.CHANNEL);
                 FlagManager.removeFlag(target, StatusFlag.CHANNELING);
                 worked = true;

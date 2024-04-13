@@ -60,14 +60,11 @@ public class FlagManager
      *
      * @return the flag data for an enemy
      */
-    public static FlagData getFlagData(LivingEntity entity, boolean create)
-    {
-        if (entity == null)
-        {
+    public static FlagData getFlagData(LivingEntity entity, boolean create) {
+        if (entity == null) {
             return null;
         }
-        if (!data.containsKey(entity.getEntityId()) && create)
-        {
+        if (!data.containsKey(entity.getEntityId()) && create) {
             data.put(entity.getEntityId(), new FlagData(entity));
         }
         return data.get(entity.getEntityId());
@@ -80,11 +77,9 @@ public class FlagManager
      * @param flag   the flag to add
      * @param ticks  the duration to add the flag for
      */
-    public static void addFlag(LivingEntity entity, String flag, int ticks)
-    {
+    public static void addFlag(LivingEntity entity, String flag, int ticks) {
         FlagData data = getFlagData(entity, true);
-        if (data != null)
-        {
+        if (data != null) {
             data.addFlag(flag, ticks);
         }
     }
@@ -95,11 +90,9 @@ public class FlagManager
      * @param entity entity to remove the flag from
      * @param flag   flag to remove
      */
-    public static void removeFlag(LivingEntity entity, String flag)
-    {
+    public static void removeFlag(LivingEntity entity, String flag) {
         FlagData data = getFlagData(entity, false);
-        if (data != null)
-        {
+        if (data != null) {
             data.removeFlag(flag);
         }
     }
@@ -112,8 +105,7 @@ public class FlagManager
      *
      * @return true if the flag is active on the entity, false otherwise
      */
-    public static boolean hasFlag(LivingEntity entity, String flag)
-    {
+    public static boolean hasFlag(LivingEntity entity, String flag) {
         return entity != null && data.containsKey(entity.getEntityId()) && getFlagData(entity, false).hasFlag(flag);
     }
 
@@ -125,10 +117,8 @@ public class FlagManager
      *
      * @return time left on the flag in seconds for the entity
      */
-    public static int getTimeLeft(LivingEntity entity, String flag)
-    {
-        if (entity == null)
-        {
+    public static int getTimeLeft(LivingEntity entity, String flag) {
+        if (entity == null) {
             return 0;
         }
         return data.containsKey(entity.getEntityId()) ? getFlagData(entity).getSecondsLeft(flag) : 0;

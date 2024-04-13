@@ -31,8 +31,8 @@ import org.bukkit.scheduler.BukkitTask;
 /**
  * Represents a buff given to an entity
  */
-public class Buff
-{
+public class Buff {
+
     private double  value;
     private boolean percent;
     private String  key;
@@ -46,8 +46,7 @@ public class Buff
      * @param multiplier whether the value is a multiplier or a flat bonus
      */
     @Deprecated
-    public Buff(double value, boolean multiplier)
-    {
+    public Buff(double value, boolean multiplier) {
         this("Default", value, multiplier);
     }
 
@@ -58,8 +57,7 @@ public class Buff
      * @param value      value of the buff
      * @param multiplier whether the value is a multiplier or a flat bonus
      */
-    public Buff(String key, double value, boolean multiplier)
-    {
+    public Buff(String key, double value, boolean multiplier) {
         this.key = key;
         this.value = value;
         this.percent = multiplier;

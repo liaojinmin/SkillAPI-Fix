@@ -57,8 +57,8 @@ import java.util.HashSet;
  * Listener for applying default status flags for the API. You should
  * not use this class as it is already set up by the API.
  */
-public class StatusListener extends SkillAPIListener
-{
+public class StatusListener extends SkillAPIListener {
+
     private static final HashMap<String, Long> messageTimers = new HashMap<String, Long>();
 
     private static final HashSet<String> interrupts = new HashSet<String>()
@@ -217,10 +217,8 @@ public class StatusListener extends SkillAPIListener
      * @param event event details
      */
     @EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
-    public void onLaunch(ProjectileLaunchEvent event)
-    {
-        if (event.getEntity().getShooter() instanceof LivingEntity)
-        {
+    public void onLaunch(ProjectileLaunchEvent event) {
+        if (event.getEntity().getShooter() instanceof LivingEntity) {
             LivingEntity shooter = (LivingEntity) event.getEntity().getShooter();
             check(event, shooter, shooter, StatusFlag.STUN, StatusFlag.DISARM, StatusFlag.CHANNELING);
         }
@@ -232,8 +230,8 @@ public class StatusListener extends SkillAPIListener
      * @param event event details
      */
     @EventHandler(ignoreCancelled = true)
-    public void onCast(PlayerCastSkillEvent event)
-    {
+    public void onCast(PlayerCastSkillEvent event) {
+      //  System.out.println("PlayerCastSkillEvent -> 检测沉默、击晕等状态效果");
         check(event, event.getPlayer(), event.getPlayer(), StatusFlag.SILENCE, StatusFlag.STUN, StatusFlag.CHANNEL);
     }
 
@@ -244,11 +242,9 @@ public class StatusListener extends SkillAPIListener
      *
      * @return true if can send a message, false otherwise
      */
-    private boolean checkTime(Player player)
-    {
+    private boolean checkTime(Player player) {
         if (!messageTimers.containsKey(player.getName())
-            || System.currentTimeMillis() - messageTimers.get(player.getName()) > 1000)
-        {
+            || System.currentTimeMillis() - messageTimers.get(player.getName()) > 1000) {
             messageTimers.put(player.getName(), System.currentTimeMillis());
             return true;
         }
@@ -265,10 +261,10 @@ public class StatusListener extends SkillAPIListener
      *
      * @return the canceled state of the event
      */
-    private boolean check(Cancellable event, LivingEntity entity, LivingEntity receiver, String... flags)
-    {
+    private boolean check(Cancellable event, LivingEntity entity, LivingEntity receiver, String... flags) {
         for (String flag : flags) {
             if (FlagManager.hasFlag(entity, flag)) {
+              //  System.out.println("生物: "+entity.getName() + " 拥有: "+flag +" 效果");
                 if (receiver instanceof Player) {
                     Player player = (Player) receiver;
                     if (checkTime(player)) {
@@ -280,6 +276,7 @@ public class StatusListener extends SkillAPIListener
                         );
                     }
                 }
+            //    System.out.println("事件被取消...");
                 event.setCancelled(true);
                 return true;
             }

@@ -29,10 +29,12 @@ package com.sucy.skill.dynamic.mechanic;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.LivingEntity;
 
+import java.util.HashSet;
 import java.util.List;
 
 /**
  * Executes child components after a delay
+ * 可以使用 {@link com.sucy.skill.dynamic.mechanic.ReturnMechanic} 设置中断
  */
 public class DelayMechanic extends MechanicComponent {
     private static final String SECONDS = "delay";
@@ -56,12 +58,30 @@ public class DelayMechanic extends MechanicComponent {
         if (targets.size() == 0) {
             return false;
         }
-        double seconds = parseValues(caster, SECONDS, level, 2.0);
+        final double seconds = parseValues(caster, SECONDS, level, 2.0);
+        final String mark = settings.getString(ReturnMechanic.MARK, "");
+        if (!mark.isEmpty()) {
+            // 添加标记
+            ReturnMechanic.addMark(caster, mark);
+        }
         Bukkit.getScheduler().runTaskLater(
                 Bukkit.getPluginManager().getPlugin("SkillAPI"),
-                () -> executeChildren(caster, level, targets),
+                () -> {
+                    if (mark.isEmpty()) {
+                        executeChildren(caster, level, targets);
+                    } else {
+                        // 如果此处还存在标记
+                        HashSet<String> list2 = ReturnMechanic.markMap.get(caster.getEntityId());
+                        if (list2 == null) {
+                            executeChildren(caster, level, targets);
+                        } else if (list2.remove(mark)) {
+                            executeChildren(caster, level, targets);
+                        }
+                    }
+                },
                 (long) (seconds * 20)
         );
+
         return true;
     }
 }

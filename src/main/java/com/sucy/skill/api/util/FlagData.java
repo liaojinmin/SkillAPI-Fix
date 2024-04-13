@@ -1,29 +1,3 @@
-/**
- * SkillAPI
- * com.sucy.util.api.skill.FlagData
- *
- * The MIT License (MIT)
- *
- * Copyright (c) 2014 Steven Sucy
- *
- * Permission is hereby granted, free of charge, to any person obtaining a copy
- * of this software and associated documentation files (the "Software") to deal
- * in the Software without restriction, including without limitation the rights
- * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
- * copies of the Software, and to permit persons to whom the Software is
- * furnished to do so, subject to the following conditions:
- *
- * The above copyright notice and this permission notice shall be included in
- * all copies or substantial portions of the Software.
- *
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
- * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
- * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
- * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
- * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
- * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
- * THE SOFTWARE.
- */
 package com.sucy.skill.api.util;
 
 import com.sucy.skill.api.event.FlagApplyEvent;
@@ -40,8 +14,8 @@ import java.util.HashMap;
 /**
  * Represents flags set on an entity
  */
-public class FlagData
-{
+public class FlagData {
+
     private final HashMap<String, Long>       flags = new HashMap<String, Long>();
     private final HashMap<String, BukkitTask> tasks = new HashMap<String, BukkitTask>();
     private LivingEntity entity;
@@ -52,8 +26,7 @@ public class FlagData
      *
      * @param entity entity to initialize for
      */
-    public FlagData(LivingEntity entity)
-    {
+    public FlagData(LivingEntity entity) {
         this.plugin = Bukkit.getPluginManager().getPlugin("SkillAPI");
         this.entity = entity;
     }
@@ -64,15 +37,14 @@ public class FlagData
      * @param flag  flag to set
      * @param ticks number of ticks to set the flag for
      */
-    public void addFlag(String flag, int ticks)
-    {
+    public void addFlag(String flag, int ticks) {
+
         FlagApplyEvent event = new FlagApplyEvent(entity, flag, ticks);
         Bukkit.getPluginManager().callEvent(event);
         if (event.isCancelled()) return;
 
         // Permanent flag
-        if (ticks < 0)
-        {
+        if (ticks < 0) {
             BukkitTask task = tasks.remove(flag);
             if (task != null)
                 task.cancel();
@@ -80,8 +52,7 @@ public class FlagData
             return;
         }
 
-        if (flags.containsKey(flag))
-        {
+        if (flags.containsKey(flag)) {
             long time = flags.get(flag);
             if (time > ticks * 50 + System.currentTimeMillis())
                 return;
@@ -101,8 +72,7 @@ public class FlagData
      *
      * @param flag flag to remove from the entity
      */
-    public void removeFlag(String flag)
-    {
+    public void removeFlag(String flag) {
         removeFlag(flag, FlagExpireEvent.ExpireReason.REMOVED);
     }
 
@@ -112,17 +82,14 @@ public class FlagData
      * @param flag   flag to remove
      * @param reason reason for removal
      */
-    private void removeFlag(String flag, FlagExpireEvent.ExpireReason reason)
-    {
-        if (flags.containsKey(flag))
-        {
+    private void removeFlag(String flag, FlagExpireEvent.ExpireReason reason) {
+        if (flags.containsKey(flag)) {
             flags.remove(flag);
             BukkitTask task = tasks.remove(flag);
             if (task != null)
                 task.cancel();
             Bukkit.getPluginManager().callEvent(new FlagExpireEvent(entity, flag, reason));
-            if (flags.size() == 0)
-            {
+            if (flags.size() == 0) {
                 FlagManager.clearFlags(entity);
             }
         }

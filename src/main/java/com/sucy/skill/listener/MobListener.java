@@ -34,5 +34,7 @@ public class MobListener extends SkillAPIListener {
                 }
             }
         });
+        // 处理韧性值
+
     }
 }

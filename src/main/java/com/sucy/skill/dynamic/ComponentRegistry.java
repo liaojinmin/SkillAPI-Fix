@@ -263,6 +263,7 @@ public class ComponentRegistry {
         register(new DamageLoreMechanic());
         register(new DefenseBuffMechanic());
         register(new DelayMechanic());
+        register(new ReturnMechanic());
         register(new DisguiseMechanic());
         register(new DurabilityMechanic());
         register(new ExplosionMechanic());

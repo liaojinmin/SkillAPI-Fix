@@ -53,16 +53,13 @@ public class FlagClearMechanic extends MechanicComponent
      * @return true if applied to something, false otherwise
      */
     @Override
-    public boolean execute(LivingEntity caster, int level, List<LivingEntity> targets)
-    {
-        if (targets.size() == 0 || !settings.has(KEY))
-        {
+    public boolean execute(LivingEntity caster, int level, List<LivingEntity> targets) {
+        if (targets.size() == 0 || !settings.has(KEY)) {
             return false;
         }
 
         String key = settings.getString(KEY);
-        for (LivingEntity target : targets)
-        {
+        for (LivingEntity target : targets) {
             FlagManager.removeFlag(target, key);
         }
         return targets.size() > 0;

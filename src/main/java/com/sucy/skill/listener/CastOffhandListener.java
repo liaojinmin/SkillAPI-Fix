@@ -34,8 +34,7 @@ public class CastOffhandListener extends SkillAPIListener {
     private static int slot = SkillAPI.getSettings().getCastSlot();
 
     @EventHandler
-    public void handleOffhandDupe(PlayerSwapHandItemsEvent event)
-    {
+    public void handleOffhandDupe(PlayerSwapHandItemsEvent event) {
         if (event.getOffHandItem() != null && event.getPlayer().getInventory().getHeldItemSlot() == slot)
             event.setCancelled(true);
     }

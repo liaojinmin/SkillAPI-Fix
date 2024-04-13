@@ -38,6 +38,8 @@ public class StatusMechanic extends MechanicComponent {
     private static final String KEY      = "status";
     private static final String DURATION = "duration";
 
+    private static final String DELETE = "delete";
+
     @Override
     public String getKey() {
         return "status";
@@ -59,10 +61,17 @@ public class StatusMechanic extends MechanicComponent {
         }
 
         String key = settings.getString(KEY, "stun").toLowerCase();
+        boolean delete = settings.getBool(DELETE, false);
+        //   System.out.println("是否删除: "+delete);
         double seconds = parseValues(caster, DURATION, level, 3.0);
         int ticks = (int) (seconds * 20);
         for (LivingEntity target : targets) {
-            FlagManager.addFlag(target, key, ticks);
+            if (delete) {
+              //  System.out.println("移除目标: "+ target.getName()+ " 属性: " + key);
+                FlagManager.removeFlag(target, key);
+            } else {
+                FlagManager.addFlag(target, key, ticks);
+            }
         }
         return targets.size() > 0;
     }

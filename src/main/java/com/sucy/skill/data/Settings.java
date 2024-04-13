@@ -46,7 +46,6 @@ import com.sucy.skill.data.formula.value.CustomValue;
 import com.sucy.skill.dynamic.DynamicSkill;
 import com.sucy.skill.gui.tool.GUITool;
 import com.sucy.skill.log.Logger;
-import me.geek.team.GeekTeamPlus;
 import me.geek.team.common.TeamHandler;
 import me.geek.team.common.TeamManager;
 import org.bukkit.Material;
@@ -72,7 +71,7 @@ import java.util.Set;
  */
 public class Settings {
 
-    private HashMap<String, GroupSettings> groups = new HashMap<String, GroupSettings>();
+    private HashMap<String, GroupSettings> groups = new HashMap<>();
 
     private SkillAPI    plugin;
     private DataSection config;

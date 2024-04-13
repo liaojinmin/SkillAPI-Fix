@@ -81,8 +81,7 @@ public class AttributeListener extends SkillAPIListener
      *
      * @param player player to clear bonuses for
      */
-    public static void clearBonuses(Player player)
-    {
+    public static void clearBonuses(Player player) {
         clearLocalBonuses(player);
         BONUSES.remove(player.getName() + ":" + AttributeManager.HEALTH);
         BONUSES.remove(player.getName() + ":" + AttributeManager.MANA);
@@ -128,11 +127,9 @@ public class AttributeListener extends SkillAPIListener
      * @param event event details
      */
     @EventHandler(priority = EventPriority.HIGH)
-    public void onRespawn(PlayerRespawnEvent event)
-    {
+    public void onRespawn(PlayerRespawnEvent event) {
         if (event.getPlayer().hasMetadata("NPC"))
             return;
-
         updatePlayer(SkillAPI.getPlayerData(event.getPlayer()));
     }
 
@@ -435,8 +432,7 @@ public class AttributeListener extends SkillAPIListener
      *
      * @param player player to refresh
      */
-    public static void refreshSpeed(Player player)
-    {
+    public static void refreshSpeed(Player player) {
         BONUSES.remove(player.getName() + ":" + AttributeManager.MOVE_SPEED);
         double speed = updateStat(SkillAPI.getPlayerData(player), AttributeManager.MOVE_SPEED, 0.2, -2, 1);
         player.setWalkSpeed((float) (0.2 + speed));

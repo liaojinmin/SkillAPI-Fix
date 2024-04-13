@@ -11,6 +11,7 @@ import org.bukkit.entity.Player;
  * com.sucy.skill.data.DefaultCombatProtection
  */
 public class DefaultCombatProtection implements CombatProtection {
+
     @Override
     public boolean canAttack(final Player attacker, final Player defender) {
         return canAttack((LivingEntity) attacker, defender);

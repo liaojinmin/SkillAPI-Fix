@@ -70,7 +70,11 @@ public class MobAttributeData {
     public void tempAddAttribute(String taskID, String string, double value) {
         HashMap<String, Double> map = temp.computeIfAbsent(taskID, k -> new HashMap<>());
         double old = map.getOrDefault(string, 0.0);
-        map.put(string, old + value);
+        value += old;
+        if (value <= 0) {
+            value = 0.0;
+        }
+        map.put(string, value);
         temp.put(taskID, map);
     }
 

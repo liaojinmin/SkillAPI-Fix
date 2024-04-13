@@ -1,6 +1,6 @@
 /**
  * SkillAPI
- * com.sucy.mechanic.dynamic.skill.FlagToggleMechanic
+ * com.sucy.mechanic.dynamic.skill.PurgeMechanic
  *
  * The MIT License (MIT)
  *
@@ -26,21 +26,30 @@
  */
 package com.sucy.skill.dynamic.mechanic;
 
-import com.sucy.skill.api.util.FlagManager;
 import org.bukkit.entity.LivingEntity;
 
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 
 /**
- * Applies a flag to each target
+ * 用于中断 {@link com.sucy.skill.dynamic.mechanic.DelayMechanic} 技能
  */
-public class FlagToggleMechanic extends MechanicComponent
-{
-    private static final String KEY = "key";
+public class ReturnMechanic extends MechanicComponent {
+
+    public static final HashMap<Integer, HashSet<String>> markMap = new HashMap<>();
+
+    public static final String MARK = "mark";
+
+    public static void addMark(LivingEntity entity, String mark) {
+        HashSet<String> list = ReturnMechanic.markMap.computeIfAbsent(entity.getEntityId(), (key) -> new HashSet<>());
+        list.add(mark);
+    }
 
     @Override
     public String getKey() {
-        return "flag toggle";
+        return "return";
     }
 
     /**
@@ -53,22 +62,17 @@ public class FlagToggleMechanic extends MechanicComponent
      * @return true if applied to something, false otherwise
      */
     @Override
-    public boolean execute(LivingEntity caster, int level, List<LivingEntity> targets)
-    {
-        if (targets.size() == 0 || !settings.has(KEY))
-        {
-            return false;
-        }
-
-        String key = settings.getString(KEY);
+    public boolean execute(LivingEntity caster, int level, List<LivingEntity> targets) {
+        final String[] mark = settings.getString(MARK, "").split(";");
+        if (mark.length == 0) return false;
         for (LivingEntity target : targets) {
-            if (FlagManager.hasFlag(target, key)) {
-                FlagManager.removeFlag(target, key);
-            }
-            else {
-                FlagManager.addFlag(target, key, -1);
+            HashSet<String> list = ReturnMechanic.markMap.get(target.getEntityId());
+            if (list != null) {
+                for (String a : mark) {
+                    list.remove(a);
+                }
             }
         }
-        return targets.size() > 0;
+        return true;
     }
 }

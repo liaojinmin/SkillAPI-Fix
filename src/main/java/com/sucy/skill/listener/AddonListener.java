@@ -25,6 +25,7 @@ import java.util.UUID;
  * See https://www.spigotmc.org/resources/addonforskillapi.55857/ for extra features
  */
 public class AddonListener extends SkillAPIListener {
+
     private static final Set<UUID> IGNORE_CASTING = new HashSet<>();
 
     /**

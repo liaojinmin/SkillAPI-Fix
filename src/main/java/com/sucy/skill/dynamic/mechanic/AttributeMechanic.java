@@ -81,10 +81,12 @@ public class AttributeMechanic extends MechanicComponent {
         for (LivingEntity target : targets) {
             TempAttributeAddEvent event = AttributeAPI.tempAttribute(target, key, amount, ticks);
             Bukkit.getPluginManager().callEvent(event);
+
             if (!event.isCancelled()) {
                 if (SkillAPI.getAttributeManager().getAttribute(key) == null) {
                     return false;
                 }
+
                 if (event.getCaster() instanceof Player) {
                     final PlayerData data = SkillAPI.getPlayerData((Player) event.getCaster());
 
@@ -195,11 +197,11 @@ public class AttributeMechanic extends MechanicComponent {
             }
             if (mob != null) {
                 mob.tempRemove(taskID.toString());
+              //  mob.tempAddAttribute(taskID.toString(), attrib, -amount);
                 if (tasks.containsKey(id)) {
                     tasks.get(id).remove(mob.getUuid().toString());
                 }
             }
-
             running = false;
         }
     }
