@@ -28,6 +28,7 @@ package com.sucy.skill.dynamic.condition;
 
 import com.sucy.skill.dynamic.ItemChecker;
 import org.bukkit.entity.LivingEntity;
+import org.bukkit.entity.Player;
 import org.bukkit.inventory.EntityEquipment;
 
 /**

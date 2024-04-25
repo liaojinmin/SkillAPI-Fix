@@ -29,6 +29,7 @@ package com.sucy.skill.task;
 import com.rit.sucy.version.VersionManager;
 import com.sucy.skill.SkillAPI;
 import com.sucy.skill.api.player.PlayerData;
+import com.sucy.skill.dynamic.condition.ShieldCondition;
 import com.sucy.skill.log.LogType;
 import com.sucy.skill.log.Logger;
 import com.sucy.skill.thread.RepeatThreadTask;
@@ -64,6 +65,7 @@ public class ManaTask extends RepeatThreadTask
         for (Player player : players) {
             PlayerData data = SkillAPI.getPlayerData(player);
             data.regenMana();
+
         }
 
     }

@@ -50,11 +50,7 @@ import me.geek.team.common.TeamHandler;
 import me.geek.team.common.TeamManager;
 import org.bukkit.Material;
 import org.bukkit.World;
-import org.bukkit.entity.Animals;
-import org.bukkit.entity.LivingEntity;
-import org.bukkit.entity.Monster;
-import org.bukkit.entity.Player;
-import org.bukkit.entity.Tameable;
+import org.bukkit.entity.*;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.material.MaterialData;
@@ -75,6 +71,10 @@ public class Settings {
 
     private SkillAPI    plugin;
     private DataSection config;
+
+    private boolean OLD_DURABILITY;
+
+    private boolean BOUNDING_BOX;
 
     /**
      * <p>Initializes a new settings manager.</p>
@@ -99,6 +99,19 @@ public class Settings {
      * and trim any values that aren't supposed to be there.</p>
      */
     public void reload() {
+        try {
+            Class.forName("org.bukkit.inventory.meta.Damageable");
+            OLD_DURABILITY = false;
+        } catch (ClassNotFoundException e) {
+            OLD_DURABILITY = true;
+        }
+        try {
+            Entity.class.getMethod("getBoundingBox");
+            BOUNDING_BOX = true;
+        } catch (NoSuchMethodException e) {
+            BOUNDING_BOX = false;
+        }
+
         loadExperienceSettings();
         loadAccountSettings();
         loadClassSettings();
@@ -115,6 +128,14 @@ public class Settings {
         loadSaveSettings();
         loadTargetingSettings();
         loadWorldGuardSettings();
+    }
+
+    public boolean useOldDurability() {
+        return OLD_DURABILITY;
+    }
+
+    public boolean useBoundingBoxes() {
+        return BOUNDING_BOX;
     }
 
     ///////////////////////////////////////////////////////
@@ -727,12 +748,16 @@ public class Settings {
     private static final String SKILL_BLOCKS    = SKILL_BASE + "block-filter";
     private static final String SKILL_KNOCKBACK = SKILL_BASE + "knockback-no-damage";
 
+    private static final String SKILL_MODEL_DATA = SKILL_BASE + "use-custommodeldata";
+
     private ArrayList<Material> filteredBlocks;
 
     private boolean allowDowngrade;
     private boolean showSkillMessages;
     private boolean knockback;
     private int     messageRadius;
+
+    private boolean skillModelData;
 
     /**
      * Checks whether or not downgrades are allowed
@@ -769,6 +794,15 @@ public class Settings {
     }
 
     /**
+     * Return whether skill mechanics should use 'data' values as CustomModelData
+     *
+     * @return skill mechanics use CustomModelData
+     */
+    public boolean useSkillModelData() {
+        return skillModelData;
+    }
+
+    /**
      * Retrieves the list of filtered blocks
      *
      * @return list of blocks
@@ -782,6 +816,15 @@ public class Settings {
         showSkillMessages = config.getBoolean(SKILL_MESSAGE);
         messageRadius = config.getInt(SKILL_RADIUS);
         knockback = config.getBoolean(SKILL_KNOCKBACK);
+        skillModelData = config.getBoolean(SKILL_MODEL_DATA);
+        if (skillModelData) {
+            try {
+                ItemMeta.class.getMethod("hasCustomModelData");
+            } catch (NoSuchMethodException e) {
+                skillModelData = false;
+                Logger.log("CustomModelData not supported below 1.14+. Using item durability/data instead.");
+            }
+        }
 
         filteredBlocks = new ArrayList<Material>();
         List<String> list = config.getList(SKILL_BLOCKS);

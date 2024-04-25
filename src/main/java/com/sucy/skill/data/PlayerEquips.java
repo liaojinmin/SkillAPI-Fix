@@ -38,6 +38,7 @@ import com.sucy.skill.utils.AttributeParseUtils;
 import org.bukkit.ChatColor;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
+import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.PlayerInventory;
 import org.jetbrains.annotations.Nullable;
@@ -142,7 +143,6 @@ public class PlayerEquips {
         if (Objects.equal(from.item, to.item)) {
             return to;
         }
-
         if (from.isMet() && (!weapon || !from.isArmor)) {
             from.revert();
         }
@@ -318,9 +318,12 @@ public class PlayerEquips {
          * Applies bonuse attributes for the item
          */
         public void apply() {
-            if (attribs != null)
-                for (Map.Entry<String, Integer> entry : attribs.entrySet())
+            if (attribs != null) {
+                for (Map.Entry<String, Integer> entry : attribs.entrySet()) {
+                  //  System.out.println("为玩家 "+player.getPlayer().getName() + " 条件属性: "+entry.getKey() + " 值: "+entry.getValue());
                     player.addBonusAttributes(entry.getKey(), entry.getValue());
+                }
+            }
         }
 
         /**
@@ -350,13 +353,16 @@ public class PlayerEquips {
             String className = main == null ? "null" : main.getData().getName().toLowerCase();
             if ((levelReq > 0 && (main == null || main.getLevel() < levelReq))
                 || (classExc != null && main != null && classExc.contains(className))
-                || (classReq != null && (main == null || !classReq.contains(className))))
+                || (classReq != null && (main == null || !classReq.contains(className)))) {
                 return false;
+            }
 
             if (classExc != null)
-                for (PlayerClass playerClass : player.getClasses())
-                    if (matches(classExc, playerClass))
+                for (PlayerClass playerClass : player.getClasses()) {
+                    if (matches(classExc, playerClass)) {
                         return false;
+                    }
+                }
 
             if (classReq != null) {
                 boolean metClassReq = false;

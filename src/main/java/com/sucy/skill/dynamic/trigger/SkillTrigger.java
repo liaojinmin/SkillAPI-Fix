@@ -4,6 +4,7 @@ import com.sucy.skill.api.Settings;
 import com.sucy.skill.api.event.SkillDamageEvent;
 import com.sucy.skill.dynamic.DynamicSkill;
 
+import java.util.Arrays;
 import java.util.List;
 
 /**
@@ -24,6 +25,8 @@ public abstract class SkillTrigger implements Trigger<SkillDamageEvent> {
         final double min = settings.getDouble("dmg-min");
         final double max = settings.getDouble("dmg-max");
         final List<String> types = settings.getStringList("category");
+
+        //System.out.println("min "+min+ " max "+ max + " 取得的触发类型 "+ Arrays.toString(types.toArray(new String[0])));
         final boolean empty = types.isEmpty() || types.get(0).isEmpty();
         return event.getDamage() >= min && event.getDamage() <= max &&
                 (empty || types.contains(event.getClassification()));

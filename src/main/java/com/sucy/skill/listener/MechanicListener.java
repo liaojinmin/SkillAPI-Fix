@@ -74,6 +74,8 @@ public class MechanicListener extends SkillAPIListener
     public static final String SPEED_KEY         = "sapiSpeedKey";
     public static final String DISGUISE_KEY      = "sapiDisguiseKey";
 
+    public static final String ARMOR_STAND = "asMechanic";
+
     private static final HashMap<UUID, Integer> flying = new HashMap<>();
     private static final DecimalFormat df = new DecimalFormat("#0.00");
 

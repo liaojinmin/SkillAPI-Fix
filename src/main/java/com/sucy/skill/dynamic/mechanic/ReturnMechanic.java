@@ -47,6 +47,13 @@ public class ReturnMechanic extends MechanicComponent {
         list.add(mark);
     }
 
+    public static void delMark(LivingEntity entity, String mark) {
+        HashSet<String> list = ReturnMechanic.markMap.get(entity.getEntityId());
+        if (list != null) {
+            list.remove(mark);
+        }
+    }
+
     @Override
     public String getKey() {
         return "return";

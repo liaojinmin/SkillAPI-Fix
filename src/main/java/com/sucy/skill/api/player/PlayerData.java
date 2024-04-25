@@ -45,6 +45,7 @@ import com.sucy.skill.cast.PlayerCastBars;
 import com.sucy.skill.data.GroupSettings;
 import com.sucy.skill.data.PlayerEquips;
 import com.sucy.skill.dynamic.EffectComponent;
+import com.sucy.skill.dynamic.condition.ShieldCondition;
 import com.sucy.skill.gui.handlers.AttributeHandler;
 import com.sucy.skill.gui.handlers.DetailsHandler;
 import com.sucy.skill.gui.handlers.ProfessHandler;
@@ -1499,17 +1500,18 @@ public class PlayerData {
            // System.out.println("已停止恢复Mana... tick "+this.getManaRestoreTick());
             return;
         }
-
-        double amount = 0;
-        for (PlayerClass c : classes.values()) {
-            if (c.getData().hasManaRegen()) {
-                amount += c.getData().getManaRegen();
+      //  if (!ShieldCondition.checkBlocking(player.getPlayer())) {
+            double amount = 0;
+            for (PlayerClass c : classes.values()) {
+                if (c.getData().hasManaRegen()) {
+                    amount += c.getData().getManaRegen();
+                }
             }
-        }
-        if (amount > 0) {
-           // System.out.println("已恢复Mana... "+amount);
-            giveMana(amount, ManaSource.REGEN);
-        }
+            if (amount > 0) {
+                // System.out.println("已恢复Mana... "+amount);
+                giveMana(amount, ManaSource.REGEN);
+            }
+      //  }
     }
 
     /**

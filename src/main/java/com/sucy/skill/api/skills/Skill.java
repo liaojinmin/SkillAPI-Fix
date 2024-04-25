@@ -753,6 +753,7 @@ public abstract class Skill implements IconHolder
     public void damage(LivingEntity target, double damage, LivingEntity source, String classification) {
         damage(target, damage, source, classification,true);
     }
+
     public void damage(LivingEntity target, double damage, LivingEntity source, String classification, boolean knockback) {
         if (target instanceof TempEntity) {
             return;
