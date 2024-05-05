@@ -30,14 +30,19 @@ import com.google.common.collect.ImmutableSet;
 import com.rit.sucy.reflect.Particle;
 import com.rit.sucy.version.VersionManager;
 import com.sucy.skill.api.Settings;
+import com.sucy.skill.api.armorstand.ArmorStandData;
+import com.sucy.skill.api.armorstand.ArmorStandInstance;
+import com.sucy.skill.api.armorstand.ArmorStandManager;
 import com.sucy.skill.api.enums.Direction;
 import com.sucy.skill.api.particle.SpigotParticles;
+import com.sucy.skill.dynamic.data.MetaSkills;
 import com.sucy.skill.log.Logger;
 import org.bukkit.Effect;
 import org.bukkit.EntityEffect;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.entity.EntityType;
+import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Wolf;
 import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
@@ -125,6 +130,8 @@ public class ParticleHelper {
      */
     public static final String SPEED_KEY = "speed";
 
+    public static final String ARMOR_STAND = "armor_stand";
+
     private static final Random random = new Random();
 
     /**
@@ -140,13 +147,8 @@ public class ParticleHelper {
         wolf.remove();
     }
 
-    /**
-     * Plays particles about the given location using the given settings
-     *
-     * @param loc      location to center the effect around
-     * @param settings data to play the particles with
-     */
-    public static void play(Location loc, Settings settings) {
+    public static void play(Location loc, Settings settings, LivingEntity entity) {
+
         String particle = settings.getString(PARTICLE_KEY, "invalid");
         if (settings.has(ARRANGEMENT_KEY)) {
             int level = settings.getInt(LEVEL, 1);
@@ -177,6 +179,17 @@ public class ParticleHelper {
     }
 
     /**
+     * Plays particles about the given location using the given settings
+     *
+     * @param loc      location to center the effect around
+     * @param settings data to play the particles with
+     */
+    public static void play(Location loc, Settings settings) {
+     //   System.out.println("loc "+loc);
+        play(loc, settings, null);
+    }
+
+    /**
      * Plays a particle at the given location based on the string
      *
      * @param loc      location to play the effect
@@ -192,11 +205,12 @@ public class ParticleHelper {
         final int amount = settings.getInt(AMOUNT_KEY, 1);
         final float speed = (float) settings.getDouble(SPEED_KEY, 1.0);
         final Material mat = Material.valueOf(settings.getString(MATERIAL_KEY, "DIRT").toUpperCase().replace(" ", "_"));
-
+        final int type = settings.getInt(TYPE_KEY, 0);
+        final int data = settings.getInt(DATA_KEY, 0);
         try {
             // Normal bukkit effects
             if (BUKKIT_EFFECTS.containsKey(particle)) {
-                loc.getWorld().playEffect(loc, BUKKIT_EFFECTS.get(particle), settings.getInt(DATA_KEY, 0));
+                loc.getWorld().playEffect(loc, BUKKIT_EFFECTS.get(particle), data);
             }
 
             // Entity effects
@@ -222,12 +236,12 @@ public class ParticleHelper {
 
             // Block break particle
             else if (particle.equals("block crack")) {
-                Particle.playBlockCrack(mat, (short) settings.getInt(TYPE_KEY, 0), loc, rad, speed);
+                Particle.playBlockCrack(mat, (short) type, loc, rad, speed);
             }
 
             // Icon break particle
             else if (particle.equals("icon crack")) {
-                Particle.playIconCrack(mat, (short) settings.getInt(TYPE_KEY, 0), loc, rad, speed);
+                Particle.playIconCrack(mat, (short) type, loc, rad, speed);
             }
 
             // 1.9+ particles

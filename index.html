@@ -1,18 +1,16 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="zh_CN">
 
 <head>
-
 	<meta charset="UTF-8"/>
-	<title>SkillAPI - Dynamic Editor</title>
-	
+	<title>SkillAPI-编辑器-NeonStudio.cn</title>
 	<!-- other scripts are loaded in com.js -->
 	<script src="editor/js/loader.js"></script>
 	<script src="editor/js/main.js"></script>
-	
 	<link rel="stylesheet" href="editor/builderStyle.css" />
 	<link rel="stylesheet" href="editor/style.css" />
     <link rel="stylesheet" href="editor/tooltips.css" />
+	<link rel="icon" href="editor/img/favicon.ico" type="image/x-icon">
 	
 </head>
 
@@ -20,31 +18,29 @@
 
 	<!-- Site header -->
 	<header>
-		<h1>Skill API</h1>
-		<h2>Dynamic Editor</h2>
+		<h1>SkillAPI-Neon-Fix</h1>
 	</header>
 	
 	<!-- IO Buttons -->
 	<div id="io">
-		<p class="ioText">Drop file anywhere to load</p>
-		<button id="saveButton" class="ioButton">Save</button>
+		<button id="saveButton" class="ioButton">下载所有</button>
+	</div>
+
+	<div style="float: right; width: 200px">
+		<button class="ioButton" onclick="window.location.href='http://docs.neonstudio.cn/'">霓虹插件坊</button>
 	</div>
 	
 	<!-- Display when the window is too small -->
 	<div id="small">
-		<p>Please enlarge your browser window or zoom out</p>
+		<p>请放大浏览器窗口或缩小</p>
 	</div>
 	
 	<div id="main">
 		
 		<!-- Skill/Class Tabs -->
 		<div id="tabSpacer"></div>
-		<div id="skillTab" class="tab tabLeft tabActive">
-			Skills
-		</div>
-		<div  id="classTab" class="tab tabRight">
-			Classes
-		</div>
+		<div id="skillTab" class="tab tabLeft tabActive">技能</div>
+		<div id="classTab" class="tab tabRight">职业</div>
 		
 		<!-- Skill Content -->
 		<div id="skills">
@@ -52,15 +48,15 @@
 			<!-- Skill list -->
 			<select id="skillList" size="30">
 				<option selected="selected">Skill 1</option>
-				<option>+ New Skill</option>
+				<option>+ 创建技能</option>
 			</select>
 			
 			<!-- Effect builder -->
 			<div id="builder">
-				<h6 id="skillDetails">Details</h6>
-				<h6 id="addTrigger">Triggers</h6>
-				<h6 id="saveSkill" class>Save</h6>
-				<h6 id="deleteSkill" class="cancelButton">Delete</h6>
+				<h6 id="skillDetails">基本信息</h6>
+				<h6 id="addTrigger">触发器</h6>
+				<h6 id="saveSkill" class>下载</h6>
+				<h6 id="deleteSkill" class="cancelButton">删除</h6>
 				<div id="builderContent"></div>
 			</div>
 			
@@ -70,27 +66,27 @@
 			
 			<!-- Trigger selection -->
 			<div id="triggerChooser">
-				<h4>Triggers</h4>
+				<h4>触发器</h4>
 				
 				<div id="triggerOptions"></div>
 				
-				<h5 class="cancelButton">Cancel</h5>
+				<h5 class="cancelButton">取消</h5>
 			</div>
 			
-			<!-- Component selection -->
+			<!-- 组件选择 -->
 			<div id="componentChooser">
 			
-				<h4>Targets</h4>
+				<h4>目标选择器</h4>
 				<div id="targetOptions"></div>
 				
-				<h4>Conditions</h4>
+				<h4>触发条件</h4>
 				<div id="conditionOptions"></div>
 				
-				<h4>Mechanics</h4>
+				<h4>技能组件</h4>
 				<div id="mechanicOptions"></div>
 				
 				<hr/>
-				<h5 class="cancelButton">Cancel</h5>
+				<h5 class="cancelButton">取消</h5>
 				
 			</div>
 		</div>
@@ -101,7 +97,7 @@
 			<!-- Class list -->
 			<select id="classList" size="30">
 				<option selected="selected">Class 1</option>
-				<option>+ New Class</option>
+				<option>+ 创建职业</option>
 			</select>
 			
 			<div id="classForm"></div>
@@ -110,15 +106,28 @@
 	</div>
 	
 	<!-- Site footer -->
+
+	<!--
 	<footer>
-		<a id="bukkit" href="https://www.spigotmc.org/resources/skillapi.4824/" target="_blank">Spigot</a>
-		<a id="profile" href="https://github.com/Eniripsa96/SkillAPI/wiki" target="_blank">Wiki</a>
-		<a id="source" href="https://github.com/Eniripsa96/SkillAPI-Dynamic-Editor" target="_blank">Source Code</a>
-        <a id="irc" href="https://skillapi.herokuapp.com/" target="_blank">IRC Help</a>
-	</footer>
-   
+		<a id="docs" href="http://docs.neonstudio.cn/" target="_blank">霓虹插件</a>
+	</footer> -->
+
+	<table>
+		<tr>
+			<td align="center">
+				<a href="https://beian.miit.gov.cn/" target="_blank" >粤ICP备2024197007号-1</a>
+			</td>
+		</tr>
+		<tr>
+			<td align="center">
+				<p>Copyright © 2024 NeonCraftStudio. 保留所有权利。</p>
+			</td>
+		</tr>
+
+	</table>
+
     <div id="badBrowser">
-        <p>Get a real browser! (Use Chrome or Firefox)</p>
+        <p>使用Chrome或Firefox</p>
     </div>
 </body>
 

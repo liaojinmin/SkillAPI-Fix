@@ -94,10 +94,9 @@ public abstract class GUIHolder<T extends IconHolder> implements InventoryHolder
         T result = get(event.getSlot());
         if (top && result != null && result.isAllowed((Player) event.getWhoClicked()))
         {
-            if (event.getAction() == InventoryAction.HOTBAR_MOVE_AND_READD || event.getAction() == InventoryAction.HOTBAR_SWAP)
-                onHotBar(result, event.getSlot(), event.getHotbarButton());
-            else
+            if (event.getAction() != InventoryAction.HOTBAR_MOVE_AND_READD || event.getAction() != InventoryAction.HOTBAR_SWAP) {
                 onClick(result, event.getSlot(), event.isLeftClick(), event.isShiftClick());
+            }
         }
         else if (top && gui.getPages() > 1) {
             if (gui.getSize() == 9) {

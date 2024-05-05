@@ -213,6 +213,7 @@ public class ComponentRegistry {
         register(new WaterCondition());
         register(new WeatherCondition());
         register(new ShieldCondition());
+        register(new MetaCondition());
 
         // Mechanics
         register(new AttributeMechanic());
@@ -241,7 +242,6 @@ public class ComponentRegistry {
         register(new ForgetTargetsMechanic());
         register(new HealMechanic());
         register(new HealthSetMechanic());
-        register(new HeldItemMechanic());
         register(new ImmunityMechanic());
         register(new InterruptMechanic());
         register(new ItemMechanic());
@@ -253,6 +253,7 @@ public class ComponentRegistry {
         register(new MessageMechanic());
         register(new ParticleMechanic());
         register(new ParticleAnimationMechanic());
+        register(new ParticleAnimationArmorStandMechanic());
         register(new ParticleEffectMechanic());
         register(new ParticleProjectileMechanic());
         register(new PassiveMechanic());
@@ -291,5 +292,13 @@ public class ComponentRegistry {
         register(new WolfMechanic());
         register(new MythicCastMechanic());
         register(new MythicCastTargetMechanic());
+
+        // armorStand
+        register(new ArmorStandMechanic());
+        register(new ArmorStandRemoveMechanic());
+
+        // meta
+        register(new MetaEditMechanic());
+        register(new MetaSetMechanic());
     }
 }

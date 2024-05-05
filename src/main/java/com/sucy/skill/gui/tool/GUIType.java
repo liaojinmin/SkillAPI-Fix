@@ -57,7 +57,7 @@ public enum GUIType
     private GUIType cycle(int direction)
     {
         GUIType type = ORDERED[(id + ORDERED.length + direction) % ORDERED.length];
-        if (type == ATTRIBUTES && !SkillAPI.getSettings().isAttributesEnabled())
+        if (type == ATTRIBUTES)
             return ORDERED[(id + ORDERED.length + 2 * direction) % ORDERED.length];
         return type;
     }

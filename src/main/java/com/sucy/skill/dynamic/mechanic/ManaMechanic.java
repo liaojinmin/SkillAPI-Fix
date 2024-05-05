@@ -71,7 +71,10 @@ public class ManaMechanic extends MechanicComponent {
 
             worked = true;
 
-            PlayerData data = SkillAPI.getPlayerData((Player) target);
+            PlayerData data = SkillAPI.getPlayerData(target.getUniqueId());
+            if (data == null) {
+                return false;
+            }
             double amount;
             if (percent) {
                 amount = data.getMaxMana() * value / 100;

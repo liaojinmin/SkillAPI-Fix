@@ -26,7 +26,6 @@ public class PlaceholderAPIHook extends PlaceholderExpansion {
         PLACEHOLDERS.put("attrib_points", (p, u) -> Integer.toString(p.getAttributePoints()));
         PLACEHOLDERS.put("attrib_spent:", (p, attribute) -> Integer.toString(p.getInvestedAttribute(attribute)));
         PLACEHOLDERS.put("attrib_total:", (p, attribute) -> Integer.toString(p.getAttribute(attribute)));
-        PLACEHOLDERS.put("combo", (p, u) -> p.getComboData().getCurrentComboString());
         PLACEHOLDERS.put("exp", (p, u) -> getExp(p.getMainClass()));
         PLACEHOLDERS.put("exp:", (p, group) -> getExp(p.getClass(group)));
         PLACEHOLDERS.put("exp_total", (p, u) -> getTotalExp(p.getMainClass()));
@@ -79,7 +78,11 @@ public class PlaceholderAPIHook extends PlaceholderExpansion {
         }
 
         BiFunction<PlayerData, String, String> placeholder = PLACEHOLDERS.get(key);
-        return placeholder == null ? "" : placeholder.apply(SkillAPI.getPlayerData(player), param);
+        PlayerData playerData = SkillAPI.getPlayerData(player.getUniqueId());
+        if (playerData == null) {
+            return "";
+        }
+        return placeholder == null ? "" : placeholder.apply(playerData, param);
     }
 
     private static String getExp(PlayerClass playerClass) {

@@ -31,15 +31,13 @@ import org.bukkit.Location;
 /**
  * A fixed location to play an effect
  */
-public class FixedTarget implements EffectTarget
-{
+public class FixedTarget implements EffectTarget {
     private Location loc;
 
     /**
      * @param loc location to play effect around
      */
-    public FixedTarget(Location loc)
-    {
+    public FixedTarget(Location loc) {
         this.loc = loc.clone();
     }
 
@@ -48,16 +46,14 @@ public class FixedTarget implements EffectTarget
      *
      * @return effect location
      */
-    public Location getLocation()
-    {
+    public Location getLocation() {
         return loc;
     }
 
     /**
      * @return tue if target is still valid, false otherwise
      */
-    public boolean isValid()
-    {
+    public boolean isValid() {
         return true;
     }
 
@@ -67,8 +63,7 @@ public class FixedTarget implements EffectTarget
     }
 
     @Override
-    public boolean equals(Object o)
-    {
+    public boolean equals(Object o) {
         return (o instanceof FixedTarget) && ((FixedTarget) o).loc.equals(loc);
     }
 }

@@ -38,8 +38,7 @@ public class Root implements IValue
     /**
      * @param formula wrapped formula
      */
-    public Root(IValue formula)
-    {
+    public Root(IValue formula) {
         this.formula = formula;
     }
 

@@ -6,6 +6,7 @@ import com.sucy.skill.api.armorstand.ArmorStandManager;
 import com.sucy.skill.api.attribute.AttributeAPI;
 import com.sucy.skill.api.skills.Skill;
 import com.sucy.skill.api.skills.SkillCastAPI;
+import com.sucy.skill.dynamic.DynamicSkill;
 import com.sucy.skill.listener.MechanicListener;
 import com.sucy.skill.task.RemoveTask;
 import org.bukkit.Location;
@@ -14,6 +15,7 @@ import org.bukkit.entity.LivingEntity;
 import org.bukkit.util.Vector;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 
 /**
@@ -22,23 +24,21 @@ import java.util.List;
 public class ArmorStandMechanic extends MechanicComponent {
 
     private static final Vector UP = new Vector(0, 1, 0);
-
-    private static final String KEY = "key";
-    private static final String DURATION = "duration";
-    private static final String NAME = "name";
-    private static final String NAME_VISIBLE = "name-visible";
-    private static final String FOLLOW = "follow";
-    private static final String GRAVITY = "gravity";
-    private static final String SMALL = "tiny";
-    private static final String ARMS = "arms";
-    private static final String BASE = "base";
-    private static final String VISIBLE = "visible";
-    private static final String MARKER = "marker";
-    private static final String FORWARD = "forward";
-    private static final String UPWARD = "upward";
-    private static final String RIGHT = "right";
-
-    private static final String SKILLS = "skills";
+    private static final String KEY = "key"; // 标记名称，默认是盔甲架名称
+    private static final String DURATION = "duration"; // 移除时间
+    private static final String NAME = "name"; // 盔甲架名称
+    private static final String NAME_VISIBLE = "name-visible"; // 盔甲架名称是否可见 true、false
+    private static final String FOLLOW = "follow";  // 是否跟随施法者 true、false
+    private static final String GRAVITY = "gravity";  // 是否在地面 true、false
+    private static final String SMALL = "tiny"; // // 是否是小型盔甲架 true、false
+    private static final String ARMS = "arms"; // 是否有盔甲 true、false
+    private static final String BASE = "base"; // 是否有地板 true、false
+    private static final String VISIBLE = "visible"; // 是否隐身 true、false
+    private static final String MARKER = "marker"; // 是否标记 true、false
+    private static final String FORWARD = "forward"; // 向前 0.1、0.5
+    private static final String UPWARD = "upward"; // 向上 0.1、0.5
+    private static final String RIGHT = "right"; // 向右 0.1、0.5
+    private static final String SKILLS = "skills"; // 盔甲架为施法者使用的技能
 
     @Override
     public String getKey() {
@@ -47,9 +47,9 @@ public class ArmorStandMechanic extends MechanicComponent {
 
     @Override
     public boolean execute(LivingEntity caster, int level, List<LivingEntity> targets) {
-        String key = settings.getString(KEY, skill.getName());
         int duration = (int) (20 * parseValues(caster, DURATION, level, 5));
         String name = settings.getString(NAME, "Armor Stand");
+        String key = settings.getString(KEY, name);
         boolean nameVisible = settings.getBool(NAME_VISIBLE, false);
         boolean follow = settings.getBool(FOLLOW, false);
         boolean gravity = settings.getBool(GRAVITY, false);
@@ -75,9 +75,6 @@ public class ArmorStandMechanic extends MechanicComponent {
                 try {
                     as.setMarker(marker);
                     as.setInvulnerable(true);
-                } catch (NoSuchMethodError ignored) {
-                }
-                try {
                     as.setSilent(true);
                 } catch (NoSuchMethodError ignored) {
                 }
@@ -99,9 +96,7 @@ public class ArmorStandMechanic extends MechanicComponent {
                     SkillCastAPI.cast(armorStand, skill, level);
                 }
             }
-
             armorStands.add(armorStand);
-
             ArmorStandInstance instance;
             if (follow) {
                 instance = new ArmorStandInstance(armorStand, target, forward, upward, right);

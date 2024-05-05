@@ -120,8 +120,8 @@ public class KillListener extends SkillAPIListener
             if (killer.getGameMode() == GameMode.CREATIVE && SkillAPI.getSettings().isBlockCreative())
                 return;
 
-            PlayerData player = SkillAPI.getPlayerData(killer);
-
+            PlayerData player = SkillAPI.getPlayerData(killer.getUniqueId());
+            if (player == null) return;
             // Give experience based on orbs when enabled
             if (SkillAPI.getSettings().isUseOrbs())
                 player.giveExp(exp, ExpSource.MOB);

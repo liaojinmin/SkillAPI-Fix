@@ -41,9 +41,9 @@ public class AddonListener extends SkillAPIListener {
 
         final LivingEntity damager = ListenerUtil.getDamager(event);
         if (event.getEntity() instanceof Player && damager instanceof Player) {
-            final PlayerData attackerData = SkillAPI.getPlayerData((Player) damager);
-            final PlayerData defenderData = SkillAPI.getPlayerData((Player) event.getEntity());
-
+            final PlayerData attackerData = SkillAPI.getPlayerData(damager.getUniqueId());
+            final PlayerData defenderData = SkillAPI.getPlayerData(event.getEntity().getUniqueId());
+            if (attackerData == null || defenderData == null) return;
             for (final String group : SkillAPI.getGroups()) {
                 final boolean friendly = SkillAPI.getSettings().getGroupSettings(group).isFriendly();
                 final PlayerClass attacker = attackerData.getClass(group);

@@ -76,8 +76,11 @@ public class CmdForceAttr implements IFunction
             cmd.sendMessage(sender, NOT_PLAYER, ChatColor.RED + "That is not a valid player name");
             return;
         }
-        PlayerData data = SkillAPI.getPlayerData(player);
-
+        PlayerData data = SkillAPI.getPlayerData(player.getUniqueId());
+        if (data == null) {
+            sender.sendMessage("玩家数据未加载...");
+            return;
+        }
         // Reset their attributes
         if (args.length == 1)
         {

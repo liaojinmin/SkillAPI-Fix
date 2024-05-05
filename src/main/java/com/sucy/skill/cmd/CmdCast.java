@@ -69,8 +69,11 @@ public class CmdCast implements IFunction
         // Requires at least one argument
         else if (args.length >= 1)
         {
-            PlayerData player = SkillAPI.getPlayerData((Player) sender);
-
+            PlayerData player = SkillAPI.getPlayerData((((Player) sender).getUniqueId()));
+            if (player == null) {
+                sender.sendMessage("玩家数据未加载...");
+                return;
+            }
             // Get the skill name
             String skill = args[0];
             for (int i = 1; i < args.length; i++)

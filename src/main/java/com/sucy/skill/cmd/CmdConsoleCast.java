@@ -61,7 +61,11 @@ public class CmdConsoleCast implements IFunction {
                 command.sendMessage(sender, DISABLED, "&4此世界已禁用...");
             }
 
-            PlayerData player = SkillAPI.getPlayerData(targer);
+            PlayerData player = SkillAPI.getPlayerData(targer.getUniqueId());
+            if (player == null) {
+                sender.sendMessage("玩家数据未加载...");
+                return;
+            }
             // Get the skill name
             StringBuilder skill = new StringBuilder(args[1]);
             for (int i = 2; i < args.length; i++) {

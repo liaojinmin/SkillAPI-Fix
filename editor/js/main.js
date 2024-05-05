@@ -111,8 +111,7 @@ depend('material', function() {
 
 function getSkillSaveData() {
     activeSkill.update();
-    if (activeComponent)
-    {
+    if (activeComponent) {
         activeComponent.update();
     }
     var data = 'loaded: false\n';
@@ -124,8 +123,7 @@ function getSkillSaveData() {
         if (an < bn) return -1;
         return 0;
     });
-    for (var i = 0; i < alphabetic.length; i++)
-    {
+    for (var i = 0; i < alphabetic.length; i++) {
         data += alphabetic[i].getSaveString();
     }
     return data;
@@ -161,12 +159,9 @@ function setupOptionList(div, list, type)
 		e.innerHTML = list[x].name;
 		e.component = list[x];
 		e.addEventListener('click', function(e) {
-			if (activeComponent == activeSkill && activeSkill.usingTrigger(this.component.name)) 
-			{
+			if (activeComponent == activeSkill && activeSkill.usingTrigger(this.component.name)) {
 				showSkillPage('builder');
-			}
-			else
-			{
+			} else {
 				showSkillPage('skillForm');
 				var component = new this.component.construct();
 				component.parent = activeComponent;

@@ -44,8 +44,7 @@ public class ParticleProjectileExpireEvent extends Event
      *
      * @param projectile the projectile that hit something
      */
-    public ParticleProjectileExpireEvent(ParticleProjectile projectile)
-    {
+    public ParticleProjectileExpireEvent(ParticleProjectile projectile) {
         this.projectile = projectile;
     }
 

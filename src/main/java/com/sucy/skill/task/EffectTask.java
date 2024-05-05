@@ -27,9 +27,9 @@
 package com.sucy.skill.task;
 
 import com.sucy.skill.api.particle.EffectManager;
-import com.sucy.skill.thread.RepeatThreadTask;
+import com.sucy.skill.thread.AbstractRepeatThread;
 
-public class EffectTask extends RepeatThreadTask
+public class EffectTask extends AbstractRepeatThread
 {
     public EffectTask()
     {

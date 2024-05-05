@@ -42,6 +42,7 @@ import org.bukkit.entity.HumanEntity;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.InventoryView;
+import org.jetbrains.annotations.Nullable;
 
 import java.util.Comparator;
 import java.util.HashMap;
@@ -74,9 +75,12 @@ public abstract class InventoryTree extends SkillTree
      *
      * @param player player to show
      */
-    public void show(Player player)
-    {
-        player.openInventory(getInventory(SkillAPI.getPlayerData(player)));
+    public void show(Player player) {
+        PlayerData playerData = SkillAPI.getPlayerData(player.getUniqueId());
+        if (playerData == null) {
+            throw new NullPointerException("玩家数据未加载...");
+        }
+        player.openInventory(getInventory(playerData));
     }
 
     /**
@@ -86,8 +90,8 @@ public abstract class InventoryTree extends SkillTree
      *
      * @return skill tree inventory
      */
-    public Inventory getInventory(PlayerData player)
-    {
+    public Inventory getInventory(PlayerData player) {
+
         GUITool.getSkillTree(tree);
         Inventory inv = InventoryManager.createInventory(
             INVENTORY_KEY,

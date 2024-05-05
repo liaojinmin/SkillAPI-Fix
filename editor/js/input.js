@@ -6,8 +6,7 @@
  * @param {string} key    - the value key of the required value input
  * @param {Array}  values - the list of values that result in this being visible
  */
-function requireValue(key, values)
-{
+function requireValue(key, values) {
 	this.requirements = this.requirements || [];
 	this.requirements.push({ key: key, values: values });
 	return this;
@@ -23,8 +22,7 @@ function copyRequirements(source, target) {
 /**
  * Applies the values required from above
  */ 
-function applyRequireValues()
-{
+function applyRequireValues() {
 	for (var i = 0; this.requirements && i < this.requirements.length; i++)
 	{
 		var key = this.requirements[i].key;
@@ -47,25 +45,18 @@ function applyRequireValues()
  *
  * @param {Object} e - event data
  */ 
-function checkRequireValue(e)
-{
-	for (var i = 0; i < this.requireLists.length; i++)
-	{
+function checkRequireValue(e) {
+	for (var i = 0; i < this.requireLists.length; i++) {
 		var requireData = this.requireLists[i];
 		var visible = false;
-		for (var j = 0; j < requireData.values.length; j++)
-		{
-			if (requireData.values[j] == (this.value || this.selectedIndex))
-			{
+		for (var j = 0; j < requireData.values.length; j++) {
+			if (requireData.values[j] == (this.value || this.selectedIndex)) {
 				visible = true;
 			}
 		}
-		if (visible)
-		{
+		if (visible) {
 			requireData.element.show();
-		}
-		else 
-		{
+		} else {
 			requireData.element.hide();
 		}
 	}
@@ -76,10 +67,21 @@ function checkRequireValue(e)
  *
  * @param {string} text - the text to display in the tooltip
  */
-function setTooltip(text)
-{
-	if (text.charAt(0) == '[') this.tooltip = text;
-	else this.tooltip = '[' + this.key + '] ' + text;
+function setTooltip(text) {
+	if (text == null) {
+		this.tooltip = 'null';
+		return this;
+	}
+	if (typeof text !== 'string') {
+		//console.log(text)
+		this.tooltip = 'not string';
+		return this;
+	}
+	if (text.charAt(0) === '[') {
+		this.tooltip = text;
+	} else {
+		this.tooltip = '[' + this.key + '] ' + text;
+	}
 	return this;
 }
 
@@ -95,8 +97,7 @@ function setTooltip(text)
  *
  * @constructor
  */ 
-function IndexListValue(name, key, list, index) 
-{
+function IndexListValue(name, key, list, index) {
 	this.name = name;
 	this.key = key;
 	this.list = list;
@@ -107,8 +108,7 @@ function IndexListValue(name, key, list, index)
 	this.hidden = false;
 }
 
-IndexListValue.prototype.dupe = function()
-{
+IndexListValue.prototype.dupe = function() {
     return new IndexListValue(this.name, this.key, this.list, this.index)
         .setTooltip(this.tooltip);
 }
@@ -124,8 +124,7 @@ IndexListValue.prototype.setTooltip = setTooltip;
  *
  * @param {Element} target - the HTML element to append to
  */ 
-IndexListValue.prototype.createHTML = function(target) 
-{
+IndexListValue.prototype.createHTML = function(target) {
 	this.label = document.createElement('label');
 	this.label.innerHTML = this.name;
     if (this.tooltip) {
@@ -149,8 +148,7 @@ IndexListValue.prototype.createHTML = function(target)
 /**
  * Hides the HTML elements of the value
  */
-IndexListValue.prototype.hide = function()
-{
+IndexListValue.prototype.hide = function() {
 	if (this.label && this.select && !this.hidden)
 	{
 		this.hidden = true;
@@ -162,8 +160,7 @@ IndexListValue.prototype.hide = function()
 /**
  * Shows the HTML elements of the value
  */
-IndexListValue.prototype.show = function()
-{
+IndexListValue.prototype.show = function() {
 	if (this.label && this.select && this.hidden)
 	{
 		this.hidden = false;
@@ -175,8 +172,7 @@ IndexListValue.prototype.show = function()
 /**
  * Updates the current index of the value using the HTML elements
  */ 
-IndexListValue.prototype.update = function()
-{
+IndexListValue.prototype.update = function() {
 	if (this.select) 
 	{
 		this.index = this.select.selectedIndex;
@@ -188,8 +184,7 @@ IndexListValue.prototype.update = function()
  *
  * @param {string} spacing - the spacing to go before the value
  */ 
-IndexListValue.prototype.getSaveString = function(spacing)
-{	
+IndexListValue.prototype.getSaveString = function(spacing) {
 	return spacing + this.key + ": " + this.index + '\n';
 }
 
@@ -198,8 +193,7 @@ IndexListValue.prototype.getSaveString = function(spacing)
  *
  * @param {integer} value - config int value
  */
-IndexListValue.prototype.load = function(value)
-{
+IndexListValue.prototype.load = function(value) {
 	this.index = value;
 }
 
@@ -213,8 +207,7 @@ IndexListValue.prototype.load = function(value)
  *
  * @constructor
  */ 
-function ListValue(name, key, list, value) 
-{
+function ListValue(name, key, list, value) {
 	this.name = name;
 	this.key = key;
 	this.list = list;
@@ -225,8 +218,7 @@ function ListValue(name, key, list, value)
 	this.hidden = false;
 }
 
-ListValue.prototype.dupe = function()
-{
+ListValue.prototype.dupe = function() {
     return new ListValue(this.name, this.key, this.list, this.value)
         .setTooltip(this.tooltip);
 }
@@ -329,8 +321,7 @@ ListValue.prototype.getSaveString = function(spacing)
  *
  * @param {string} value - config string value
  */
-ListValue.prototype.load = function(value)
-{
+ListValue.prototype.load = function(value) {
 	this.value = value;
 }
 
@@ -344,13 +335,11 @@ ListValue.prototype.load = function(value)
  *
  * @constructor
  */
-function AttributeValue(name, key, base, scale)
-{
+function AttributeValue(name, key, base, scale) {
 	this.name = name;
 	this.key = key;
 	this.base = base;
 	this.scale = scale;
-	
 	this.label = undefined;
 	this.left = undefined;
 	this.right = undefined;
@@ -359,8 +348,7 @@ function AttributeValue(name, key, base, scale)
 	this.hidden = false;
 }
 
-AttributeValue.prototype.dupe = function()
-{
+AttributeValue.prototype.dupe = function() {
     return new AttributeValue(this.name, this.key, this.base, this.scale)
         .setTooltip(this.tooltip);
 }
@@ -376,8 +364,7 @@ AttributeValue.prototype.setTooltip = setTooltip;
  *
  * @param {Element} target - the HTML element to append to
  */ 
-AttributeValue.prototype.createHTML = function(target) 
-{
+AttributeValue.prototype.createHTML = function(target) {
 	this.label = document.createElement('label');
 	this.label.innerHTML = this.name;
     if (this.tooltip) {
@@ -412,8 +399,7 @@ AttributeValue.prototype.createHTML = function(target)
 /**
  * Hides the HTML elements of the value
  */
-AttributeValue.prototype.hide = function()
-{
+AttributeValue.prototype.hide = function() {
 	if (this.label && this.baseBox && this.scaleBox && this.left && this.right && !this.hidden)
 	{
 		this.hidden = true;
@@ -428,10 +414,8 @@ AttributeValue.prototype.hide = function()
 /**
  * Shows the HTML elements of the value
  */
-AttributeValue.prototype.show = function()
-{
-	if (this.label && this.baseBox && this.scaleBox && this.left && this.right && this.hidden)
-	{
+AttributeValue.prototype.show = function() {
+	if (this.label && this.baseBox && this.scaleBox && this.left && this.right && this.hidden) {
 		this.hidden = false;
 		this.label.style.display = 'block';
 		this.baseBox.style.display = 'block';
@@ -444,10 +428,8 @@ AttributeValue.prototype.show = function()
 /**
  * Updates the current values using the HTML elements
  */ 
-AttributeValue.prototype.update = function()
-{
-	if (this.baseBox && this.scaleBox) 
-	{
+AttributeValue.prototype.update = function() {
+	if (this.baseBox && this.scaleBox) {
 		this.base = this.baseBox.value;
 		this.scale = this.scaleBox.value;
 	}
@@ -458,8 +440,7 @@ AttributeValue.prototype.update = function()
  *
  * @param {string} spacing - the spacing to go before the value
  */ 
-AttributeValue.prototype.getSaveString = function(spacing)
-{	
+AttributeValue.prototype.getSaveString = function(spacing) {
 	return spacing + this.key + "-base: " + this.base + "\n" + spacing + this.key + "-scale: " + this.scale + "\n";
 }
 
@@ -468,8 +449,7 @@ AttributeValue.prototype.getSaveString = function(spacing)
  *
  * @param {float} value - config double value
  */
-AttributeValue.prototype.loadBase = function(value)
-{
+AttributeValue.prototype.loadBase = function(value) {
 	this.base = value;
 }
 
@@ -478,8 +458,7 @@ AttributeValue.prototype.loadBase = function(value)
  *
  * @param {float} value - config double value
  */
-AttributeValue.prototype.loadScale = function(value)
-{
+AttributeValue.prototype.loadScale = function(value) {
 	this.scale = value;
 }
 
@@ -492,8 +471,7 @@ AttributeValue.prototype.loadScale = function(value)
  *
  * @constructor
  */
-function DoubleValue(name, key, value)
-{
+function DoubleValue(name, key, value) {
 	this.name = name;
 	this.key = key;
 	this.value = value;
@@ -503,8 +481,7 @@ function DoubleValue(name, key, value)
 	this.hidden = false;
 }
 
-DoubleValue.prototype.dupe = function()
-{
+DoubleValue.prototype.dupe = function() {
     return new DoubleValue(this.name, this.key, this.value)
         .setTooltip(this.tooltip);
 }
@@ -677,8 +654,7 @@ IntValue.prototype.show = function()
 /**
  * Updates the current value using the HTML elements
  */ 
-IntValue.prototype.update = function()
-{
+IntValue.prototype.update = function() {
 	if (this.box) 
 	{
 		this.value = Number(this.box.value);
@@ -691,7 +667,7 @@ IntValue.prototype.update = function()
  * @param {string} spacing - the spacing to go before the value
  */ 
 IntValue.prototype.getSaveString = function(spacing)
-{	
+{
 	return spacing + this.key + ": " + this.value + "\n";
 }
 
@@ -700,8 +676,7 @@ IntValue.prototype.getSaveString = function(spacing)
  *
  * @param {integer} value - config int value
  */
-IntValue.prototype.load = function(value)
-{
+IntValue.prototype.load = function(value) {
 	this.value = value;
 }
 
@@ -714,8 +689,7 @@ IntValue.prototype.load = function(value)
  *
  * @constructor
  */
-function StringValue(name, key, value)
-{
+function StringValue(name, key, value) {
 	this.name = name;
 	this.key = key;
 	this.value = value;

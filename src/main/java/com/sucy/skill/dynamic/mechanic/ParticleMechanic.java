@@ -76,8 +76,7 @@ public class ParticleMechanic extends MechanicComponent
         copy.set(ParticleHelper.RADIUS_KEY, parseValues(caster, ParticleHelper.RADIUS_KEY, level, 0), 0);
         copy.set("level", level);
 
-        for (LivingEntity target : targets)
-        {
+        for (LivingEntity target : targets) {
             Location loc = target.getLocation();
             Vector dir = loc.getDirection().setY(0).normalize();
             Vector side = dir.clone().crossProduct(UP);

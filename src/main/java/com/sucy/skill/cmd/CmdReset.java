@@ -73,7 +73,11 @@ public class CmdReset implements IFunction
             }
             else
             {
-                PlayerData data = SkillAPI.getPlayerData((Player) sender);
+                PlayerData data = SkillAPI.getPlayerData(((Player) sender).getUniqueId());
+                if (data == null) {
+                    sender.sendMessage("玩家数据未加载...");
+                    return;
+                }
                 data.resetAll();
                 cmd.sendMessage(sender, RESET, ChatColor.DARK_GREEN + "You have reset your active account data");
             }

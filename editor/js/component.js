@@ -97,7 +97,8 @@ var Condition = {
     TOOL:        { name: 'Tool',        container: true, construct: ConditionTool       },
     VALUE:       { name: 'Value',       container: true, construct: ConditionValue      },
     WATER:       { name: 'Water',       container: true, construct: ConditionWater      },
-    WEATHER:     { name: 'Weather',     container: true, construct: ConditionWeather,   premium: true }
+    WEATHER:     { name: 'Weather',     container: true, construct: ConditionWeather,   premium: true },
+    META:        { name: 'Meta',        container: true, construct: ConditionMeta,      premium: true }
 };
 
 /**
@@ -176,7 +177,12 @@ var Mechanic = {
     WARP_SWAP:           { name: 'Warp Swap',           container: false, construct: MechanicWarpSwap           },
     WARP_TARGET:         { name: 'Warp Target',         container: false, construct: MechanicWarpTarget         },
     WARP_VALUE:          { name: 'Warp Value',          container: false, construct: MechanicWarpValue          },
-    WOLF:                { name: 'Wolf',                container: true,  construct: MechanicWolf               }
+    WOLF:                { name: 'Wolf',                container: true,  construct: MechanicWolf               },
+    ARMOR_STAND:         { name: '实体盔甲架生成',         container: true,  construct: MechanicArmorStand         },
+    ARMOR_STAND_REMOVE:  { name: '实体盔甲架删除',         container: true,  construct: MechanicArmorStandRemove   },
+    RETURM:              { name: 'Delay 中断器',         container: true,  construct: MechanicReturn             },
+    MYTHIC_CAST:         { name: 'Mythic cast',          container: false, construct: MechanicMythicCast         },
+    MYTHIC_CAST_TARGET:  { name: 'Mythic cast target',   container: false, construct: MechanicMythicCastTarget   },
 };
 
 var saveIndex;
@@ -191,8 +197,7 @@ var saveIndex;
  *
  * @constructor
  */
-function Component(name, type, container, parent)
-{
+function Component(name, type, container, parent) {
     this.name = name;
     this.type = type;
     this.container = container;
@@ -200,12 +205,12 @@ function Component(name, type, container, parent)
     this.html = undefined;
     this.components = [];
     this.data = [new StringValue('Icon Key', 'icon-key', '').setTooltip('The key used by the component in the Icon Lore. If this is set to "example" and has a value name of "value", it can be referenced using the string "{attr:example.value}".')];
-    if (this.type == Type.MECHANIC) {
+    if (this.type === Type.MECHANIC) {
         this.data.push(new ListValue('Counts as Cast', 'counts', [ 'True', 'False' ], 'True')
             .setTooltip('Whether or not this mechanic running treats the skill as "casted" and will consume mana and start the cooldown. Set to false if it is a mechanic appled when the skill fails such as cleanup or an error message.')
         );
     }
-    else if (this.type == Type.TRIGGER && name != 'Cast' && name != 'Initialize' && name != 'Cleanup')
+    else if (this.type === Type.TRIGGER && name != 'Cast' && name != 'Initialize' && name != 'Cleanup')
     {
         this.data.push(new ListValue('Mana', 'mana', [ 'True', 'False' ], 'False')
             .setTooltip('Whether or not this trigger requires the mana cost to activate')
@@ -219,17 +224,14 @@ function Component(name, type, container, parent)
     this.componentKey = 'children';
 }
 
-Component.prototype.dupe = function(parent)
-{
+Component.prototype.dupe = function(parent) {
     var i;
     var ele = new Component(this.name, this.type, this.container, parent);
-    for (i = 0; i < this.components.length; i++)
-    {
+    for (i = 0; i < this.components.length; i++) {
         ele.components.push(this.components[i].dupe(ele));
     }
     ele.data = ele.data.slice(0, 1);
-    for (i = ele.data.length; i < this.data.length; i++)
-    {
+    for (i = ele.data.length; i < this.data.length; i++) {
         ele.data.push(copyRequirements(this.data[i], this.data[i].dupe()));
     }
     ele.description = this.description;
@@ -247,13 +249,13 @@ Component.prototype.createBuilderHTML = function(target)
     // Create the wrapping divs with the appropriate classes
     var container = document.createElement('div');
     container.comp = this;
-    if (this.type == Type.TRIGGER) {
+    if (this.type === Type.TRIGGER) {
         container.className = 'componentWrapper';
     }
 
     var div = document.createElement('div');
     div.className = 'component ' + this.type;
-    if (this.type != Type.TRIGGER) {
+    if (this.type !== Type.TRIGGER) {
         div.draggable = true;
         div.ondragstart = this.drag;
     }
@@ -264,7 +266,7 @@ Component.prototype.createBuilderHTML = function(target)
 
     // Component label
     var label = document.createElement('h3');
-    label.title = 'Edit ' + this.name + ' options';
+    label.title = '编辑 ' + this.name + ' 选项';
     label.className = this.type + 'Label';
     label.innerHTML = this.name;
     label.component = this;
@@ -279,7 +281,7 @@ Component.prototype.createBuilderHTML = function(target)
     {
         var add = document.createElement('div');
         add.className = 'builderButton';
-        add.innerHTML = '+ Add Child';
+        add.innerHTML = '+ 添加组件';
         add.component = this;
         add.addEventListener('click', function(e) {
             activeComponent = this.component;
@@ -288,19 +290,16 @@ Component.prototype.createBuilderHTML = function(target)
         div.appendChild(add);
 
         var vision = document.createElement('div');
-        vision.title = 'Hide Children';
+        vision.title = '隐藏组件';
         vision.className = 'builderButton smallButton';
         vision.style.background = 'url("editor/img/eye.png") no-repeat center #222';
         vision.component = this;
         vision.addEventListener('click', function(e) {
             var comp = this.component;
-            if (comp.childrenHidden)
-            {
+            if (comp.childrenHidden) {
                 comp.childDiv.style.display = 'block';
                 this.style.backgroundImage = 'url("editor/img/eye.png")';
-            }
-            else
-            {
+            } else {
                 comp.childDiv.style.display = 'none';
                 this.style.backgroundImage = 'url("editor/img/eyeShaded.png")';
             }
@@ -311,11 +310,10 @@ Component.prototype.createBuilderHTML = function(target)
     }
 
     // Add the duplicate button
-    if (this.type != Type.TRIGGER)
-    {
+    if (this.type !== Type.TRIGGER) {
         var duplicate = document.createElement('div');
         duplicate.className = 'builderButton smallButton';
-        duplicate.title = 'Duplicate';
+        duplicate.title = '复制';
         duplicate.style.background = 'url("editor/img/duplicate.png") no-repeat center #222';
         duplicate.component = this;
         duplicate.addEventListener('click', function(e) {
@@ -329,16 +327,14 @@ Component.prototype.createBuilderHTML = function(target)
 
     // Add the remove button
     var remove = document.createElement('div');
-    remove.title = 'Remove';
+    remove.title = '删除';
     remove.className = 'builderButton smallButton cancelButton';
     remove.style.background = 'url("editor/img/delete.png") no-repeat center #f00';
     remove.component = this;
     remove.addEventListener('click', function(e) {
         var list = this.component.parent.components;
-        for (var i = 0; i < list.length; i++)
-        {
-            if (list[i] == this.component)
-            {
+        for (var i = 0; i < list.length; i++) {
+            if (list[i] === this.component) {
                 list.splice(i, 1);
                 break;
             }
@@ -473,7 +469,7 @@ Component.prototype.createFormHTML = function()
 
     var done = document.createElement('h5');
     done.className = 'doneButton';
-    done.innerHTML = 'Done';
+    done.innerHTML = '确认';
     done.component = this;
     done.addEventListener('click', function(e) {
         this.component.update();
@@ -1237,8 +1233,7 @@ function ConditionLight()
 }
 
 extend('ConditionMana', 'Component');
-function ConditionMana()
-{
+function ConditionMana() {
     this.super('Mana', Type.CONDITION, true);
 
     this.description = "Applies child components when the target's mana matches the settings.";
@@ -1251,6 +1246,9 @@ function ConditionMana()
     );
     this.data.push(new AttributeValue('Max Value', 'max-value', 10, 2)
         .setTooltip('The maximum amount of mana needed')
+    );
+    this.data.push(new StringValue('Tick', 'tick', "1000")
+        .setTooltip('设置法力值恢复延后，1000 = 1秒')
     );
 }
 
@@ -1418,14 +1416,23 @@ function ConditionWater()
 }
 
 extend('ConditionWeather', 'Component');
-function ConditionWeather()
-{
+function ConditionWeather() {
     this.super('Weather', Type.CONDITION, true);
 
     this.description = 'Applies child components when the target\'s location has the given weather condition';
 
     this.data.push(new ListValue('Type', 'type', [ 'None', 'Rain', 'Snow', 'Thunder' ], 'Rain')
         .setTooltip('Whether or not the target needs to be in the water')
+    );
+}
+
+extend('ConditionMeta', 'Component');
+function ConditionMeta() {
+    this.super('Meta', Type.CONDITION, true);
+
+    this.description = '自定义临时数据条件';
+    this.data.push(new StringValue('Key', 'key', 'KEY')
+        .setTooltip('数据键')
     );
 }
 
@@ -1710,6 +1717,9 @@ function MechanicDelay()
 
     this.data.push(new AttributeValue('Delay', 'delay', 2, 0)
         .setTooltip('The amount of time to wait before applying child components in seconds')
+    );
+    this.data.push(new StringValue('Mark', 'mark', '标记名称')
+        .setTooltip('为 delay 延时程序设置唯一标签')
     );
 }
 
@@ -2031,8 +2041,7 @@ function MechanicLightning()
 }
 
 extend('MechanicMana', 'Component');
-function MechanicMana()
-{
+function MechanicMana() {
     this.super('Mana', Type.MECHANIC, false);
 
     this.description = 'Restores or deducts mana from the target.';
@@ -2046,8 +2055,7 @@ function MechanicMana()
 }
 
 extend('MechanicMessage', 'Component');
-function MechanicMessage()
-{
+function MechanicMessage() {
     this.super('Message', Type.MECHANIC, false);
 
     this.description = 'Sends a message to each player target. To include numbers from Value mechanics, use the filters {<key>} where <key> is the key the value is stored under.'
@@ -2140,7 +2148,7 @@ function MechanicParticleProjectile()
 {
     this.super('Particle Projectile', Type.MECHANIC, true);
 
-    this.description = 'Launches a projectile using particles as its visual that applies child components upon landing. The target passed on will be the collided target or the location where it landed if it missed.';
+    this.description = '使用粒子作为其视觉效果发射射弹，在着陆时应用子组件。传递的目标将是碰撞的目标，或者如果没有击中，则是它降落的位置。';
 
     addProjectileOptions(this);
 
@@ -2159,6 +2167,13 @@ function MechanicParticleProjectile()
     this.data.push(new DoubleValue('Lifespan', 'lifespan', 3)
         .setTooltip('How long in seconds before the projectile will expire in case it doesn\'t hit anything')
     );
+
+    this.data.push(new ListValue('是否使用发包盔甲架', 'armor-stand', ['True', 'False'], 'False'));
+    this.data.push(new StringValue('盔甲架名称', 'name', 'Armor Stand'));
+    this.data.push(new ListValue('名称显示', 'name-visible', ['True', 'False'], 'False'));
+    this.data.push(new ListValue('小型盔甲架', 'small', ['True', 'False'], 'True'));
+    this.data.push(new ListValue('是否可见', 'visible', ['True', 'False'], 'True'));
+    this.data.push(new ListValue('标记', 'marker', ['True', 'False'], 'True'));
 
     addEffectOptions(this, true);
 }
@@ -2768,8 +2783,7 @@ function MechanicWarpValue()
 }
 
 extend('MechanicWolf', 'Component');
-function MechanicWolf()
-{
+function MechanicWolf() {
     this.super('Wolf', Type.MECHANIC, true);
     
     this.description = 'Summons a wolf on each target for a duration. Child components will start off targeting the wolf so you can add effects to it. You can also give it its own skillset, though Cast triggers will not occur.';
@@ -2797,6 +2811,98 @@ function MechanicWolf()
     );
     this.data.push(new StringListValue('Skills (one per line)', 'skills', [])
         .setTooltip('The skills to give the wolf. Skills are executed at the level of the skill summoning the wolf. Skills needing a Cast trigger will not work.')
+    );
+}
+
+extend('MechanicArmorStand', 'Component');
+function MechanicArmorStand() {
+    this.super('ArmorStand', Type.MECHANIC, true);
+
+    this.description = '召唤实体盔甲架';
+
+    this.data.push(new StringValue('自定义Key', 'key', 'default')
+    );
+    this.data.push(new AttributeValue('删除时间', 'duration', 5, 0)
+    );
+    this.data.push(new StringValue('盔甲架名称', 'name', 'Armor Stand')
+    );
+    this.data.push(new ListValue('名称显示', 'name-visible', ['True', 'False'], 'False')
+    );
+    this.data.push(new ListValue('跟随目标', 'follow', ['True', 'False'], 'False')
+    );
+    this.data.push(new ListValue('重力', 'gravity', ['True', 'False'], 'True')
+    );
+    this.data.push(new ListValue('小型盔甲架', 'tiny', ['True', 'False'], 'False')
+    );
+    this.data.push(new ListValue('显示盔甲', 'arms', ['True', 'False'], 'False')
+    );
+    this.data.push(new ListValue('显示底板', 'base', ['True', 'False'], 'False')
+    );
+    this.data.push(new ListValue('是否可见', 'visible', ['True', 'False'], 'True')
+    );
+    this.data.push(new ListValue('标记', 'marker', ['True', 'False'], 'True')
+        .setTooltip('会移除盔甲架碰撞')
+    );
+    this.data.push(new AttributeValue('前偏移', 'forward', 0, 0)
+    );
+    this.data.push(new AttributeValue('上偏移', 'upward', 0, 0)
+    );
+    this.data.push(new AttributeValue('右偏移', 'right', 0, 0)
+    );
+    this.data.push(new StringListValue('盔甲架技能', 'skills', [])
+        .setTooltip('这会视为盔甲架释放的技能 造成伤害/治疗会以召唤者为伤害/治疗源(伤害/治疗属性来自于召唤者)')
+    );
+}
+
+extend('MechanicArmorStandRemove', 'Component');
+function MechanicArmorStandRemove() {
+    this.super('ArmorStandRemove', Type.MECHANIC, true);
+
+    this.description = '删除盔甲架';
+
+    this.data.push(new StringValue('自定义Key', 'key', 'default'));
+    this.data.push(new ListValue('移除目标', 'target', ['True', 'False'], 'True')
+        .setTooltip('是否是移除目标的盔甲架，而不是施法者'));
+}
+
+extend('MechanicReturn', 'Component');
+function MechanicReturn() {
+    this.super('Return', Type.MECHANIC, true);
+
+    this.description = '中断 Delay';
+    this.data.push(new StringValue('mark', 'mark', '标记名称')
+        .setTooltip('要中断的标记名称，该delay必须设置了标记, 可使用 ; 分割多个标记')
+    );
+}
+
+
+extend('MechanicMythicCast', 'Component');
+
+function MechanicMythicCast() {
+    this.super('Mythic Cast', Type.MECHANIC, false);
+
+    this.description = '让目标释放Mythic的技能组';
+
+    this.data.push(new StringValue('SkillName', 'skillname', '技能名')
+        .setTooltip('唯一识别标签 {uuid} 会被进行替换为 施法者的UUID')
+    );
+    this.data.push(new AttributeValue('Power', 'power', 0, 0)
+        .setTooltip('技能等级')
+    );
+}
+
+extend('MechanicMythicCastTarget', 'Component');
+
+function MechanicMythicCastTarget() {
+    this.super('Mythic Cast Target', Type.MECHANIC, false);
+
+    this.description = '对目标释放技能';
+
+    this.data.push(new StringValue('SkillName', 'skillname', '技能名')
+        .setTooltip('唯一识别标签 {uuid} 会被进行替换为 施法者的UUID')
+    );
+    this.data.push(new AttributeValue('Power', 'power', 0, 0)
+        .setTooltip('技能等级')
     );
 }
 

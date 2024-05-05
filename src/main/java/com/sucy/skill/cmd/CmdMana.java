@@ -102,7 +102,11 @@ public class CmdMana implements IFunction
             }
 
             // Give mana
-            PlayerData data = SkillAPI.getPlayerData(target);
+            PlayerData data = SkillAPI.getPlayerData(target.getUniqueId());
+            if (data == null) {
+                sender.sendMessage("玩家数据未加载...");
+                return;
+            }
             data.giveMana(amount, ManaSource.COMMAND);
 
             // Messages

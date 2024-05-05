@@ -185,8 +185,7 @@ public final class PlayerSkill
      *
      * @return the level requirement to get to the next level
      */
-    public int getLevelReq()
-    {
+    public int getLevelReq() {
         return skill.getLevelReq(level);
     }
 
@@ -195,8 +194,7 @@ public final class PlayerSkill
      *
      * @return true if on cooldown, false otherwise
      */
-    public boolean isOnCooldown()
-    {
+    public boolean isOnCooldown() {
         return cooldown > System.currentTimeMillis();
     }
 
@@ -205,8 +203,7 @@ public final class PlayerSkill
      *
      * @return true if at max level, false otherwise
      */
-    public boolean isMaxed()
-    {
+    public boolean isMaxed() {
         return level >= skill.getMaxLevel();
     }
 
@@ -233,12 +230,10 @@ public final class PlayerSkill
      *
      * @return the ready status of the skill
      */
-    public SkillStatus getStatus()
-    {
+    public SkillStatus getStatus() {
 
         // See if it is on cooldown
-        if (isOnCooldown())
-        {
+        if (isOnCooldown()) {
             return SkillStatus.ON_COOLDOWN;
         }
 
@@ -302,16 +297,7 @@ public final class PlayerSkill
         this.points += amount;
     }
 
-    /**
-     * Sets the bind material of the skill
-     *
-     * @param mat new bind material
-     */
-    public void setBind(Material mat)
-    {
-        this.bind = mat;
-        getPlayerData().bind(mat, this);
-    }
+
 
     /**
      * Reverts the skill back to level 0, locking it from

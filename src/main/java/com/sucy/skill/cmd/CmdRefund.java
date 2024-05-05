@@ -53,16 +53,16 @@ public class CmdRefund implements IFunction
      * @param args   argument list
      */
     @Override
-    public void execute(ConfigurableCommand cmd, Plugin plugin, CommandSender sender, String[] args)
-    {
+    public void execute(ConfigurableCommand cmd, Plugin plugin, CommandSender sender, String[] args) {
         // Only players have skills
-        if (sender instanceof Player)
-        {
-            PlayerData player = SkillAPI.getPlayerData((Player) sender);
-
+        if (sender instanceof Player) {
+            PlayerData player = SkillAPI.getPlayerData(((Player) sender).getUniqueId());
+            if (player == null) {
+                sender.sendMessage("玩家数据未加载...");
+                return;
+            }
             // Player must have a class
-            if (!player.hasClass())
-            {
+            if (!player.hasClass()) {
                 cmd.sendMessage(sender, NO_CLASS, "&4You have not professed as any class yet");
             }
 

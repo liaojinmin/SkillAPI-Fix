@@ -27,24 +27,28 @@
 package com.sucy.skill.api.projectile;
 
 import com.sucy.skill.api.Settings;
+import com.sucy.skill.api.armorstand.ArmorStandInstance;
+import com.sucy.skill.api.armorstand.ArmorStandManager;
 import com.sucy.skill.api.event.ParticleProjectileExpireEvent;
 import com.sucy.skill.api.event.ParticleProjectileHitEvent;
 import com.sucy.skill.api.event.ParticleProjectileLandEvent;
 import com.sucy.skill.api.event.ParticleProjectileLaunchEvent;
 import com.sucy.skill.api.util.ParticleHelper;
+import com.sucy.skill.dynamic.ArmorStandCarrier;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.event.Event;
 import org.bukkit.util.Vector;
+import org.jetbrains.annotations.Nullable;
 
 import java.util.ArrayList;
 
 /**
  * A fake projectile that plays particles along its path
  */
-public class ParticleProjectile extends CustomProjectile
-{
+public class ParticleProjectile extends CustomProjectile {
+
     /**
      * Settings key for the projectile speed
      */
@@ -68,7 +72,11 @@ public class ParticleProjectile extends CustomProjectile
     private static final String PIERCE = "pierce";
 
     private Location loc;
-    private Settings settings;
+    private final Settings settings;
+
+    @Nullable
+    private ArmorStandCarrier carrier;
+
     private Vector   vel;
     private int      steps;
     private int      count;
@@ -85,12 +93,16 @@ public class ParticleProjectile extends CustomProjectile
      * @param loc      initial location of the projectile
      * @param settings settings for the projectile
      */
-    public ParticleProjectile(LivingEntity shooter, int level, Location loc, Settings settings)
-    {
-        super(shooter);
+    public ParticleProjectile(LivingEntity shooter, int level, Location loc, Settings settings) {
+        this(shooter, level, loc, settings, null);
+    }
 
+    public ParticleProjectile(LivingEntity shooter, int level, Location loc, Settings settings,
+                              @Nullable ArmorStandCarrier carrier) {
+        super(shooter);
         this.loc = loc;
         this.settings = settings;
+        this.carrier = carrier;
         this.vel = loc.getDirection().multiply(settings.getAttr(SPEED, level, 1.0));
         this.freq = (int) (20 * settings.getDouble(FREQUENCY, 0.5));
         this.life = (int) (settings.getDouble(LIFESPAN, 2) * 20);
@@ -109,26 +121,29 @@ public class ParticleProjectile extends CustomProjectile
      * @return location of the projectile
      */
     @Override
-    public Location getLocation()
-    {
+    public Location getLocation() {
         return loc;
     }
 
     /**
-     * Handles expiring due to range or leaving loaded chunks
+     * Handles 由于范围或离开加载的块而过期
      */
     @Override
-    protected Event expire()
-    {
+    protected Event expire() {
+        if (carrier != null) {
+            carrier.setDead(true);
+        }
         return new ParticleProjectileExpireEvent(this);
     }
 
     /**
-     * Handles landing on terrain
+     * Handles 命中地面
      */
     @Override
-    protected Event land()
-    {
+    protected Event land() {
+        if (carrier != null) {
+            carrier.setDead(true);
+        }
         return new ParticleProjectileLandEvent(this);
     }
 
@@ -138,8 +153,10 @@ public class ParticleProjectile extends CustomProjectile
      * @param entity entity the projectile hit
      */
     @Override
-    protected Event hit(LivingEntity entity)
-    {
+    protected Event hit(LivingEntity entity) {
+        if (carrier != null) {
+            carrier.setDead(true);
+        }
         return new ParticleProjectileHitEvent(this, entity);
     }
 
@@ -147,8 +164,7 @@ public class ParticleProjectile extends CustomProjectile
      * @return true if passing through a solid block, false otherwise
      */
     @Override
-    protected boolean landed()
-    {
+    protected boolean landed() {
         return getLocation().getBlock().getType().isSolid();
     }
 
@@ -156,8 +172,7 @@ public class ParticleProjectile extends CustomProjectile
      * @return squared radius for colliding
      */
     @Override
-    protected double getCollisionRadius()
-    {
+    protected double getCollisionRadius() {
         return 1.5;
     }
 
@@ -165,8 +180,7 @@ public class ParticleProjectile extends CustomProjectile
      * @return velocity of the projectile
      */
     @Override
-    public Vector getVelocity()
-    {
+    public Vector getVelocity() {
         return vel;
     }
 
@@ -175,8 +189,7 @@ public class ParticleProjectile extends CustomProjectile
      *
      * @param loc location to teleport to
      */
-    public void teleport(Location loc)
-    {
+    public void teleport(Location loc) {
         this.loc = loc;
     }
 
@@ -186,8 +199,7 @@ public class ParticleProjectile extends CustomProjectile
      * @param vel new velocity
      */
     @Override
-    public void setVelocity(Vector vel)
-    {
+    public void setVelocity(Vector vel) {
         this.vel = vel;
     }
 
@@ -195,34 +207,35 @@ public class ParticleProjectile extends CustomProjectile
      * Updates the projectiles position and checks for collisions
      */
     @Override
-    public void run()
-    {
+    public void run() {
         // Go through multiple steps to avoid tunneling
-        for (int i = 0; i < steps; i++)
-        {
+        for (int i = 0; i < steps; i++) {
             loc.add(vel);
             vel.add(gravity);
 
-            if (!isTraveling())
+            if (!isTraveling()) {
                 return;
-
-            checkCollision(pierce);
+            }
+            if (!checkCollision(pierce)) break;
         }
 
         // Particle along path
         count++;
-        if (count >= freq)
-        {
+        if (count >= freq) {
             count = 0;
-            ParticleHelper.play(loc, settings);
+            if (carrier != null) {
+                carrier.teleport(loc);
+            } else {
+                ParticleHelper.play(loc, settings, getShooter());
+            }
         }
 
         // Lifespan
         life--;
-        if (life <= 0)
-        {
+        if (life <= 0) {
+            //System.out.println("抛射物结束...");
             cancel();
-            Bukkit.getPluginManager().callEvent(new ParticleProjectileExpireEvent(this));
+            Bukkit.getPluginManager().callEvent(expire());
         }
     }
 
@@ -240,15 +253,25 @@ public class ParticleProjectile extends CustomProjectile
      *
      * @return list of fired projectiles
      */
-    public static ArrayList<ParticleProjectile> spread(LivingEntity shooter, int level, Vector center, Location loc, Settings settings, double angle, int amount, ProjectileCallback callback)
-    {
+    public static ArrayList<ParticleProjectile> spread(
+            LivingEntity shooter,
+            int level,
+            Vector center,
+            Location loc,
+            Settings settings,
+            double angle,
+            int amount,
+            ProjectileCallback callback,
+            ArmorStandCarrier carrier
+    ) {
         ArrayList<Vector> dirs = calcSpread(center, angle, amount);
-        ArrayList<ParticleProjectile> list = new ArrayList<ParticleProjectile>();
-        for (Vector dir : dirs)
-        {
+        ArrayList<ParticleProjectile> list = new ArrayList<>();
+
+
+        for (Vector dir : dirs) {
             Location l = loc.clone();
             l.setDirection(dir);
-            ParticleProjectile p = new ParticleProjectile(shooter, level, l, settings);
+            ParticleProjectile p = new ParticleProjectile(shooter, level, l, settings, carrier);
             p.setCallback(callback);
             list.add(p);
         }
@@ -269,15 +292,23 @@ public class ParticleProjectile extends CustomProjectile
      *
      * @return list of fired projectiles
      */
-    public static ArrayList<ParticleProjectile> rain(LivingEntity shooter, int level, Location center, Settings settings, double radius, double height, int amount, ProjectileCallback callback)
-    {
+    public static ArrayList<ParticleProjectile> rain(
+            LivingEntity shooter,
+            int level,
+            Location center,
+            Settings settings,
+            double radius,
+            double height,
+            int amount,
+            ProjectileCallback callback,
+            ArmorStandCarrier carrier
+    ) {
         Vector vel = new Vector(0, 1, 0);
         ArrayList<Location> locs = calcRain(center, radius, height, amount);
         ArrayList<ParticleProjectile> list = new ArrayList<ParticleProjectile>();
-        for (Location l : locs)
-        {
+        for (Location l : locs) {
             l.setDirection(vel);
-            ParticleProjectile p = new ParticleProjectile(shooter, level, l, settings);
+            ParticleProjectile p = new ParticleProjectile(shooter, level, l, settings, carrier);
             p.setCallback(callback);
             list.add(p);
         }

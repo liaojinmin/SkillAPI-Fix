@@ -69,8 +69,11 @@ public class CmdProfess implements IFunction
         // Only players have profession options
         else if (sender instanceof Player)
         {
-            PlayerData data = SkillAPI.getPlayerData((Player) sender);
-
+            PlayerData data = SkillAPI.getPlayerData(((Player) sender).getUniqueId());
+            if (data == null) {
+                sender.sendMessage("玩家数据未加载...");
+                return;
+            }
             if (args.length == 0)
             {
                 if (!data.showProfession((Player) sender))

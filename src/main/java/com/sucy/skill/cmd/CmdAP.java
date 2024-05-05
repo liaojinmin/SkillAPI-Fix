@@ -100,7 +100,11 @@ public class CmdAP implements IFunction
             }
 
             // Give skill points
-            PlayerData data = SkillAPI.getPlayerData(target);
+            PlayerData data = SkillAPI.getPlayerData(target.getUniqueId());
+            if (data == null) {
+                sender.sendMessage("玩家数据未加载...");
+                return;
+            }
             data.giveAttribPoints(amount);
 
             // Messages

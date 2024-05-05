@@ -66,7 +66,9 @@ public class ArmorStandManager {
      * @return active armor stand or null if not found
      */
     public static ArmorStandInstance getArmorStand(LivingEntity target, String key) {
-        if (!instances.containsKey(target)) { return null; }
+        if (!instances.containsKey(target)) {
+            return null;
+        }
         return instances.get(target).getArmorStands(key);
     }
 
@@ -78,8 +80,9 @@ public class ArmorStandManager {
      * @param key    armor stand key
      */
     public static void register(ArmorStandInstance armorStand, LivingEntity target, String key) {
-        if (!instances.containsKey(target)) { instances.put(target, new ArmorStandData(target)); }
-        instances.get(target).register(armorStand, key);
+        ArmorStandData data = instances.computeIfAbsent(target, (a) -> new ArmorStandData(target) );
+        data.register(armorStand, key);
+
     }
 
     /**
@@ -89,7 +92,9 @@ public class ArmorStandManager {
         Iterator<ArmorStandData> iterator = instances.values().iterator();
         while (iterator.hasNext()) {
             ArmorStandData data = iterator.next();
-            if (data.isValid()) { data.tick(); } else {
+            if (data.isValid()) {
+                data.tick();
+            } else {
                 data.remove();
                 iterator.remove();
             }

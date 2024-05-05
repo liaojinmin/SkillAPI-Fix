@@ -43,7 +43,8 @@ public class ClassCondition extends ConditionComponent {
         final RPGClass rpgClass = SkillAPI.getClass(settings.getString(CLASS));
         final boolean exact = settings.getBool(EXACT, false);
 
-        final PlayerData data = SkillAPI.getPlayerData((Player) target);
+        final PlayerData data = SkillAPI.getPlayerData(target.getUniqueId());
+        if (data == null) return false;
         return exact ? data.isExactClass(rpgClass) : data.isClass(rpgClass);
     }
 

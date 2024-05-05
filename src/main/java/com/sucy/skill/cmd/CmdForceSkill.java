@@ -76,7 +76,11 @@ public class CmdForceSkill implements IFunction
                 return;
             }
 
-            PlayerData playerData = SkillAPI.getPlayerData(player);
+            PlayerData playerData = SkillAPI.getPlayerData(player.getUniqueId());
+            if (playerData == null) {
+                sender.sendMessage("玩家数据未加载...");
+                return;
+            }
             StringBuilder skillName = new StringBuilder(args[2]);
             for (int i = 3; i < args.length; i++) skillName.append(args[i]);
             PlayerSkill skill = playerData.getSkill(skillName.toString());

@@ -294,14 +294,8 @@ public class GUITool implements ToolMenu
         this.player = player;
     }
 
-    public void open()
-    {
-        if (!inUse)
-        {
-            PlayerData data = SkillAPI.getPlayerData(player);
-            if (data.hasClass() && SkillAPI.getSettings().isSkillBarEnabled())
-                data.getSkillBar().clear(player);
-
+    public void open() {
+        if (!inUse) {
             this.data = new InventoryData(player);
             setType(GUIType.CLASS_SELECTION);
             inUse = true;

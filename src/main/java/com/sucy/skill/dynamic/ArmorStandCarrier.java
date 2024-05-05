@@ -1,0 +1,63 @@
+package com.sucy.skill.dynamic;
+
+import me.neon.libs.carrier.CarrierBase;
+import me.neon.libs.carrier.meta.ArmorStandMeta;
+import me.neon.libs.util.BoundingBox;
+import org.bukkit.Location;
+import org.jetbrains.annotations.NotNull;
+
+/**
+ * SkillAPI-Fix
+ * com.sucy.skill.dynamic
+ *
+ * @author 老廖
+ * @since 2024/5/3 12:34
+ */
+public class ArmorStandCarrier extends CarrierBase {
+
+    private final BoundingBox box;
+
+    private Location loc;
+
+    private String name = "ArmorStandCarrier";
+
+    public ArmorStandCarrier(Location loc, ArmorStandMeta meta) {
+        this.loc = loc;
+        this.box = BoundingBox.Companion.of(loc, loc);
+        setMeta(meta);
+    }
+
+
+    @NotNull
+    @Override
+    public BoundingBox getBoundingBox() {
+        return box;
+    }
+
+    @NotNull
+    @Override
+    public String getDisplayName() {
+        return name;
+    }
+
+    @Override
+    public void setDisplayName(@NotNull String s) {
+        name = s;
+    }
+
+    @NotNull
+    @Override
+    public Location getEyeLocation() {
+        return loc.clone().add(0.0, 1.2, 0.0);
+    }
+
+    @NotNull
+    @Override
+    public Location getLocation() {
+        return loc;
+    }
+
+    public void setLocation(Location location) {
+        this.loc = location;
+    }
+}

@@ -78,44 +78,37 @@ public class CmdInfo implements IFunction
         else if (sender instanceof Player || args.length >= 1)
         {
             OfflinePlayer target = args.length == 0 ? (OfflinePlayer) sender : VersionManager.getOfflinePlayer(args[0], false);
-            if (target == null)
-            {
+            if (target == null) {
                 cmd.sendMessage(sender, NOT_PLAYER, ChatColor.RED + "That is not a valid player name");
                 return;
             }
 
-            PlayerData data = SkillAPI.getPlayerData(target);
+            PlayerData data = SkillAPI.getPlayerData(target.getUniqueId());
+            if (data == null) {
+                sender.sendMessage("玩家数据未加载...");
+                return;
+            }
             cmd.sendMessage(sender, TITLE, ChatColor.DARK_GRAY + "--" + ChatColor.DARK_GREEN + " {player} " + ChatColor.DARK_GRAY + "-----------", Filter.PLAYER.setReplacement(target.getName()));
             String separator = cmd.getMessage(SEPARATOR, ChatColor.DARK_GRAY + "----------------------------");
             boolean first = true;
-            if (data != null)
-            {
-                for (String group : SkillAPI.getGroups())
-                {
-                    PlayerClass c = data.getClass(group);
+            for (String group : SkillAPI.getGroups()) {
+                PlayerClass c = data.getClass(group);
 
-                    // Separator message if not the first group
-                    if (first)
-                    {
-                        first = false;
-                    }
-                    else
-                    {
-                        sender.sendMessage(separator);
-                    }
+                // Separator message if not the first group
+                if (first) {
+                    first = false;
+                } else {
+                    sender.sendMessage(separator);
+                }
 
-                    // Compose the message
-                    cmd.sendMessage(sender, CATEGORY, ChatColor.GOLD + "{group}" + ChatColor.GRAY + ": ", RPGFilter.GROUP.setReplacement(TextFormatter.format(group)));
-                    PlayerClass profession = data.getClass(group);
-                    if (profession == null)
-                    {
-                        cmd.sendMessage(sender, NO_CLASS, ChatColor.GRAY + "Not Professed");
-                    }
-                    else
-                    {
-                        cmd.sendMessage(sender, PROFESSION, ChatColor.AQUA + "Lv{level} " + ChatColor.DARK_GREEN + "{profession}", RPGFilter.LEVEL.setReplacement(profession.getLevel() + ""), RPGFilter.PROFESSION.setReplacement(profession.getData().getName()));
-                        cmd.sendMessage(sender, EXP, ChatColor.AQUA + "Exp " + ChatColor.DARK_GREEN + "{exp}", RPGFilter.EXP.setReplacement((int) profession.getExp() + "/" + profession.getRequiredExp()));
-                    }
+                // Compose the message
+                cmd.sendMessage(sender, CATEGORY, ChatColor.GOLD + "{group}" + ChatColor.GRAY + ": ", RPGFilter.GROUP.setReplacement(TextFormatter.format(group)));
+                PlayerClass profession = data.getClass(group);
+                if (profession == null) {
+                    cmd.sendMessage(sender, NO_CLASS, ChatColor.GRAY + "Not Professed");
+                } else {
+                    cmd.sendMessage(sender, PROFESSION, ChatColor.AQUA + "Lv{level} " + ChatColor.DARK_GREEN + "{profession}", RPGFilter.LEVEL.setReplacement(profession.getLevel() + ""), RPGFilter.PROFESSION.setReplacement(profession.getData().getName()));
+                    cmd.sendMessage(sender, EXP, ChatColor.AQUA + "Exp " + ChatColor.DARK_GREEN + "{exp}", RPGFilter.EXP.setReplacement((int) profession.getExp() + "/" + profession.getRequiredExp()));
                 }
             }
             cmd.sendMessage(sender, END, ChatColor.DARK_GRAY + "----------------------------");

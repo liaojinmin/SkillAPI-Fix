@@ -35,6 +35,9 @@ import com.sucy.skill.api.player.PlayerData;
 import com.sucy.skill.api.player.PlayerSkill;
 import com.sucy.skill.cast.IIndicator;
 import com.sucy.skill.cast.IndicatorType;
+import com.sucy.skill.dynamic.data.CustomMeta;
+import com.sucy.skill.dynamic.data.CustomMetaStack;
+import com.sucy.skill.dynamic.data.MetaSkills;
 import com.sucy.skill.log.Logger;
 import com.sucy.skill.manager.AttributeManager;
 import org.bukkit.entity.LivingEntity;
@@ -122,6 +125,30 @@ public abstract class EffectComponent {
         return false;
     }
 
+    protected double parseMetas(LivingEntity caster, String key, double fallback) {
+        CustomMetaStack stack = MetaSkills.getMetaStack(caster.getUniqueId(), false);
+        if (stack != null) {
+            CustomMeta meta = stack.getMeta(key);
+            if (meta != null) {
+                return meta.getValue();
+            } else {
+                return fallback;
+            }
+        } else return fallback;
+    }
+
+    protected String parseMetas(LivingEntity caster, String key, String fallback) {
+        CustomMetaStack stack = MetaSkills.getMetaStack(caster.getUniqueId(), false);
+        if (stack != null) {
+            CustomMeta meta = stack.getMeta(key);
+            if (meta != null) {
+                return String.valueOf(meta.getValue());
+            } else {
+                return fallback;
+            }
+        } else return fallback;
+    }
+
     /**
      * Retrieves an attribute value while applying attribute
      * data if enabled and a player is using the skill
@@ -139,25 +166,29 @@ public abstract class EffectComponent {
         double value = base + (level - 1) * scale;
 
         // Apply global modifiers
-        if (SkillAPI.getSettings().isAttributesEnabled()) {
-            value = AttributeAPI.scaleDynamic(caster, this, key, value);
-        }
-
+        value = AttributeAPI.scaleDynamic(caster, this, key, value);
         return value;
     }
     protected void parseEngine(LivingEntity caster, int level, ScriptEngine engine) {
 
-        if (SkillAPI.getSettings().isAttributesEnabled()) {
-            final AttributeManager manager = SkillAPI.getAttributeManager();
-            if (manager != null) {
-                manager.getAttributes().forEach((s, attribute) -> {
-                    int amount = AttributeAPI.getAttribute(caster, attribute.getKey());
-                    engine.put("attribute_" + attribute.getKey(), attribute.modify(this, attribute.getKey(), 0, amount));
-                });
-            }
+        final AttributeManager manager = SkillAPI.getAttributeManager();
+        if (manager != null) {
+            manager.getAttributes().forEach((s, attribute) -> {
+                int amount = AttributeAPI.getAttribute(caster, attribute.getKey());
+                engine.put("attribute_" + attribute.getKey(), attribute.modify(this, attribute.getKey(), 0, amount));
+            });
         }
         engine.put("skill_level", level);
 
+    }
+
+    protected String getString(LivingEntity caster, String key, String fallback) {
+        String val = settings.getString(key);
+        if (val == null) return fallback;
+        final Map<String, Object> map = DynamicSkill.getCastData(caster);
+        if (map.containsKey(val)) {
+            return map.get(val).toString();
+        } else return fallback;
     }
 
     /**
@@ -247,7 +278,9 @@ public abstract class EffectComponent {
      */
     protected PlayerSkill getSkillData(LivingEntity caster) {
         if (caster instanceof Player) {
-            return SkillAPI.getPlayerData((Player) caster).getSkill(skill.getName());
+            PlayerData playerData = SkillAPI.getPlayerData(caster.getUniqueId());
+            if (playerData == null) return null;
+            return playerData.getSkill(skill.getName());
         } else {
             return null;
         }

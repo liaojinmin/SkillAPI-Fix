@@ -242,8 +242,6 @@ public class PlayerEquips {
             String excludeText = settings.getLoreExcludeText();
             String levelText = settings.getLoreLevelText();
             boolean skills = settings.isCheckSkillLore();
-            boolean attributes = settings.isAttributesEnabled();
-
             for (String line : lore) {
                 String lower = ChatColor.stripColor(line).toLowerCase();
 
@@ -284,7 +282,7 @@ public class PlayerEquips {
                     }
 
                     // Attribute requirements 属性要求
-                    if (attributes && !done) {
+                    if (!done) {
 
                         for (String attr : SkillAPI.getAttributeManager().getLookupKeys()) {
                             String text = settings.getAttrReqText(attr);

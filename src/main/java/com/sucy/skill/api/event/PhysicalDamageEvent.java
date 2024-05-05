@@ -52,8 +52,7 @@ public class PhysicalDamageEvent extends Event implements Cancellable
      * @param damage     the amount of damage dealt
      * @param projectile whether or not it was a projectile attack
      */
-    public PhysicalDamageEvent(LivingEntity damager, LivingEntity target, double damage, boolean projectile)
-    {
+    public PhysicalDamageEvent(LivingEntity damager, LivingEntity target, double damage, boolean projectile) {
         this.damager = damager;
         this.target = target;
         this.damage = damage;
@@ -66,8 +65,7 @@ public class PhysicalDamageEvent extends Event implements Cancellable
      *
      * @return entity that dealt the damage
      */
-    public LivingEntity getDamager()
-    {
+    public LivingEntity getDamager() {
         return damager;
     }
 

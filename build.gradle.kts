@@ -4,6 +4,7 @@ import com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar
 plugins {
     id("java")
     id("com.github.johnrengelman.shadow") version "7.1.2"
+    id("org.jetbrains.kotlin.jvm") version "1.7.20"
 }
 
 
@@ -23,6 +24,7 @@ repositories {
 }
 
 apply<JavaPlugin>()
+apply(plugin = "org.jetbrains.kotlin.jvm")
 
 
 java {
@@ -53,6 +55,7 @@ tasks {
 
 
 dependencies {
+    compileOnly(kotlin("stdlib"))
 
     implementation("com.zaxxer:HikariCP:4.0.3") {
         exclude("org.slf4j", "slf4j-api")
@@ -60,7 +63,7 @@ dependencies {
 
     implementation("com.alibaba.fastjson2:fastjson2:2.0.31")
 
-    compileOnly("me.neon.libs:NeonLibs:1.0.0-local")
+    compileOnly("me.neon.libs:NeonLibs:1.0.1.5-local")
 
    // compileOnly(kotlin("stdlib"))
 

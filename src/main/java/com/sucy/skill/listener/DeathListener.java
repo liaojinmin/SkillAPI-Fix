@@ -30,11 +30,13 @@ import com.sucy.skill.SkillAPI;
 import com.sucy.skill.api.event.SkillDamageEvent;
 import com.sucy.skill.api.event.TrueDamageEvent;
 import com.sucy.skill.api.particle.EffectManager;
+import com.sucy.skill.dynamic.data.MetaSkills;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.entity.EntityDeathEvent;
+import org.bukkit.event.player.PlayerQuitEvent;
 
 public class DeathListener extends SkillAPIListener
 {
@@ -46,8 +48,7 @@ public class DeathListener extends SkillAPIListener
      * @param event event details
      */
     @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
-    public void onSpell(SkillDamageEvent event)
-    {
+    public void onSpell(SkillDamageEvent event) {
         handle(event.getTarget(), event.getDamager(), event.getDamage());
     }
 
@@ -57,19 +58,20 @@ public class DeathListener extends SkillAPIListener
      * @param event event details
      */
     @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
-    public void onTrue(TrueDamageEvent event)
-    {
+    public void onTrue(TrueDamageEvent event) {
         handle(event.getTarget(), event.getDamager(), event.getDamage());
     }
 
-    private void handle(final LivingEntity entity, final LivingEntity damager, final double damage)
-    {
+    private void handle(final LivingEntity entity, final LivingEntity damager, final double damage) {
         SkillAPI.setMeta(entity, KILLER, damager);
     }
 
     @EventHandler(priority = EventPriority.LOWEST)
     public void onDeath(EntityDeathEvent event) {
         EffectManager.clear(event.getEntity());
+        if (!(event.getEntity() instanceof Player)) {
+            MetaSkills.delMetaStack(event.getEntity().getUniqueId());
+        }
         Object killer = SkillAPI.getMeta(event.getEntity(), KILLER);
         if (killer != null && event.getEntity().getKiller() == null) {
             applyDeath(event.getEntity(), (LivingEntity)killer, event.getDroppedExp());

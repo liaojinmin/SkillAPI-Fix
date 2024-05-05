@@ -87,7 +87,11 @@ public class CmdExp implements IFunction
                 cmd.sendMessage(sender, NOT_PLAYER, ChatColor.RED + "That is not a valid player name");
                 return;
             }
-            PlayerData data = SkillAPI.getPlayerData(target);
+            PlayerData data = SkillAPI.getPlayerData(target.getUniqueId());
+            if (data == null) {
+                sender.sendMessage("玩家数据未加载...");
+                return;
+            }
 
             // Parse the experience
             double amount;

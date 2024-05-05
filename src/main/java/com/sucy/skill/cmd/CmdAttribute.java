@@ -64,7 +64,11 @@ public class CmdAttribute implements IFunction
         else if (sender instanceof Player)
         {
             Player p = (Player) sender;
-            PlayerData data = SkillAPI.getPlayerData(p);
+            PlayerData data = SkillAPI.getPlayerData(p.getUniqueId());
+            if (data == null) {
+                sender.sendMessage("玩家数据未加载...");
+                return;
+            }
             data.openAttributeMenu();
         }
 

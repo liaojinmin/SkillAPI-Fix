@@ -61,8 +61,7 @@ public class ItemProjectile extends CustomProjectile
      * @param item    the item to represent the projectile
      * @param vel     the velocity of the projectile
      */
-    public ItemProjectile(LivingEntity thrower, Location loc, ItemStack item, Vector vel)
-    {
+    public ItemProjectile(LivingEntity thrower, Location loc, ItemStack item, Vector vel) {
         super(thrower);
 
         ItemMeta meta = item.getItemMeta();
@@ -152,8 +151,7 @@ public class ItemProjectile extends CustomProjectile
      * will move faster than it should.</p>
      */
     @Override
-    public void run()
-    {
+    public void run() {
         if (isTraveling())
             checkCollision(false);
     }

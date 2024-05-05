@@ -7,6 +7,7 @@ import com.rit.sucy.version.VersionManager;
 import com.sucy.skill.SkillAPI;
 import com.sucy.skill.api.classes.RPGClass;
 import com.sucy.skill.api.player.PlayerClass;
+import com.sucy.skill.api.player.PlayerData;
 import com.sucy.skill.language.RPGFilter;
 import org.bukkit.ChatColor;
 import org.bukkit.command.CommandSender;
@@ -37,8 +38,10 @@ public class CmdChangeClass implements IFunction {
         if (args.length >= 3) {
             final String playerName = args[0];
             final String groupName = args[1];
-            String className = args[2];
-            for (int i = 3; i < args.length; i++) className += ' ' + args[i];
+            StringBuilder className = new StringBuilder(args[2]);
+            for (int i = 3; i < args.length; i++) {
+                className.append(' ').append(args[i]);
+            }
 
             final Player player = VersionManager.getPlayer(playerName);
             if (player == null) {
@@ -46,8 +49,13 @@ public class CmdChangeClass implements IFunction {
                         Filter.PLAYER.setReplacement(playerName));
                 return;
             }
+            PlayerData playerData = SkillAPI.getPlayerData(player.getUniqueId());
+            if (playerData == null) {
+                sender.sendMessage("玩家数据未加载...");
+                return;
+            }
 
-            final PlayerClass data = SkillAPI.getPlayerData(player).getClass(groupName);
+            final PlayerClass data = playerData.getClass(groupName);
             if (data == null) {
                 cmd.sendMessage(sender, INVALID_GROUP, "{player} does not have a {group}",
                         Filter.PLAYER.setReplacement(player.getName()),
@@ -56,17 +64,17 @@ public class CmdChangeClass implements IFunction {
             }
 
             final String original = data.getData().getName();
-            final RPGClass target = SkillAPI.getClass(className);
+            final RPGClass target = SkillAPI.getClass(className.toString());
             if (target == null) {
                 cmd.sendMessage(sender, INVALID_TARGET, "{class} is not a valid class to change to",
-                        RPGFilter.CLASS.setReplacement(className));
+                        RPGFilter.CLASS.setReplacement(className.toString()));
                 return;
             }
 
             data.setClassData(target);
             cmd.sendMessage(sender, SUCCESS, "You have changed {player} from a {name} to a {group}",
                     Filter.PLAYER.setReplacement(player.getName()),
-                    RPGFilter.CLASS.setReplacement(className),
+                    RPGFilter.CLASS.setReplacement(className.toString()),
                     RPGFilter.NAME.setReplacement(original));
 
             if (sender != player) {

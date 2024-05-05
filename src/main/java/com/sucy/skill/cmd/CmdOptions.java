@@ -75,14 +75,14 @@ public class CmdOptions implements IFunction
         else if (sender instanceof Player)
         {
             cmd.sendMessage(sender, TITLE, ChatColor.DARK_GRAY + "--" + ChatColor.DARK_GREEN + " Profess Options " + ChatColor.DARK_GRAY + "-----------");
-            PlayerData data = SkillAPI.getPlayerData((Player) sender);
+            PlayerData data = SkillAPI.getPlayerData(((Player) sender).getUniqueId());
+
             String categoryTemplate = cmd.getMessage(CATEGORY, ChatColor.GOLD + "{category}" + ChatColor.GRAY + ": ");
             String optionTemplate = cmd.getMessage(OPTION, ChatColor.LIGHT_PURPLE + "{option}" + ChatColor.GRAY);
             String separator = cmd.getMessage(SEPARATOR, ChatColor.DARK_GRAY + "----------------------------");
             String none = cmd.getMessage(NO_OPTIONS, ChatColor.GRAY + "None");
             boolean first = true;
-            if (data != null)
-            {
+            if (data != null) {
                 for (String group : SkillAPI.getGroups())
                 {
                     PlayerClass c = data.getClass(group);

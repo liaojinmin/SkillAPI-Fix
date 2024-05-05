@@ -44,6 +44,7 @@ import org.bukkit.entity.Snowball;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.util.Vector;
 
+import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -70,6 +71,11 @@ public class ProjectileMechanic extends MechanicComponent
     private static final String UPWARD     = "upward";
     private static final String FORWARD    = "forward";
 
+    // Lifespan
+    private static final String LIFESPAN = "lifespan";
+    // ravity
+    private static final String GRAVITY = "gravity";
+
     @Override
     public String getKey() {
         return "projectile";
@@ -91,63 +97,68 @@ public class ProjectileMechanic extends MechanicComponent
         int amount = (int) parseValues(caster, AMOUNT, level, 1.0);
         double speed = parseValues(caster, SPEED, level, 2.0);
         double range = parseValues(caster, RANGE, level, 999);
+        int lifespan = (int) parseValues(caster, LIFESPAN, level, 20);
+        int gravity = (int) parseValues(caster, GRAVITY, level, 0);
+        boolean grav = gravity == 0;
+
         boolean flaming = settings.getString(FLAMING, "false").equalsIgnoreCase("true");
         String spread = settings.getString(SPREAD, "cone").toLowerCase();
         String projectile = settings.getString(PROJECTILE, "arrow").toLowerCase();
         String cost = settings.getString(COST, "none").toLowerCase();
         Class<? extends Projectile> type = PROJECTILES.get(projectile);
-        if (type == null)
-        {
+        if (type == null) {
             type = Arrow.class;
         }
 
         // Cost to cast
-        if (cost.equals("one") || cost.equals("all"))
-        {
+        if (cost.equals("one") || cost.equals("all")) {
             Material mat = MATERIALS.get(settings.getString(PROJECTILE, "arrow").toLowerCase());
             if (mat == null || !(caster instanceof Player)) return false;
             Player player = (Player) caster;
-            if (cost.equals("one") && !player.getInventory().contains(mat, 1))
-            {
+            if (cost.equals("one") && !player.getInventory().contains(mat, 1)) {
                 return false;
             }
-            if (cost.equals("all") && !player.getInventory().contains(mat, amount))
-            {
+            if (cost.equals("all") && !player.getInventory().contains(mat, amount)) {
                 return false;
             }
-            if (cost.equals("one"))
-            {
+            if (cost.equals("one")) {
                 player.getInventory().removeItem(new ItemStack(mat));
-            }
-            else player.getInventory().removeItem(new ItemStack(mat, amount));
+            } else player.getInventory().removeItem(new ItemStack(mat, amount));
         }
 
         // Fire from each target
         ArrayList<Entity> projectiles = new ArrayList<Entity>();
-        for (LivingEntity target : targets)
-        {
+        for (LivingEntity target : targets) {
             // Apply the spread type
-            if (spread.equals("rain"))
-            {
+            if (spread.equals("rain")) {
                 double radius = parseValues(caster, RADIUS, level, 2.0);
                 double height = parseValues(caster, HEIGHT, level, 8.0);
 
                 ArrayList<Location> locs = CustomProjectile.calcRain(target.getLocation(), radius, height, amount);
-                for (Location loc : locs)
-                {
+                for (Location loc : locs) {
                     Projectile p = caster.launchProjectile(type);
+                    p.setTicksLived(lifespan);
+                    p.setGravity(grav);
+                    if (type.getName().contains("Arrow")) {
+                        try {
+                            //1.12+
+                            Arrow arrow = (Arrow) p;
+                            Class<?> pickupStatusClass = Class.forName("org.bukkit.Arrow$PickupStatus");
+                            Arrow.class.getMethod("setPickupStatus", pickupStatusClass).invoke(arrow, pickupStatusClass.getMethod("valueOf", String.class).invoke(null, "DISALLOWED"));
+                            arrow.setGravity(grav);
+                        } catch (NoSuchMethodError | ClassNotFoundException | NoSuchMethodException |
+                                 IllegalAccessException | InvocationTargetException ignored) {
+                        }
+                    }
                     p.setVelocity(new Vector(0, speed, 0));
                     p.teleport(loc);
                     SkillAPI.setMeta(p, LEVEL, level);
                     if (flaming) p.setFireTicks(9999);
                     projectiles.add(p);
                 }
-            }
-            else
-            {
+            } else {
                 Vector dir = target.getLocation().getDirection();
-                if (spread.equals("horizontal cone"))
-                {
+                if (spread.equals("horizontal cone")) {
                     dir.setY(0);
                     dir.normalize();
                 }
@@ -161,11 +172,12 @@ public class ProjectileMechanic extends MechanicComponent
                 looking.multiply(forward).add(normal.multiply(right));
 
                 ArrayList<Vector> dirs = CustomProjectile.calcSpread(dir, angle, amount);
-                for (Vector d : dirs)
-                {
+                for (Vector d : dirs) {
                     Projectile p = caster.launchProjectile(type);
-                    if (type != Arrow.class)
-                    {
+                    p.setTicksLived(lifespan);
+                    p.setGravity(grav);
+
+                    if (type != Arrow.class) {
                         p.teleport(target.getLocation().add(looking).add(0, upward + 0.5, 0).add(p.getVelocity()).setDirection(d));
                     }
                     p.setVelocity(d.multiply(speed));
@@ -187,8 +199,7 @@ public class ProjectileMechanic extends MechanicComponent
      * @param projectile projectile calling back for
      * @param hit        the entity hit by the projectile, if any
      */
-    public void callback(Projectile projectile, LivingEntity hit)
-    {
+    public void callback(Projectile projectile, LivingEntity hit) {
         if (hit == null)
             hit = new TempEntity(projectile.getLocation());
 

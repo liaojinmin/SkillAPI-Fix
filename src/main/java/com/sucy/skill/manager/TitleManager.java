@@ -48,8 +48,7 @@ public class TitleManager
     /**
      * Initializes the title object if not done so already
      */
-    private static void init()
-    {
+    private static void init() {
         Settings settings = SkillAPI.getSettings();
         fadeIn = settings.getTitleFadeIn();
         duration = settings.getTitleDuration();

@@ -28,6 +28,7 @@ package com.sucy.skill.dynamic.mechanic;
 
 import com.sucy.skill.SkillAPI;
 import com.sucy.skill.api.Settings;
+import com.sucy.skill.api.armorstand.ArmorStandManager;
 import com.sucy.skill.api.particle.EffectPlayer;
 import com.sucy.skill.api.particle.target.FollowTarget;
 import com.sucy.skill.api.projectile.CustomProjectile;
@@ -39,7 +40,11 @@ import com.sucy.skill.cast.CylinderIndicator;
 import com.sucy.skill.cast.IIndicator;
 import com.sucy.skill.cast.IndicatorType;
 import com.sucy.skill.cast.ProjectileIndicator;
+import com.sucy.skill.dynamic.ArmorStandCarrier;
 import com.sucy.skill.dynamic.TempEntity;
+import me.neon.libs.carrier.meta.ArmorStandMeta;
+import me.neon.libs.util.RunnerDslKt;
+import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
@@ -65,18 +70,131 @@ public class ParticleProjectileMechanic extends MechanicComponent implements Pro
     private static final String RIGHT    = "right";
     private static final String UPWARD   = "upward";
     private static final String FORWARD  = "forward";
-
     private static final String USE_EFFECT = "use-effect";
     private static final String EFFECT_KEY = "effect-key";
 
+    private static final String ARMOR_STAND = "armor-stand";
+    private static final String NAME = "name"; // 盔甲架名称
+    private static final String NAME_VISIBLE = "name-visible"; // 盔甲架名称是否可见 true、false
+    private static final String SMALL = "small"; // // 是否是小型盔甲架 true、false
+    private static final String VISIBLE = "visible"; // 是否隐身 true、false
+    private static final String MARKER = "marker"; // 是否标记 true、false
+
+    private static final ArmorStandMeta ARMOR_STAND_META = new ArmorStandMeta(true, false, true, false, true, false);
+
+
+
+    @Override
+    public String getKey() {
+        return "particle projectile";
+    }
+
     /**
-     * Creates the list of indicators for the skill
+     * Executes the component
      *
-     * @param list   list to store indicators in
-     * @param caster caster reference
-     * @param targets location to base location on
-     * @param level  the level of the skill to create for
+     * @param caster  caster of the skill
+     * @param level   level of the skill
+     * @param targets targets to apply to
+     *
+     * @return true if applied to something, false otherwise
      */
+    @Override
+    public boolean execute(LivingEntity caster, int level, List<LivingEntity> targets) {
+        // Get common values
+        int amount = (int) parseValues(caster, AMOUNT, level, 1.0);
+        String spread = settings.getString(SPREAD, "cone").toLowerCase();
+        boolean ally = settings.getString(ALLY, "enemy").toLowerCase().equals("ally");
+        settings.set("level", level);
+        final Settings copy = new Settings(settings);
+        copy.set(ParticleProjectile.SPEED, parseValues(caster, ParticleProjectile.SPEED, level, 1), 0);
+        copy.set(ParticleHelper.PARTICLES_KEY, parseValues(caster, ParticleHelper.PARTICLES_KEY, level, 1), 0);
+        copy.set(ParticleHelper.RADIUS_KEY, parseValues(caster, ParticleHelper.RADIUS_KEY, level, 0), 0);
+
+        // Fire from each target
+        for (LivingEntity target : targets) {
+            Location loc = target.getLocation();
+            ArmorStandCarrier carrier = null;
+            ArmorStandMeta meta = null;
+            if (settings.getBool(ARMOR_STAND, false)) {
+                // 修正数量
+                amount = 1;
+                String name = settings.getString(NAME, "Armor Stand Packet");
+                boolean nameVisible = settings.getBool(NAME_VISIBLE, false);
+                boolean small = settings.getBool(SMALL, false);
+                boolean visible = settings.getBool(VISIBLE, true);
+                boolean marker = settings.getBool(MARKER, false);
+                carrier = new ArmorStandCarrier(loc, ARMOR_STAND_META);
+                carrier.setDisplayName(name);
+                meta = new ArmorStandMeta(visible, false, small, false, true, marker);
+                carrier.setDead(false);
+            }
+            // Apply the spread type
+            ArrayList<ParticleProjectile> list;
+            if (spread.equals("rain")) {
+                double radius = parseValues(caster, RADIUS, level, 2.0);
+                double height = parseValues(caster, HEIGHT, level, 8.0);
+                list = ParticleProjectile.rain(caster, level, loc, copy, radius, height, amount, this, carrier);
+            } else {
+                Vector dir = target.getLocation().getDirection();
+                double right = parseValues(caster, RIGHT, level, 0);
+                double upward = parseValues(caster, UPWARD, level, 0);
+                double forward = parseValues(caster, FORWARD, level, 0);
+
+                Vector looking = dir.clone().setY(0).normalize();
+                Vector normal = looking.clone().crossProduct(UP);
+                looking.multiply(forward).add(normal.multiply(right));
+                if (spread.equals("horizontal cone")) {
+                    dir.setY(0);
+                    dir.normalize();
+                }
+                double angle = parseValues(caster, ANGLE, level, 30.0);
+                Location a = loc.add(looking).add(0, upward + 0.5, 0);
+                if (carrier != null) {
+                    carrier.setLocation(a);
+                }
+                list = ParticleProjectile.spread(caster, level, dir, a, copy, angle, amount, this, carrier);
+            }
+
+            // 设置回调发生时的元数据
+            for (ParticleProjectile p : list) {
+                SkillAPI.setMeta(p, LEVEL, level);
+                p.setAllyEnemy(ally, !ally);
+            }
+
+            if (settings.getBool(USE_EFFECT, false)) {
+                EffectPlayer player = new EffectPlayer(settings);
+                for (CustomProjectile p : list) {
+                    player.start(new FollowTarget(p), settings.getString(EFFECT_KEY, skill.getName()), 9999, level, true);
+                }
+            }
+            final ArmorStandCarrier carrier1 = carrier;
+            if (carrier1 != null) {
+                final ArmorStandMeta meta1 = meta;
+                Bukkit.getScheduler().runTaskLater(SkillAPI.singleton(), () -> {
+                    carrier1.setMeta(meta1);
+                },5);
+            }
+
+        }
+        return targets.size() > 0;
+    }
+
+    /**
+     * The callback for the projectiles that applies child components
+     *
+     * @param projectile projectile calling back for
+     * @param hit        the entity hit by the projectile, if any
+     */
+    @Override
+    public void callback(CustomProjectile projectile, LivingEntity hit) {
+        if (hit == null) {
+            hit = new TempEntity(projectile.getLocation());
+        }
+        ArrayList<LivingEntity> targets = new ArrayList<>();
+        targets.add(hit);
+        executeChildren(projectile.getShooter(), SkillAPI.getMetaInt(projectile, LEVEL), targets);
+    }
+
     @Override
     public void makeIndicators(List<IIndicator> list, Player caster, List<LivingEntity> targets, int level) {
         targets.forEach(target -> {
@@ -116,108 +234,5 @@ public class ParticleProjectileMechanic extends MechanicComponent implements Pro
                 }
             }
         });
-    }
-
-    @Override
-    public String getKey() {
-        return "particle projectile";
-    }
-
-    /**
-     * Executes the component
-     *
-     * @param caster  caster of the skill
-     * @param level   level of the skill
-     * @param targets targets to apply to
-     *
-     * @return true if applied to something, false otherwise
-     */
-    @Override
-    public boolean execute(LivingEntity caster, int level, List<LivingEntity> targets) {
-        // Get common values
-        int amount = (int) parseValues(caster, AMOUNT, level, 1.0);
-        String spread = settings.getString(SPREAD, "cone").toLowerCase();
-        boolean ally = settings.getString(ALLY, "enemy").toLowerCase().equals("ally");
-        settings.set("level", level);
-
-        final Settings copy = new Settings(settings);
-        copy.set(ParticleProjectile.SPEED, parseValues(caster, ParticleProjectile.SPEED, level, 1), 0);
-        copy.set(ParticleHelper.PARTICLES_KEY, parseValues(caster, ParticleHelper.PARTICLES_KEY, level, 1), 0);
-        copy.set(ParticleHelper.RADIUS_KEY, parseValues(caster, ParticleHelper.RADIUS_KEY, level, 0), 0);
-
-        // Fire from each target
-        for (LivingEntity target : targets) {
-            Location loc = target.getLocation();
-
-            // Apply the spread type
-            ArrayList<ParticleProjectile> list;
-            if (spread.equals("rain")) {
-                double radius = parseValues(caster, RADIUS, level, 2.0);
-                double height = parseValues(caster, HEIGHT, level, 8.0);
-                list = ParticleProjectile.rain(caster, level, loc, copy, radius, height, amount, this);
-            } else {
-                Vector dir = target.getLocation().getDirection();
-
-                double right = parseValues(caster, RIGHT, level, 0);
-                double upward = parseValues(caster, UPWARD, level, 0);
-                double forward = parseValues(caster, FORWARD, level, 0);
-
-                Vector looking = dir.clone().setY(0).normalize();
-                Vector normal = looking.clone().crossProduct(UP);
-                looking.multiply(forward).add(normal.multiply(right));
-
-                if (spread.equals("horizontal cone")) {
-                    dir.setY(0);
-                    dir.normalize();
-                }
-                double angle = parseValues(caster, ANGLE, level, 30.0);
-                list = ParticleProjectile.spread(
-                        caster,
-                        level,
-                        dir,
-                        loc.add(looking).add(0, upward + 0.5, 0),
-                        copy,
-                        angle,
-                        amount,
-                        this
-                );
-            }
-
-            // Set metadata for when the callback happens
-            for (ParticleProjectile p : list) {
-                SkillAPI.setMeta(p, LEVEL, level);
-                p.setAllyEnemy(ally, !ally);
-            }
-
-            if (settings.getBool(USE_EFFECT, false)) {
-                EffectPlayer player = new EffectPlayer(settings);
-                for (CustomProjectile p : list) {
-                    player.start(
-                            new FollowTarget(p),
-                            settings.getString(EFFECT_KEY, skill.getName()),
-                            9999,
-                            level,
-                            true);
-                }
-            }
-        }
-
-        return targets.size() > 0;
-    }
-
-    /**
-     * The callback for the projectiles that applies child components
-     *
-     * @param projectile projectile calling back for
-     * @param hit        the entity hit by the projectile, if any
-     */
-    @Override
-    public void callback(CustomProjectile projectile, LivingEntity hit) {
-        if (hit == null) {
-            hit = new TempEntity(projectile.getLocation());
-        }
-        ArrayList<LivingEntity> targets = new ArrayList<LivingEntity>();
-        targets.add(hit);
-        executeChildren(projectile.getShooter(), SkillAPI.getMetaInt(projectile, LEVEL), targets);
     }
 }

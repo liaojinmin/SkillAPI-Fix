@@ -69,10 +69,8 @@ public class ParticleAnimationMechanic extends MechanicComponent
      * @return true if applied to something, false otherwise
      */
     @Override
-    public boolean execute(LivingEntity caster, int level, List<LivingEntity> targets)
-    {
-        if (targets.size() == 0)
-        {
+    public boolean execute(LivingEntity caster, int level, List<LivingEntity> targets) {
+        if (targets.size() == 0) {
             return false;
         }
 
@@ -84,8 +82,7 @@ public class ParticleAnimationMechanic extends MechanicComponent
         return targets.size() > 0;
     }
 
-    private class ParticleTask extends BukkitRunnable
-    {
+    private class ParticleTask extends BukkitRunnable {
 
         private List<LivingEntity> targets;
         private double[]           rots;
@@ -157,14 +154,11 @@ public class ParticleAnimationMechanic extends MechanicComponent
         }
 
         @Override
-        public void run()
-        {
-            for (int i = 0; i < steps; i++)
-            {
+        public void run() {
+            for (int i = 0; i < steps; i++) {
                 // Play the effect
                 int j = 0;
-                for (LivingEntity target : targets)
-                {
+                for (LivingEntity target : targets) {
                     Location loc = target.getLocation();
 
                     rotate(offset, rots[j], rots[j + 1]);

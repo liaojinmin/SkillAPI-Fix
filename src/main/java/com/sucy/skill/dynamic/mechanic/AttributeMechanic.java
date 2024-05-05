@@ -88,8 +88,10 @@ public class AttributeMechanic extends MechanicComponent {
                 }
 
                 if (event.getCaster() instanceof Player) {
-                    final PlayerData data = SkillAPI.getPlayerData((Player) event.getCaster());
-
+                    final PlayerData data = SkillAPI.getPlayerData(event.getCaster().getUniqueId());
+                    if (data == null) {
+                        return false;
+                    }
                     if (casterTasks.containsKey(data.getPlayerName()) && !stackable) {
                         final AttribTask old = casterTasks.remove(data.getPlayerName());
                         if (event.getValue() != old.amount) {

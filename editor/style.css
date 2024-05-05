@@ -87,7 +87,7 @@ html, body {
 }
 
 #main {
-	height: calc(100% - 115px);
+	height: calc(100% - 135px);
 	background-color: #333;
 	clear: both;
 }
@@ -132,20 +132,20 @@ html, body {
 }
 
 header {
-	width: 150px;
+	width: 380px;
 	float: left;
-	height: 80px;
+	height: 60px;
 }
 
 h1 {
-	font: 36px Mojave-Web;
+	font: 32px Sertig-Web;
 	font-weight: bold;
 	color: #FFAB3C;
 	padding: 10px;
 }
 
 h2 {
-	font: 20px Mojave-Web;
+	font: 18px Sertig-Web;
 	font-weight: bold;
 	padding-left: 10px;
 }
@@ -207,10 +207,30 @@ hr {
 	margin: 10px 0;
 }
 
+table {
+	text-size-adjust: 100%;
+	margin-top: 18px;
+	border-collapse: collapse;
+	width: 100%;
+}
+
+
+table p,a {
+	font-size: 12px;
+	-webkit-font-smoothing: subpixel-antialiased;
+	text-size-adjust: 100%;
+	line-height: 20px;
+	font-family: 'Microsoft YaHei', serif;
+	padding: 0;
+	margin: 0;
+	color: #7e8890
+}
+
 footer {
 	width: 100%;
-	height: 40px;
+	height: 0;
 	background-color: black;
+	font-family: 'Microsoft YaHei', serif;
 }
 
 footer a {
@@ -218,7 +238,7 @@ footer a {
 	height: 25px;
 	display: inline-block;
 	width: 25%;
-	color: #06C;
+	color: #7e8890;
 	padding-top: 5px;
 	text-decoration: none;
 	border-top: 1px solid white;
@@ -236,16 +256,8 @@ footer a:first-child {
 	border-left: none;
 }
 
-footer #profile {
-	left: 25%;
-}
-
-footer #source {
-	left: 50%;
-}
-
-footer #irc {
-    left: 75%;
+footer #docs {
+	left: 0%;
 }
 
 input, select, textarea {
@@ -295,8 +307,8 @@ hr {
 }
 
 .ioButton {
-	height: 30px;
-	margin: 5px 10px;
+	height: 40px;
+	margin: 10px 1px;
 	width: calc(100% - 20px);
 	background-color: #375a7f;
 	color: white;
@@ -514,6 +526,7 @@ textArea {
     border-radius: 10px;
 	background-color: #aaa;
 }
+
 
 @media screen and (max-width: 599px) {
 	

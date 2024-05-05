@@ -1,29 +1,3 @@
-/**
- * SkillAPI
- * com.sucy.listener.skill.MechanicListener
- *
- * The MIT License (MIT)
- *
- * Copyright (c) 2014 Steven Sucy
- *
- * Permission is hereby granted, free of charge, to any person obtaining a copy
- * of this software and associated documentation files (the "Software") to deal
- * in the Software without restriction, including without limitation the rights
- * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
- * copies of the Software, and to permit persons to whom the Software is
- * furnished to do so, subject to the following conditions:
- *
- * The above copyright notice and this permission notice shall be included in
- * all copies or substantial portions of the Software.
- *
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
- * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
- * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
- * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
- * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
- * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
- * THE SOFTWARE.
- */
 package com.sucy.skill.listener;
 
 import com.rit.sucy.version.VersionManager;
@@ -40,18 +14,13 @@ import com.sucy.skill.hook.PluginChecker;
 import com.sucy.skill.hook.VaultHook;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
-import org.bukkit.entity.Entity;
-import org.bukkit.entity.LivingEntity;
-import org.bukkit.entity.Player;
-import org.bukkit.entity.Projectile;
+import org.bukkit.entity.*;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.block.BlockBreakEvent;
-import org.bukkit.event.entity.EntityDamageByEntityEvent;
-import org.bukkit.event.entity.EntityExplodeEvent;
-import org.bukkit.event.entity.PotionSplashEvent;
-import org.bukkit.event.entity.ProjectileHitEvent;
+import org.bukkit.event.entity.*;
 import org.bukkit.event.inventory.InventoryPickupItemEvent;
+import org.bukkit.event.player.PlayerArmorStandManipulateEvent;
 import org.bukkit.event.player.PlayerMoveEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
 
@@ -63,8 +32,7 @@ import java.util.concurrent.ConcurrentHashMap;
 /**
  * The listener for handling events related to dynamic mechanics
  */
-public class MechanicListener extends SkillAPIListener
-{
+public class MechanicListener extends SkillAPIListener {
     public static final String SUMMON_DAMAGE     = "sapiSumDamage";
     public static final String P_CALL            = "pmCallback";
     public static final String POTION_PROJECTILE = "potionProjectile";
@@ -84,12 +52,11 @@ public class MechanicListener extends SkillAPIListener
      * Cleans up listener data on shutdown
      */
     @Override
-    public void cleanup()
-    {
+    public void cleanup() {
         flying.clear();
     }
 
-    private final ConcurrentHashMap<UUID, Long> interval = new ConcurrentHashMap<>();
+
     /**
      * Checks for landing on the ground
      *
@@ -97,8 +64,6 @@ public class MechanicListener extends SkillAPIListener
      */
     @EventHandler
     public void onMove(PlayerMoveEvent event) {
-        if (event.getPlayer().hasMetadata("NPC"))
-            return;
         final Player player = event.getPlayer();
 
         boolean inMap = flying.containsKey(player.getUniqueId());
@@ -124,8 +89,7 @@ public class MechanicListener extends SkillAPIListener
      * @param event event details
      */
     @EventHandler
-    public void onQuit(PlayerQuitEvent event)
-    {
+    public void onQuit(PlayerQuitEvent event) {
         flying.remove(event.getPlayer().getUniqueId());
         event.getPlayer().setWalkSpeed(0.2f);
     }
@@ -136,8 +100,7 @@ public class MechanicListener extends SkillAPIListener
      * @param event event details
      */
     @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
-    public void onApply(FlagApplyEvent event)
-    {
+    public void onApply(FlagApplyEvent event) {
         if (event.getEntity() instanceof Player)
         {
             if (event.getFlag().startsWith("perm:") && PluginChecker.isVaultActive())
@@ -151,18 +114,12 @@ public class MechanicListener extends SkillAPIListener
      * @param event event details
      */
     @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
-    public void onExpire(FlagExpireEvent event)
-    {
-        if (event.getEntity() instanceof Player)
-        {
+    public void onExpire(FlagExpireEvent event) {
+        if (event.getEntity() instanceof Player) {
             if (event.getFlag().startsWith("perm:") && PluginChecker.isVaultActive())
                 VaultHook.remove((Player) event.getEntity(), event.getFlag().substring(5));
-            else if (event.getFlag().equals(SPEED_KEY))
-            {
-                if (SkillAPI.getSettings().isAttributesEnabled())
-                    AttributeListener.refreshSpeed((Player) event.getEntity());
-                else
-                    ((Player) event.getEntity()).setWalkSpeed(0.2f);
+            else if (event.getFlag().equals(SPEED_KEY)) {
+                AttributeListener.refreshSpeed((Player) event.getEntity());
             }
         }
         if (event.getFlag().equals(DISGUISE_KEY))
@@ -269,5 +226,31 @@ public class MechanicListener extends SkillAPIListener
     {
         if (BlockMechanic.isPending(event.getBlock().getLocation()))
             event.setCancelled(true);
+    }
+
+    /**
+     * Cancels damage to armor stands corresponding to an Armor Stand Mechanic
+     *
+     * @param event event details
+     */
+    @EventHandler
+    public void onArmorStandDamage(EntityDamageEvent event) {
+        Entity entity = event.getEntity();
+        if (entity instanceof ArmorStand && SkillAPI.getMeta(entity, ARMOR_STAND) != null) {
+            event.setCancelled(true);
+        }
+    }
+
+    /**
+     * Cancels interactions with  armor stands corresponding to an Armor Stand Mechanic
+     *
+     * @param event event details
+     */
+    @EventHandler
+    public void onArmorStandInteract(PlayerArmorStandManipulateEvent event) {
+        Entity entity = event.getRightClicked();
+        if (SkillAPI.getMeta(entity, ARMOR_STAND) != null) {
+            event.setCancelled(true);
+        }
     }
 }

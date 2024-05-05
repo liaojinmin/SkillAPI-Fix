@@ -29,10 +29,9 @@ package com.sucy.skill.task;
 import com.rit.sucy.version.VersionManager;
 import com.sucy.skill.SkillAPI;
 import com.sucy.skill.api.player.PlayerData;
-import com.sucy.skill.dynamic.condition.ShieldCondition;
 import com.sucy.skill.log.LogType;
 import com.sucy.skill.log.Logger;
-import com.sucy.skill.thread.RepeatThreadTask;
+import com.sucy.skill.thread.AbstractRepeatThread;
 import org.bukkit.entity.Player;
 
 /**
@@ -40,7 +39,7 @@ import org.bukkit.entity.Player;
  * <p>This task is run by the API and you should not
  * use this task yourself.</p>
  */
-public class ManaTask extends RepeatThreadTask
+public class ManaTask extends AbstractRepeatThread
 {
     /**
      * Starts a new task for regenerating mana over time. The task is
@@ -63,8 +62,10 @@ public class ManaTask extends RepeatThreadTask
         Player[] players = VersionManager.getOnlinePlayers();
         Logger.log(LogType.MANA, 1, "Applying mana regen for " + players.length + " players");
         for (Player player : players) {
-            PlayerData data = SkillAPI.getPlayerData(player);
-            data.regenMana();
+            PlayerData data = SkillAPI.getPlayerData(player.getUniqueId());
+            if (data != null) {
+                data.regenMana();
+            }
 
         }
 

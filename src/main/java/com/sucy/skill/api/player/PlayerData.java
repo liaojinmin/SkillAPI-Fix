@@ -1,34 +1,7 @@
-/**
- * SkillAPI
- * com.sucy.player.api.skill.PlayerData
- *
- * The MIT License (MIT)
- *
- * Copyright (c) 2014 Steven Sucy
- *
- * Permission is hereby granted, free of charge, to any person obtaining a copy
- * of this software and associated documentation files (the "Software") to deal
- * in the Software without restriction, including without limitation the rights
- * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
- * copies of the Software, and to permit persons to whom the Software is
- * furnished to do so, subject to the following conditions:
- *
- * The above copyright notice and this permission notice shall be included in
- * all copies or substantial portions of the Software.
- *
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
- * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
- * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
- * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
- * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
- * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
- * THE SOFTWARE.
- */
 package com.sucy.skill.api.player;
 
 import com.rit.sucy.config.Filter;
 import com.rit.sucy.config.FilterType;
-import com.rit.sucy.config.parse.DataSection;
 import com.rit.sucy.player.TargetHelper;
 import com.rit.sucy.version.VersionManager;
 import com.rit.sucy.version.VersionPlayer;
@@ -41,11 +14,9 @@ import com.sucy.skill.api.skills.PassiveSkill;
 import com.sucy.skill.api.skills.Skill;
 import com.sucy.skill.api.skills.SkillShot;
 import com.sucy.skill.api.skills.TargetSkill;
-import com.sucy.skill.cast.PlayerCastBars;
 import com.sucy.skill.data.GroupSettings;
 import com.sucy.skill.data.PlayerEquips;
 import com.sucy.skill.dynamic.EffectComponent;
-import com.sucy.skill.dynamic.condition.ShieldCondition;
 import com.sucy.skill.gui.handlers.AttributeHandler;
 import com.sucy.skill.gui.handlers.DetailsHandler;
 import com.sucy.skill.gui.handlers.ProfessHandler;
@@ -58,10 +29,7 @@ import com.sucy.skill.listener.AttributeListener;
 import com.sucy.skill.log.LogType;
 import com.sucy.skill.log.Logger;
 import com.sucy.skill.manager.AttributeManager;
-import com.sucy.skill.task.ScoreboardTask;
-import com.sun.tools.javac.comp.Todo;
 import org.bukkit.Bukkit;
-import org.bukkit.Material;
 import org.bukkit.OfflinePlayer;
 import org.bukkit.attribute.Attribute;
 import org.bukkit.attribute.AttributeInstance;
@@ -71,65 +39,54 @@ import org.bukkit.entity.Player;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicLong;
+import java.util.concurrent.locks.ReentrantLock;
 
 import static com.sucy.skill.api.event.PlayerSkillCastFailedEvent.Cause.*;
 
-/**
- * Represents one account for a player which can contain one class from each group
- * and the skills in each of those classes. You should not instantiate this class
- * yourself and instead get it from the SkillAPI static methods.
- *
- * In order to get a player's data, use "SkillAPI.getPlayerData(...)". Do NOT
- * try to instantaite your own PlayerData object.
- */
+
 public class PlayerData {
 
-    private final HashMap<String, PlayerClass>   classes     = new HashMap<>();
+    private final ReentrantLock lock = new ReentrantLock();
 
-    private final HashMap<String, PlayerSkill>   skills      = new HashMap<>();
+    private final HashMap<String, PlayerClass> classes = new HashMap<>();
 
-    private final HashMap<Material, PlayerSkill> binds       = new HashMap<>();
+    private final HashMap<String, PlayerSkill> skills = new HashMap<>();
 
-    public final HashMap<String, Integer>       attributes  = new HashMap<>();
+    public final HashMap<String, Integer> attributes = new HashMap<>();
 
-    public final HashMap<String, Integer>       bonusAttrib = new HashMap<>();
+    public final HashMap<String, Integer> bonusAttrib = new HashMap<>();
 
-    /**
-     * 临时属性 map
-     */
-    public final ConcurrentHashMap<String, ConcurrentHashMap<String, Integer>> addAttrib = new ConcurrentHashMap<>();
-    private DataSection extraData = new DataSection();
-    private OfflinePlayer  player;
-    private PlayerSkillBar skillBar;
-    private PlayerCastBars castBars;
-    private PlayerCombos   combos;
+    /** 临时属性 **/
+    public final ConcurrentHashMap<String, ConcurrentHashMap<String, Integer>> addAttrib
+            = new ConcurrentHashMap<>();
+
+    private final AtomicLong manaRestoreTick = new AtomicLong(0);
+
+    private final OfflinePlayer  player;
+
     private PlayerEquips   equips;
     private String         scheme;
     private String         menuClass;
     private double         mana;
     private double         maxMana;
-    private AtomicLong     manaRestoreTick = new AtomicLong(0);
     private double         bonusHealth;
     private double         bonusMana;
     private double         lastHealth;
     private double         hunger;
-    private boolean        init;
     private boolean        passive;
     private int            attribPoints;
-    private long           skillTimer;
+
+    private boolean init = false;
+
 
     /**
      * Initializes a new account data representation for a player.
      *
      * @param player player to store the data for
      */
-    PlayerData(OfflinePlayer player, boolean init) {
+    public PlayerData(OfflinePlayer player) {
         this.player = player;
-        this.skillBar = new PlayerSkillBar(this);
-        this.castBars = new PlayerCastBars(this);
-        this.combos = new PlayerCombos(this);
         this.equips = new PlayerEquips(this);
-        this.init = SkillAPI.isLoaded() && init;
         this.scheme = "default";
         this.hunger = 1;
         for (String group : SkillAPI.getGroups()) {
@@ -160,40 +117,26 @@ public class PlayerData {
         return player.getName();
     }
 
-    public UUID getUUID() {
+    public UUID getUniqueId() {
         return player.getUniqueId();
     }
 
-    /**
-     * Retrieves the skill bar data for the owner
-     *
-     * @return skill bar data of the owner
-     */
-    public PlayerSkillBar getSkillBar() {
-        return skillBar;
+    public boolean getInit() {
+        lock.lock();
+        try {
+            return init;
+        } finally {
+            lock.unlock();
+        }
     }
 
-    /**
-     * @return cast bars data for the player
-     */
-    public PlayerCastBars getCastBars() {
-        return castBars;
-    }
-
-    /**
-     * Returns the data for the player's combos
-     *
-     * @return combo data for the player
-     */
-    public PlayerCombos getComboData() {
-        return combos;
-    }
-
-    /**
-     * @return extra data attached to the player's account
-     */
-    public DataSection getExtraData() {
-        return extraData;
+    public void setInit(boolean value) {
+        lock.lock();
+        try {
+            init = value;
+        } finally {
+            lock.unlock();
+        }
     }
 
     /**
@@ -560,12 +503,10 @@ public class PlayerData {
 
     /**
      * Opens the attribute menu for the player
-     *
-     * @return true if successfully opened, false if conditions weren't met
      */
-    public boolean openAttributeMenu() {
+    public void openAttributeMenu() {
         Player player = getPlayer();
-        if (SkillAPI.getSettings().isAttributesEnabled() && player != null) {
+        if (player != null) {
             GUITool.getAttributesMenu().show(
                     new AttributeHandler(),
                     this,
@@ -578,9 +519,7 @@ public class PlayerData {
                     ).get(0),
                     SkillAPI.getAttributeManager().getAttributes()
             );
-            return true;
         }
-        return false;
     }
 
     /**
@@ -677,7 +616,6 @@ public class PlayerData {
         String key = skill.getKey();
         if (!skills.containsKey(key)) {
             PlayerSkill data = new PlayerSkill(this, skill, parent);
-            combos.addSkill(skill);
             skills.put(key, data);
             autoLevel(skill);
         }
@@ -687,7 +625,6 @@ public class PlayerData {
      * Attempts to auto-level any skills that are able to do so
      */
     public void autoLevel() {
-        if (init) { return; }
 
         final Player player = getPlayer();
         if (player == null) { return; }
@@ -839,7 +776,6 @@ public class PlayerData {
             // Apply upgrade
             data.getPlayerClass().givePoints(cost, PointSource.REFUND);
             forceDownSkill(data);
-
             return true;
         } else {
             return false;
@@ -865,10 +801,6 @@ public class PlayerData {
             }
         }
 
-        // Clear bindings
-        if (skill.getLevel() == 0) {
-            clearBinds(skill.getData());
-        }
     }
 
     /**
@@ -894,9 +826,9 @@ public class PlayerData {
      * Refunds all skills for the player
      */
     public void refundSkills() {
-        for (PlayerSkill skill : skills.values()) { refundSkill(skill); }
-
-        clearAllBinds();
+        for (PlayerSkill skill : skills.values()) {
+            refundSkill(skill);
+        }
     }
 
     /**
@@ -1106,9 +1038,10 @@ public class PlayerData {
         if (c != null) {
             for (Skill skill : c.getData().getSkills()) {
                 skills.remove(skill.getName().toLowerCase());
-                combos.removeSkill(skill);
             }
-        } else { attribPoints += rpgClass.getGroupSettings().getStartingAttribs(); }
+        } else {
+            attribPoints += rpgClass.getGroupSettings().getStartingAttribs();
+        }
 
         PlayerClass classData = new PlayerClass(this, rpgClass);
         classes.put(rpgClass.getGroup(), classData);
@@ -1119,7 +1052,6 @@ public class PlayerData {
         }
 
         updateHealthAndMana(getPlayer());
-        updateScoreboard();
         return classes.get(rpgClass.getGroup());
     }
 
@@ -1207,12 +1139,7 @@ public class PlayerData {
                 if (ps != null && ps.isUnlocked() && ps.getData() instanceof PassiveSkill) {
                     ((PassiveSkill) ps.getData()).stopEffects(getPlayer(), ps.getLevel());
                 }
-                combos.removeSkill(skill);
             }
-
-            // Update GUI features
-            updateScoreboard();
-
             // Call the event
             Bukkit.getPluginManager().callEvent(new PlayerClassChangeEvent(playerClass, data, null));
         }
@@ -1222,7 +1149,6 @@ public class PlayerData {
         if (rpgClass != null && settings.getPermission() == null) {
             setClass(rpgClass);
         }
-        binds.clear();
         resetAttribs();
     }
 
@@ -1297,13 +1223,11 @@ public class PlayerData {
             for (Skill skill : rpgClass.getSkills()) {
                 if (!skills.containsKey(skill.getKey())) {
                     skills.put(skill.getKey(), new PlayerSkill(this, skill, current));
-                    combos.addSkill(skill);
                 }
             }
 
             Bukkit.getPluginManager().callEvent(new PlayerClassChangeEvent(current, previous, current.getData()));
             resetAttribs();
-            updateScoreboard();
             return true;
         } else {
             return false;
@@ -1636,121 +1560,6 @@ public class PlayerData {
         equips = new PlayerEquips(this);
     }
 
-    ///////////////////////////////////////////////////////
-    //                                                   //
-    //                   Skill Binding                   //
-    //                                                   //
-    ///////////////////////////////////////////////////////
-
-    /**
-     * Retrieves a skill the player has bound by material
-     *
-     * @param mat material to get the bind for
-     *
-     * @return skill bound to the material or null if none are bound
-     */
-    public PlayerSkill getBoundSkill(Material mat) {
-        return binds.get(mat);
-    }
-
-    /**
-     * Retrieves the bound data for the player. Modifying this map will
-     * modify the bindings the player has.
-     *
-     * @return the skill binds data for the player
-     */
-    public HashMap<Material, PlayerSkill> getBinds() {
-        return binds;
-    }
-
-    /**
-     * Checks whether or not the material has a skill bound to it
-     *
-     * @param mat material to check
-     *
-     * @return true if a skill is bound to it, false otherwise
-     */
-    public boolean isBound(Material mat) {
-        return binds.containsKey(mat);
-    }
-
-    /**
-     * Binds a skill to a material for the player. The bind will not work if the skill
-     * was already bound to the material.
-     *
-     * @param mat   material to bind the skill to
-     * @param skill skill to bind to the material
-     *
-     * @return true if was able to bind the skill, false otherwise
-     */
-    public boolean bind(Material mat, PlayerSkill skill) {
-        // Special cases
-        if (mat == null || (skill != null && skill.getPlayerData() != this)) {
-            return false;
-        }
-
-        PlayerSkill bound = getBoundSkill(mat);
-        if (bound != skill) {
-            // Apply the binding
-            if (skill == null) {
-                binds.remove(mat);
-            } else {
-                binds.put(mat, skill);
-            }
-
-            // Update the old skill's bind
-            if (bound != null) {
-                bound.setBind(null);
-            }
-
-            // Update the new skill's bind
-            if (skill != null) {
-                skill.setBind(mat);
-            }
-
-            return true;
-        }
-
-        // The skill was already bound
-        else {
-            return false;
-        }
-    }
-
-    /**
-     * Clears a skill binding on the material. If there is no binding on the
-     * material, this will do nothing.
-     *
-     * @param mat material to clear bindings from
-     *
-     * @return true if a binding was cleared, false otherwise
-     */
-    public boolean clearBind(Material mat) {
-        return binds.remove(mat) != null;
-    }
-
-    /**
-     * Clears the skill binding for the given skill. This will remove the bindings
-     * on all materials involving the skill.
-     *
-     * @param skill skill to unbind
-     */
-    public void clearBinds(Skill skill) {
-        ArrayList<Material> keys = new ArrayList<>(binds.keySet());
-        for (Material key : keys) {
-            PlayerSkill bound = binds.get(key);
-            if (bound.getData() == skill) {
-                binds.remove(key);
-            }
-        }
-    }
-
-    /**
-     * Clears all binds the player currently has
-     */
-    public void clearAllBinds() {
-        binds.clear();
-    }
 
     ///////////////////////////////////////////////////////
     //                                                   //
@@ -1765,15 +1574,6 @@ public class PlayerData {
      */
     public void record(Player player) {
         this.lastHealth = player.getHealth();
-    }
-
-    /**
-     * Updates the scoreboard with the player's current class.
-     * This is already done by the API and doesn't need to be
-     * done by other plugins.
-     */
-    public void updateScoreboard() {
-        if (SkillAPI.getSettings().isShowScoreboard()) { SkillAPI.schedule(new ScoreboardTask(this), 2); }
     }
 
     /**
@@ -1939,7 +1739,6 @@ public class PlayerData {
         if (SkillAPI.getSettings().isManaEnabled()) {
             useMana(manaCost, ManaCost.SKILL_CAST);
         }
-        skillTimer = System.currentTimeMillis() + SkillAPI.getSettings().getCastCooldown();
         return true;
     }
 
@@ -1953,7 +1752,7 @@ public class PlayerData {
      * @return true if can use
      */
     public boolean check(PlayerSkill skill, boolean cooldown, boolean mana) {
-        if (skill == null || System.currentTimeMillis() < skillTimer) { return false; }
+        if (skill == null) { return false; }
 
         SkillStatus status = skill.getStatus();
         int level = skill.getLevel();
@@ -1997,13 +1796,13 @@ public class PlayerData {
      * @param player player to set up for
      */
     public void init(Player player) {
-        if (!SkillAPI.getSettings().isWorldEnabled(player.getWorld())) { return; }
-
+        if (!SkillAPI.getSettings().isWorldEnabled(player.getWorld())) {
+            return;
+        }
         AttributeListener.updatePlayer(this);
         getEquips().update(player);
         this.updateHealthAndMana(player);
         this.startPassives(player);
-        this.updateScoreboard();
         if (this.getLastHealth() > 0 && !player.isDead()) {
             player.setHealth(Math.min(this.getLastHealth(), player.getMaxHealth()));
         }

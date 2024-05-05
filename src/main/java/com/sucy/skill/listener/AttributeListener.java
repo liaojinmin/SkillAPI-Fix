@@ -1,29 +1,3 @@
-/**
- * SkillAPI
- * com.sucy.listener.skill.AttributeListener
- *
- * The MIT License (MIT)
- *
- * Copyright (c) 2014 Steven Sucy
- *
- * Permission is hereby granted, free of charge, to any person obtaining a copy
- * of this software and associated documentation files (the "Software") to deal
- * in the Software without restriction, including without limitation the rights
- * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
- * copies of the Software, and to permit persons to whom the Software is
- * furnished to do so, subject to the following conditions:
- *
- * The above copyright notice and this permission notice shall be included in
- * all copies or substantial portions of the Software.
- *
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
- * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
- * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
- * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
- * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
- * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
- * THE SOFTWARE.
- */
 package com.sucy.skill.listener;
 
 import com.rit.sucy.version.VersionManager;
@@ -33,7 +7,6 @@ import com.sucy.skill.api.enums.ExpSource;
 import com.sucy.skill.api.enums.ManaSource;
 import com.sucy.skill.api.event.*;
 import com.sucy.skill.api.player.PlayerData;
-import com.sucy.skill.hook.CitizensHook;
 import com.sucy.skill.log.LogType;
 import com.sucy.skill.log.Logger;
 import com.sucy.skill.manager.AttributeManager;
@@ -49,16 +22,17 @@ import org.bukkit.event.entity.FoodLevelChangeEvent;
 import org.bukkit.event.player.PlayerChangedWorldEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.event.player.PlayerRespawnEvent;
+import org.jetbrains.annotations.Nullable;
 
 import java.util.HashMap;
 
 /**
  * Listener for managing applying attribute bonuses for players
  */
-public class AttributeListener extends SkillAPIListener
-{
+public class AttributeListener extends SkillAPIListener {
+
     public static final String PHYSICAL = "physical";
-    private static HashMap<String, Double> BONUSES = new HashMap<>();
+    private static final HashMap<String, Double> BONUSES = new HashMap<>();
 
     @Override
     public void init() {
@@ -116,8 +90,7 @@ public class AttributeListener extends SkillAPIListener
     /**
      * Gives players bonus stats on login
      */
-    public void onJoin(final Player player)
-    {
+    public void onJoin(final Player player) {
         updatePlayer(SkillAPI.getPlayerData(player));
     }
 
@@ -216,48 +189,6 @@ public class AttributeListener extends SkillAPIListener
         }
         event.setDamage(newAmountD);
     }
-    /*
-    @EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
-    public void onPhysicalDamage(PhysicalDamageEvent event)
-    {
-        // Physical Damage
-        if (event.getDamager() instanceof Player)
-        {
-            Player player = (Player) event.getDamager();
-            if (CitizensHook.isNPC(player))
-                return;
-
-            PlayerData data = SkillAPI.getPlayerData(player);
-
-            double newAmount = data.scaleStat(AttributeManager.PHYSICAL_DAMAGE, event.getDamage());
-            if (event.isProjectile()) {
-                newAmount = data.scaleStat(AttributeManager.PROJECTILE_DAMAGE, newAmount);
-            } else {
-                newAmount = data.scaleStat(AttributeManager.MELEE_DAMAGE, newAmount);
-            }
-            event.setDamage(newAmount);
-        }
-
-        // Physical Defense
-        if (event.getTarget() instanceof Player)
-        {
-            Player player = (Player) event.getTarget();
-            if (CitizensHook.isNPC(player))
-                return;
-
-            PlayerData data = SkillAPI.getPlayerData(player);
-
-            double newAmount = data.scaleStat(AttributeManager.PHYSICAL_DEFENSE, event.getDamage());
-            if (event.isProjectile()) {
-                newAmount = data.scaleStat(AttributeManager.PROJECTILE_DEFENSE, newAmount);
-            } else {
-                newAmount = data.scaleStat(AttributeManager.MELEE_DEFENSE, newAmount);
-            }
-            event.setDamage(newAmount);
-        }
-    }
-
-     */
 
     /**
      * Apply skill damage/defense attribute buffs
@@ -285,62 +216,17 @@ public class AttributeListener extends SkillAPIListener
             event.setDamage(newAmount);
         }
     }
-    /*
-    @EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
-    public void onSkillDamage(final SkillDamageEvent event)
-    {
-        // Skill Damage
-        if (event.getDamager() instanceof Player)
-        {
-            final Player player = (Player) event.getDamager();
-            if (CitizensHook.isNPC(player))
-                return;
 
-            final PlayerData data = SkillAPI.getPlayerData(player);
-
-            if (event.getClassification().equalsIgnoreCase(PHYSICAL)) {
-                event.setDamage(data.scaleStat(AttributeManager.PHYSICAL_DAMAGE, event.getDamage()));
-            } else {
-                final String classified = AttributeManager.SKILL_DAMAGE + "-" + event.getClassification();
-                final double firstPass = data.scaleStat(classified, event.getDamage());
-                final double newAmount = data.scaleStat(AttributeManager.SKILL_DAMAGE, firstPass);
-                event.setDamage(newAmount);
-            }
-        }
-
-        // Skill Defense
-        if (event.getTarget() instanceof Player)
-        {
-            final Player player = (Player) event.getTarget();
-            if (CitizensHook.isNPC(player))
-                return;
-
-            final PlayerData data = SkillAPI.getPlayerData(player);
-
-            if (event.getClassification().equalsIgnoreCase(PHYSICAL)) {
-                event.setDamage(data.scaleStat(AttributeManager.PHYSICAL_DEFENSE, event.getDamage()));
-            } else {
-                final String classified = AttributeManager.SKILL_DEFENSE + "-" + event.getClassification();
-                final double firstPass = data.scaleStat(classified, event.getDamage());
-                final double newAmount = data.scaleStat(AttributeManager.SKILL_DEFENSE, firstPass);
-                event.setDamage(newAmount);
-            }
-        }
-    }
-
-     */
 
     @EventHandler(priority = EventPriority.HIGH)
     public void onDamage(final EntityDamageEvent event) {
         if (!(event.getEntity() instanceof Player))
             return;
-
         final Player player = (Player)event.getEntity();
-        if (CitizensHook.isNPC(player)) {
+        final PlayerData data = SkillAPI.getPlayerData(player);
+        if (data == null) {
             return;
         }
-
-        final PlayerData data = SkillAPI.getPlayerData(player);
         event.setDamage(data.scaleStat("defense-" + event.getCause().name().toLowerCase(), event.getDamage()));
     }
 
@@ -368,6 +254,9 @@ public class AttributeListener extends SkillAPIListener
         final Player player = (Player)event.getEntity();
         if (event.getFoodLevel() < player.getFoodLevel()) {
             final PlayerData data = SkillAPI.getPlayerData(player);
+            if (data == null) {
+                return;
+            }
             final int lost = data.subtractHungerValue(player.getFoodLevel() - event.getFoodLevel());
             event.setFoodLevel(player.getFoodLevel() - lost);
         }
@@ -379,6 +268,9 @@ public class AttributeListener extends SkillAPIListener
                 && event.getEntity() instanceof Player) {
             final Player player = (Player)event.getEntity();
             final PlayerData data = SkillAPI.getPlayerData(player);
+            if (data == null) {
+                return;
+            }
             final double scaled = data.scaleStat(AttributeManager.HUNGER_HEAL, event.getAmount());
             event.setAmount(scaled);
         }
@@ -389,7 +281,10 @@ public class AttributeListener extends SkillAPIListener
      *
      * @param data player to update
      */
-    public static void updatePlayer(PlayerData data) {
+    public static void updatePlayer(@Nullable PlayerData data) {
+        if (data == null) {
+            return;
+        }
         Player player = data.getPlayer();
         if (player != null && SkillAPI.getSettings().isWorldEnabled(player.getWorld())) {
 
@@ -434,7 +329,11 @@ public class AttributeListener extends SkillAPIListener
      */
     public static void refreshSpeed(Player player) {
         BONUSES.remove(player.getName() + ":" + AttributeManager.MOVE_SPEED);
-        double speed = updateStat(SkillAPI.getPlayerData(player), AttributeManager.MOVE_SPEED, 0.2, -2, 1);
+        PlayerData data = SkillAPI.getPlayerData(player);
+        if (data == null) {
+            return;
+        }
+        double speed = updateStat(data, AttributeManager.MOVE_SPEED, 0.2, -2, 1);
         player.setWalkSpeed((float) (0.2 + speed));
     }
 
@@ -447,8 +346,7 @@ public class AttributeListener extends SkillAPIListener
      *
      * @return change in the stat based on current attributes
      */
-    private static double updateStat(PlayerData data, String key, double value, double min, double max)
-    {
+    private static double updateStat(PlayerData data, String key, double value, double min, double max) {
         Player player = data.getPlayer();
         if (player != null)
         {

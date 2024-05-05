@@ -1,13 +1,13 @@
 package com.sucy.skill.task;
 
 import com.sucy.skill.api.attribute.mob.MobAttribute;
-import com.sucy.skill.thread.RepeatThreadTask;
+import com.sucy.skill.thread.AbstractRepeatThread;
 import org.bukkit.Bukkit;
 
 import java.util.ArrayList;
 import java.util.UUID;
 
-public class MobAttributeTask extends RepeatThreadTask {
+public class MobAttributeTask extends AbstractRepeatThread {
 
     public MobAttributeTask() {
         super(0, 20 * 30);

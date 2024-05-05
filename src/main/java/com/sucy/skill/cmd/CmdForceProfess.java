@@ -82,7 +82,11 @@ public class CmdForceProfess implements IFunction
             String name = args[1];
             for (int i = 2; i < args.length; i++) name += ' ' + args[i];
 
-            PlayerData data = SkillAPI.getPlayerData(player);
+            PlayerData data = SkillAPI.getPlayerData(player.getUniqueId());
+            if (data == null) {
+                sender.sendMessage("玩家数据未加载...");
+                return;
+            }
             RPGClass target = SkillAPI.getClass(name);
 
             // Invalid class

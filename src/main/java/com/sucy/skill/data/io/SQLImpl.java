@@ -27,19 +27,14 @@
 package com.sucy.skill.data.io;
 
 import com.alibaba.fastjson2.JSONObject;
-import com.rit.sucy.version.VersionManager;
-import com.rit.sucy.version.VersionPlayer;
 import com.sucy.skill.SkillAPI;
-import com.sucy.skill.api.player.PlayerAccounts;
+import com.sucy.skill.api.player.PlayerData;
 import com.sucy.skill.data.Settings;
-
 import com.sucy.skill.utils.Pair;
-
 import org.bukkit.Bukkit;
 import org.bukkit.OfflinePlayer;
 import org.bukkit.entity.Player;
 import org.bukkit.scheduler.BukkitTask;
-
 import java.sql.*;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
@@ -48,7 +43,6 @@ import java.util.concurrent.ConcurrentHashMap;
  * Loads player data from the SQL Database
  */
 public class SQLImpl extends IOManager {
-
 
     private final SqlService sqlService;
 
@@ -77,105 +71,49 @@ public class SQLImpl extends IOManager {
         return this.sqlService.getConnection();
     }
 
-    @Override
-    public HashMap<String, PlayerAccounts> loadAll() {
-        HashMap<String, PlayerAccounts> result = new HashMap<>();
-        for (Player player : VersionManager.getOnlinePlayers()) {
-            result.put(new VersionPlayer(player).getIdString(), load(player));
-        }
-        return result;
-    }
 
     @Override
-    public PlayerAccounts loadData(OfflinePlayer player) {
+    public PlayerData loadData(OfflinePlayer player) {
         if (player == null) return null;
-        return load(player);
+        String data = select(player.getUniqueId());
+        if (data == null || data.isEmpty()) {
+            return new PlayerData(player);
+        }
+        return loadOfJson(player, JSONObject.parseObject(data));
+
     }
 
-    private PlayerAccounts load(OfflinePlayer player) {
-        String playerKey = new VersionPlayer(player).getIdString();
-        String data = select(playerKey, player);
-        if (data == null || data.isEmpty()) {
-            return new PlayerAccounts(player);
-        }
-        AccountAgent accountAgent = new AccountAgent(JSONObject.parseObject(data));
-        return accountAgent.adpPlayerAccount(player);
-    }
 
     @Override
-    public void saveData(PlayerAccounts data) {
-        if (data == null || data instanceof FakePlayer) {
+    public void saveData(PlayerData data) {
+        if (data == null || data.getPlayer() == null || !data.getPlayer().isOnline()) {
             return;
         }
-        if (data.getOfflinePlayer() == null || !data.getOfflinePlayer().isOnline()) {
-            return;
-        }
-        String key = new VersionPlayer((data.getOfflinePlayer())).getIdString();
-        update(key, data.toJson());
-    }
-
-    public void saveByGeek(PlayerAccounts data) {
-        if (data == null || data instanceof FakePlayer) {
-            String info;
-            if (data != null) {
-                info = "is FakePlayer";
-            } else  {
-                info = "is null";
-            }
-            System.out.println("这个数据存在异常 -> "+info);
-            return;
-        }
-        String key = new VersionPlayer((data.getOfflinePlayer())).getIdString();
-        update(key, data.toJson());
+        update(data.getUniqueId(), saveOfJson(data).toJSONString());
     }
 
 
     @Override
     public void saveAll() {
        // System.out.println("正在准备储存所有数据");
-        ConcurrentHashMap<String, PlayerAccounts> data = SkillAPI.getPlayerAccountData();
-        List<Pair<String, String>> list = new ArrayList<>();
-        List<String> keys = new ArrayList<>(data.keySet());
-        for (String key : keys) {
-            PlayerAccounts accounts = data.get(key);
-            if (accounts == null || accounts instanceof FakePlayer) {
+        ConcurrentHashMap<UUID, PlayerData> data = SkillAPI.getPlayerDataMap();
+        List<Pair<UUID, String>> list = new ArrayList<>();
+        List<UUID> keys = new ArrayList<>(data.keySet());
+        for (UUID key : keys) {
+            PlayerData playerData = data.get(key);
+            if (playerData == null) {
                 continue;
             }
-            if (accounts.getOfflinePlayer() == null || !accounts.getOfflinePlayer().isOnline()) {
-                continue;
-            }
-            //if (accounts.getPlayer().)
-            list.add(new Pair<>(key, accounts.toJson()));
+            list.add(new Pair<>(key, saveOfJson(playerData).toJSONString()));
         }
         updateAll(list);
       //  System.out.println("    数据储存完毕....");
     }
 
-    public void insertSingle(PlayerAccounts data) {
-        if (data instanceof FakePlayer) {
-            return;
-        }
-        String key = new VersionPlayer((data.getOfflinePlayer())).getIdString();
-        insert(key, data.toJson());
-    }
-
-
-    private void insert(String key, String data) {
+    private void insert(UUID key) {
         try (Connection connection = getConnection()) {
             try (PreparedStatement preparedStatement = connection.prepareStatement("insert into  skillapi_players(`Name`, `data`) values(?,?)")) {
-                preparedStatement.setString(1, key);
-                preparedStatement.setString(2, data);
-                preparedStatement.executeUpdate();
-            }
-        } catch (SQLException e) {
-            e.printStackTrace();
-        }
-    }
-
-    private void insert(String key) {
-        try (Connection connection = getConnection()) {
-            try (PreparedStatement preparedStatement = connection.prepareStatement("insert into  skillapi_players(`Name`, `data`) values(?,?)")) {
-                preparedStatement.setString(1, key);
+                preparedStatement.setString(1, key.toString());
                 preparedStatement.setString(2, "");
                 preparedStatement.executeUpdate();
             }
@@ -184,17 +122,16 @@ public class SQLImpl extends IOManager {
         }
     }
 
-    private String select(String key, OfflinePlayer player) {
+
+    private String select(UUID key) {
         String data = null;
         try (Connection connection = getConnection()) {
             try (PreparedStatement preparedStatement = connection.prepareStatement("select `data` from `skillapi_players` where Name=?")) {
-                preparedStatement.setString(1, key);
+                preparedStatement.setString(1, key.toString());
                 ResultSet resultSet = preparedStatement.executeQuery();
                 if (resultSet.next()) {
                     data = resultSet.getString("data");
                 } else {
-                    // 先找文件
-              //      configIO.loadData(player);
                     insert(key);
                 }
             }
@@ -204,23 +141,24 @@ public class SQLImpl extends IOManager {
         return data;
     }
 
-    private void update(String key, String data) {
+    private void update(UUID key, String data) {
         try (Connection connection = getConnection()) {
             try (PreparedStatement preparedStatement = connection.prepareStatement("update `skillapi_players` set `data`=? where Name=?")) {
                 preparedStatement.setString(1, data);
-                preparedStatement.setString(2, key);
+                preparedStatement.setString(2, key.toString());
                 preparedStatement.executeUpdate();
             }
         } catch (SQLException e) {
             e.printStackTrace();
         }
     }
-    private void updateAll(List<Pair<String, String>> data) {
+
+    private void updateAll(List<Pair<UUID, String>> data) {
         try (Connection connection = getConnection()) {
             try (PreparedStatement preparedStatement = connection.prepareStatement("update `skillapi_players` set `data`=? where Name=?")) {
-                for (Pair<String, String> d : data) {
+                for (Pair<UUID, String> d : data) {
                     preparedStatement.setString(1, d.value);
-                    preparedStatement.setString(2, d.key);
+                    preparedStatement.setString(2, d.key.toString());
                     preparedStatement.addBatch();
                 }
                 preparedStatement.executeBatch();
@@ -238,5 +176,7 @@ public class SQLImpl extends IOManager {
             sqlService.stopSql();
         }
     }
+
+
 
 }

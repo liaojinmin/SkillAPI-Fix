@@ -70,16 +70,5 @@ public class Combat
         return timers.containsKey(player.getName()) && System.currentTimeMillis() - timers.get(player.getName()) < seconds * 1000;
     }
 
-    /**
-     * Checks whether or not the player is out of combat or not
-     *
-     * @param player  player to check for
-     * @param seconds seconds before being counted as out of combat
-     *
-     * @return true if out of combat, false otherwise
-     */
-    public static boolean isOutOfCombat(Player player, double seconds)
-    {
-        return !isInCombat(player, seconds);
-    }
+
 }

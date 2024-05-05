@@ -4,7 +4,6 @@ import com.sucy.skill.SkillAPI;
 import com.sucy.skill.api.attribute.mob.MobAttribute;
 import com.sucy.skill.api.attribute.mob.MobAttributeData;
 import com.sucy.skill.api.event.AttributeEntityAddEvent;
-import com.sucy.skill.api.event.AttributeGetEvent;
 import com.sucy.skill.api.event.TempAttributeAddEvent;
 import com.sucy.skill.api.player.PlayerClass;
 import com.sucy.skill.api.player.PlayerData;
@@ -40,29 +39,24 @@ public class AttributeAPI {
         int total = 0;
         // 去色
         key = ChatColor.stripColor(key).toLowerCase();
-
-        if (entity instanceof Player && SkillAPI.getPlayerData((Player) entity) != null) {
-            PlayerData data = SkillAPI.getPlayerData((Player) entity);
-            if (data.attributes.containsKey(key)) {
-                total += data.attributes.get(key);
+        if (entity instanceof Player) {
+            PlayerData data = SkillAPI.getPlayerData(entity.getUniqueId());
+            if (data != null) {
+                if (data.attributes.containsKey(key)) {
+                    total += data.attributes.get(key);
+                }
+                if (data.bonusAttrib.containsKey(key)) {
+                    total += data.bonusAttrib.get(key);
+                }
+                total += data.getAddAttribute(key);
+                for (PlayerClass playerClass : data.getClasses()) {
+                    total += playerClass.getData().getAttribute(key, playerClass.getLevel());
+                }
+                return Math.max(0, total);
             }
-            AttributeGetEvent event = new AttributeGetEvent(entity, key, total);
-            Bukkit.getPluginManager().callEvent(event);
-            total = event.getValue();
-            if (data.bonusAttrib.containsKey(key)) {
-                total += data.bonusAttrib.get(key);
-            }
-            total += data.getAddAttribute(key);
-            for (PlayerClass playerClass : data.getClasses()) {
-                total += playerClass.getData().getAttribute(key, playerClass.getLevel());
-            }
-            return Math.max(0, total);
         }
-        AttributeGetEvent event = new AttributeGetEvent(entity, key, total);
-        Bukkit.getPluginManager().callEvent(event);
-        int old = event.getValue();
         MobAttributeData mobAttributeData = MobAttribute.getData(entity.getUniqueId(), true);
-        return (int) (old + mobAttributeData.getAttribute(key));
+        return (int) (total + mobAttributeData.getAttribute(key));
     }
 
     /**

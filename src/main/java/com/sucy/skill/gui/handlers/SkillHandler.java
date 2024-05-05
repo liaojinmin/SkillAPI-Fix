@@ -49,10 +49,4 @@ public class SkillHandler extends GUIHolder<Skill> {
                 && player.downgradeSkill(type)) { setPage(page); }
     }
 
-    @Override
-    public void onHotBar(Skill type, int from, int to) {
-        if (player.getSkillBar().isSetup() && type.canCast() && player.hasSkill(type.getName())) {
-            player.getSkillBar().assign(player.getSkill(type.getName()), to);
-        }
-    }
 }

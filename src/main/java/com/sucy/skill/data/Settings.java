@@ -38,6 +38,7 @@ import com.sucy.party.Party;
 import com.sucy.skill.SkillAPI;
 import com.sucy.skill.api.CombatProtection;
 import com.sucy.skill.api.DefaultCombatProtection;
+import com.sucy.skill.api.attribute.AttributeAPI;
 import com.sucy.skill.api.player.PlayerClass;
 import com.sucy.skill.api.skills.Skill;
 import com.sucy.skill.cast.IndicatorSettings;
@@ -48,6 +49,7 @@ import com.sucy.skill.gui.tool.GUITool;
 import com.sucy.skill.log.Logger;
 import me.geek.team.common.TeamHandler;
 import me.geek.team.common.TeamManager;
+import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.World;
 import org.bukkit.entity.*;
@@ -55,12 +57,7 @@ import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.material.MaterialData;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 
 /**
  * <p>The management class for SkillAPI's config.yml settings.</p>
@@ -119,10 +116,7 @@ public class Settings {
         loadSkillSettings();
         loadItemSettings();
         loadGUISettings();
-        loadCastSettings();
-        loadComboSettings();
         loadExpSettings();
-        loadSkillBarSettings();
         loadLoggingSettings();
         loadWorldSettings();
         loadSaveSettings();
@@ -261,12 +255,10 @@ public class Settings {
 
     private static final String ACCOUNT_BASE = "Accounts.";
     private static final String ACCOUNT_MAIN = ACCOUNT_BASE + "com-class-group";
-    private static final String ACCOUNT_EACH = ACCOUNT_BASE + "one-per-class";
     private static final String ACCOUNT_MAX  = ACCOUNT_BASE + "max-accounts";
     private static final String ACCOUNT_PERM = ACCOUNT_BASE + "perm-accounts";
 
     private String  mainGroup;
-    private boolean onePerClass;
     private int     maxAccounts;
 
     private HashMap<String, Integer> permAccounts = new HashMap<String, Integer>();
@@ -281,15 +273,6 @@ public class Settings {
         return mainGroup;
     }
 
-    /**
-     * Retrieves whether or not accounts should be initialized with
-     * one file per class.
-     *
-     * @return true if enabled, false otherwise
-     */
-    public boolean isOnePerClass() {
-        return onePerClass;
-    }
 
     /**
      * Retrieves the max accounts allowed for most players
@@ -323,7 +306,6 @@ public class Settings {
 
     private void loadAccountSettings() {
         mainGroup = config.getString(ACCOUNT_MAIN);
-        onePerClass = config.getBoolean(ACCOUNT_EACH);
         maxAccounts = config.getInt(ACCOUNT_MAX);
 
         // Permission account amounts
@@ -382,6 +364,15 @@ public class Settings {
      * @return true if can be attacked, false otherwise
      */
     public boolean canAttack(LivingEntity attacker, LivingEntity target) {
+        //召唤物的判断依赖于召唤者
+        if (!attacker.getMetadata(AttributeAPI.FX_SKILL_API_MASTER).isEmpty()) {
+            UUID masterId = UUID.fromString(attacker.getMetadata(AttributeAPI.FX_SKILL_API_MASTER).get(0).asString());
+            Entity master = Bukkit.getEntity(masterId);
+            if (master != null && !master.isEmpty()) {
+                attacker = (LivingEntity) master;
+            }
+        }
+
         if (attacker instanceof Player) {
             final Player player = (Player) attacker;
             if (!player.getWorld().getPVP() && target instanceof Player) {
@@ -614,14 +605,12 @@ public class Settings {
     private static final String CLASS_MODIFY = CLASS_BASE + "modify-health";
     private static final String CLASS_HP     = CLASS_BASE + "classless-hp";
     private static final String CLASS_SHOW   = CLASS_BASE + "show-auto-skills";
-    private static final String CLASS_ATTRIB = CLASS_BASE + "attributes-enabled";
     private static final String CLASS_REFUND = CLASS_BASE + "attributes-downgrade";
     private static final String CLASS_LEVEL  = CLASS_BASE + "level-up-skill";
 
     private boolean modifyHealth;
     private int     defaultHealth;
     private boolean showAutoSkills;
-    private boolean attributesEnabled;
     private boolean attributesDowngrade;
     private String  levelUpSkill;
 
@@ -652,14 +641,7 @@ public class Settings {
         return showAutoSkills;
     }
 
-    /**
-     * Checks whether or not attributes are enabled
-     *
-     * @return true if enabled, false otherwise
-     */
-    public boolean isAttributesEnabled() {
-        return attributesEnabled;
-    }
+
 
     /**
      * Checks whether or not attribute points can be refunded
@@ -694,7 +676,6 @@ public class Settings {
         modifyHealth = config.getBoolean(CLASS_MODIFY);
         defaultHealth = config.getInt(CLASS_HP);
         showAutoSkills = config.getBoolean(CLASS_SHOW);
-        attributesEnabled = config.getBoolean(CLASS_ATTRIB);
         attributesDowngrade = config.getBoolean(CLASS_REFUND);
         levelUpSkill = config.getString(CLASS_LEVEL);
     }
@@ -1011,7 +992,6 @@ public class Settings {
             GUI_FOOD   = GUI_BASE + "food-bar",
             GUI_ACTION = GUI_BASE + "use-action-bar",
             GUI_TEXT   = GUI_BASE + "action-bar-text",
-            GUI_BOARD  = GUI_BASE + "scoreboard-enabled",
             GUI_NAME   = GUI_BASE + "show-class-name",
             GUI_LEVEL  = GUI_BASE + "show-class-level",
             GUI_BINDS  = GUI_BASE + "show-binds",
@@ -1032,7 +1012,6 @@ public class Settings {
     private String  levelText;
     private boolean useActionBar;
     private String  actionText;
-    private boolean showScoreboard;
     private boolean showClassName;
     private boolean showClassLevel;
     private boolean showBinds;
@@ -1094,14 +1073,6 @@ public class Settings {
         return actionText;
     }
 
-    /**
-     * Checks whether or not the stats scoreboard is to be shown
-     *
-     * @return true if shown, false otherwise
-     */
-    public boolean isShowScoreboard() {
-        return showScoreboard;
-    }
 
     /**
      * Checks whether or not a player's class name is to be
@@ -1179,7 +1150,6 @@ public class Settings {
         foodBar = config.getString(GUI_FOOD);
         useActionBar = config.getBoolean(GUI_ACTION);
         actionText = config.getString(GUI_TEXT);
-        showScoreboard = config.getBoolean(GUI_BOARD);
         showClassName = config.getBoolean(GUI_NAME);
         showClassLevel = config.getBoolean(GUI_LEVEL);
         showBinds = config.getBoolean(GUI_BINDS);
@@ -1189,181 +1159,6 @@ public class Settings {
         titleFadeIn = (int) (20 * config.getFloat(GUI_FADEI));
         titleFadeOut = (int) (20 * config.getFloat(GUI_FADEO));
         titleMessages = config.getList(GUI_LIST);
-    }
-
-    ///////////////////////////////////////////////////////
-    //                                                   //
-    //                   Cast Settings                   //
-    //                                                   //
-    ///////////////////////////////////////////////////////
-
-    private static final String CAST_BASE      = "Casting.";
-    private static final String CAST_ENABLED   = CAST_BASE + "enabled";
-    private static final String CAST_BARS      = CAST_BASE + "bars";
-    private static final String CAST_COMBAT    = CAST_BASE + "combat";
-    private static final String CAST_INDICATOR = CAST_BASE + "cast-indicator";
-    private static final String CAST_SLOT      = CAST_BASE + "slot";
-    private static final String CAST_ITEM      = CAST_BASE + "item";
-    private static final String CAST_COOLDOWN  = CAST_BASE + "cooldown";
-    private static final String CAST_HOVER     = CAST_BASE + "hover-item";
-    private static final String CAST_INSTANT   = CAST_BASE + "instant-item";
-
-    private boolean   castEnabled;
-    private boolean   castBars;
-    private boolean   combatEnabled;
-    private int       castSlot;
-    private long      castCooldown;
-    private ItemStack castItem;
-    private ItemStack hoverItem;
-    private ItemStack instantItem;
-
-    /**
-     * @return true if default casting is enabled
-     */
-    public boolean isCastEnabled() {
-        return castEnabled;
-    }
-
-    /**
-     * @return true if using bar format, false otherwise
-     */
-    public boolean isUsingBars() {
-        return castEnabled && castBars && !combatEnabled;
-    }
-
-    public boolean isUsingWand() {
-        return castEnabled && !castBars && !combatEnabled;
-    }
-
-    public boolean isUsingCombat() {
-        return castEnabled && combatEnabled;
-    }
-
-    /**
-     * @return slot the cast item is stored in
-     */
-    public int getCastSlot() {
-        return castSlot;
-    }
-
-    /**
-     * @return global cooldown for casting
-     */
-    public long getCastCooldown() {
-        return castCooldown;
-    }
-
-    /**
-     * @return cast item to use in the slot
-     */
-    public ItemStack getCastItem() {
-        return castItem;
-    }
-
-    public ItemStack getHoverItem() {
-        return hoverItem;
-    }
-
-    public ItemStack getInstantItem() {
-        return instantItem;
-    }
-
-    private void loadCastSettings() {
-        castEnabled = config.getBoolean(CAST_ENABLED);
-        castBars = config.getBoolean(CAST_BARS);
-        combatEnabled = config.getBoolean(CAST_COMBAT);
-        castSlot = config.getInt(CAST_SLOT) - 1;
-        castCooldown = (long) (config.getDouble(CAST_COOLDOWN) * 1000);
-        castItem = GUITool.parseItem(config.getSection(CAST_ITEM));
-        hoverItem = GUITool.parseItem(config.getSection(CAST_HOVER));
-        instantItem = GUITool.parseItem(config.getSection(CAST_INSTANT));
-        castEnabled = castEnabled && castItem != null;
-        IndicatorSettings.load(config.getSection(CAST_INDICATOR));
-    }
-
-    ///////////////////////////////////////////////////////
-    //                                                   //
-    //               Click Combo Settings                //
-    //                                                   //
-    ///////////////////////////////////////////////////////
-
-    private static final String COMBO_BASE    = "Click Combos.";
-    private static final String COMBO_ENABLED = COMBO_BASE + "enabled";
-    private static final String COMBO_CUSTOM  = COMBO_BASE + "allow-custom";
-    private static final String COMBO_CLICK   = COMBO_BASE + "use-click-";
-    private static final String COMBO_SIZE    = COMBO_BASE + "combo-size";
-    private static final String COMBO_TIME    = COMBO_BASE + "click-time";
-    private static final String COMBO_AUTO    = COMBO_BASE + "auto-assign";
-
-    private boolean[] clicks;
-    private boolean   combosEnabled;
-    private boolean   customCombos;
-    private boolean   autoAssignCombos;
-    private int       comboSize;
-    private int       clickTime;
-
-    /**
-     * Checks whether or not click combos are enabled
-     *
-     * @return true if enabled, false otherwise
-     */
-    public boolean isCombosEnabled() {
-        return combosEnabled;
-    }
-
-    /**
-     * Checks whether or not players can customize their click combos
-     *
-     * @return true if can customize them, false otherwise
-     */
-    public boolean isCustomCombosAllowed() {
-        return customCombos;
-    }
-
-    public boolean shouldAutoAssignCombos() {
-        return autoAssignCombos;
-    }
-
-    /**
-     * @return enabled clicks as an array of booleans indexed by click ID
-     */
-    public boolean[] getEnabledClicks() {
-        return clicks;
-    }
-
-    /**
-     * Retrieves the max length of combos to be used
-     *
-     * @return max length of combos to be used
-     */
-    public int getComboSize() {
-        return comboSize;
-    }
-
-    /**
-     * Retrieves the amount of seconds allowed between clicks before the combo resets
-     *
-     * @return number of seconds before a click combo resets
-     */
-    public int getClickTime() {
-        return clickTime;
-    }
-
-    private void loadComboSettings() {
-        combosEnabled = config.getBoolean(COMBO_ENABLED);
-        customCombos = combosEnabled && config.getBoolean(COMBO_CUSTOM);
-        autoAssignCombos = combosEnabled && config.getBoolean(COMBO_AUTO, true);
-        comboSize = config.getInt(COMBO_SIZE);
-        clickTime = (int) (1000 * config.getDouble(COMBO_TIME));
-
-        clicks = new boolean[Click.values().length + 1];
-        for (int i = 1; i <= Click.values().length; i++) {
-            final String key = COMBO_CLICK + Click.getById(i).name().toLowerCase().replace('_', '-');
-            clicks[i] = config.getBoolean(key);
-        }
-        if (clicks[Click.RIGHT_SHIFT.getId()] || clicks[Click.LEFT_SHIFT.getId()]) {
-            clicks[Click.SHIFT.getId()] = false;
-        }
     }
 
     ///////////////////////////////////////////////////////
@@ -1516,106 +1311,6 @@ public class Settings {
         this.yields.clear();
         for (String key : yields.keys()) {
             this.yields.put(key, yields.getDouble(key));
-        }
-    }
-
-    ///////////////////////////////////////////////////////
-    //                                                   //
-    //                Skill Bar Settings                 //
-    //                                                   //
-    ///////////////////////////////////////////////////////
-
-    private boolean   skillBarEnabled;
-    private boolean   skillBarCooldowns;
-    private ItemStack unassigned;
-    private boolean[] defaultBarLayout = new boolean[9];
-    private boolean[] lockedSlots      = new boolean[9];
-
-    /**
-     * Checks whether or not the skill bar is enabled
-     *
-     * @return true if enabled, false otherwise
-     */
-    public boolean isSkillBarEnabled() {
-        return skillBarEnabled;
-    }
-
-    /**
-     * Checks whether or not the skill bar is to display cooldowns
-     *
-     * @return true if enabled, false otherwise
-     */
-    public boolean isSkillBarCooldowns() {
-        return skillBarCooldowns;
-    }
-
-    /**
-     * Retrieves the indicator for an unassigned skill slot
-     *
-     * @return unassigned indicator
-     */
-    public ItemStack getUnassigned() {
-        return unassigned;
-    }
-
-    /**
-     * Retrieves the default skill bar layout
-     *
-     * @return default skill bar layout
-     */
-    public boolean[] getDefaultBarLayout() {
-        return defaultBarLayout;
-    }
-
-    /**
-     * Retrieves the list of locked skill bar slots
-     *
-     * @return list of locked skill bar slots
-     */
-    public boolean[] getLockedSlots() {
-        return lockedSlots;
-    }
-
-    private void loadSkillBarSettings() {
-        DataSection bar = config.getSection("Skill Bar");
-        skillBarEnabled = bar.getBoolean("enabled", false) && !castEnabled;
-        skillBarCooldowns = bar.getBoolean("show-cooldown", true);
-
-        DataSection icon = bar.getSection("empty-icon");
-        Material mat = Material.matchMaterial(icon.getString("material", "PUMPKIN_SEEDS"));
-        if (mat == null) { mat = Material.PUMPKIN_SEEDS; }
-        unassigned = new ItemStack(mat);
-
-        final int data = icon.getInt("data", 0);
-        unassigned.setDurability((short) data);
-        unassigned.setData(new MaterialData(mat, (byte) data));
-
-        ItemMeta meta = unassigned.getItemMeta();
-        if (icon.isList("text")) {
-            List<String> format = TextFormatter.colorStringList(icon.getList("text"));
-            meta.setDisplayName(format.remove(0));
-            meta.setLore(format);
-        } else { meta.setDisplayName(TextFormatter.colorString(icon.getString("text", "&7Unassigned"))); }
-        unassigned.setItemMeta(meta);
-
-        DataSection layout = bar.getSection("layout");
-        int skillCount = 0;
-        for (int i = 0; i < 9; i++) {
-            DataSection slot = layout.getSection((i + 1) + "");
-            defaultBarLayout[i] = slot.getBoolean("skill", i <= 5);
-            lockedSlots[i] = slot.getBoolean("locked", false);
-            if (isUsingCombat() && i == castSlot) {
-                lockedSlots[i] = true;
-                defaultBarLayout[i] = false;
-            }
-            if (defaultBarLayout[i]) {
-                skillCount++;
-            }
-        }
-        if (skillCount == 9) {
-            Logger.invalid("Invalid Skill Bar Setup - Cannot have all 9 skill slots!");
-            Logger.invalid("  -> Setting last slot to be a weapon slot");
-            defaultBarLayout[8] = false;
         }
     }
 

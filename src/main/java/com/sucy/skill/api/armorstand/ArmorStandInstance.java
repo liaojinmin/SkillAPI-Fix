@@ -3,6 +3,7 @@ package com.sucy.skill.api.armorstand;
 import org.bukkit.Location;
 import org.bukkit.entity.ArmorStand;
 import org.bukkit.entity.LivingEntity;
+import org.bukkit.scheduler.BukkitRunnable;
 import org.bukkit.util.Vector;
 
 public class ArmorStandInstance {
@@ -20,6 +21,7 @@ public class ArmorStandInstance {
         this.target = target;
         this.follow = false;
     }
+
     public ArmorStandInstance(ArmorStand armorStand, LivingEntity target, double forward, double upward, double right) {
         this.armorStand = armorStand;
         this.target = target;
@@ -41,6 +43,16 @@ public class ArmorStandInstance {
      */
     public void remove() {
         armorStand.remove();
+    }
+
+    public void move(Location location) {
+        if (armorStand.isValid()) {
+            Location loc = location.clone();
+            Vector dir = loc.getDirection().setY(0).normalize();
+            Vector side = dir.clone().crossProduct(UP);
+            loc.add(dir.multiply(forward)).add(0, upward, 0).add(side.multiply(right));
+            armorStand.teleport(loc);
+        }
     }
 
     /**

@@ -51,7 +51,8 @@ public class ExperienceListener extends SkillAPIListener {
             return;
         }
 
-        PlayerData playerData = SkillAPI.getPlayerData(event.getPlayer());
+        PlayerData playerData = SkillAPI.getPlayerData(event.getPlayer().getUniqueId());
+        if (playerData == null) return;
         for (PlayerClass playerClass : playerData.getClasses()) {
             double yield = SkillAPI.getSettings().getBreakYield(playerClass, event.getBlock().getType());
             if (yield > 0) {
@@ -65,8 +66,8 @@ public class ExperienceListener extends SkillAPIListener {
         if (track) {
             unnatural.add(format(event.getBlock()));
         }
-
-        PlayerData playerData = SkillAPI.getPlayerData(event.getPlayer());
+        PlayerData playerData = SkillAPI.getPlayerData(event.getPlayer().getUniqueId());
+        if (playerData == null) return;
         for (PlayerClass playerClass : playerData.getClasses()) {
             double yield = SkillAPI.getSettings().getPlaceYield(playerClass, event.getBlock().getType());
             if (yield > 0) {
@@ -77,7 +78,8 @@ public class ExperienceListener extends SkillAPIListener {
 
     @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
     public void onCraft(CraftItemEvent event) {
-        PlayerData playerData = SkillAPI.getPlayerData((Player) event.getWhoClicked());
+        PlayerData playerData = SkillAPI.getPlayerData(event.getWhoClicked().getUniqueId());
+        if (playerData == null) return;
         for (PlayerClass playerClass : playerData.getClasses()) {
             double yield = SkillAPI.getSettings().getCraftYield(playerClass, event.getRecipe().getResult().getType());
             if (yield > 0) {

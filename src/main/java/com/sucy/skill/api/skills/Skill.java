@@ -37,7 +37,6 @@ import com.sucy.skill.api.ReadOnlySettings;
 import com.sucy.skill.api.Settings;
 import com.sucy.skill.api.event.SkillDamageEvent;
 import com.sucy.skill.api.event.TrueDamageEvent;
-import com.sucy.skill.api.player.PlayerCombos;
 import com.sucy.skill.api.player.PlayerData;
 import com.sucy.skill.api.player.PlayerSkill;
 import com.sucy.skill.api.util.DamageLoreRemover;
@@ -50,7 +49,7 @@ import com.sucy.skill.language.NotificationNodes;
 import com.sucy.skill.language.RPGFilter;
 import com.sucy.skill.language.SkillNodes;
 import com.sucy.skill.log.Logger;
-import me.neon.libs.utils.MetaKt;
+import me.neon.libs.util.MetaKt;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.Location;
@@ -84,7 +83,6 @@ public abstract class Skill implements IconHolder
     private int          maxLevel;
     private int          skillReqLevel;
     private boolean      needsPermission;
-    private int          combo;
 
     /**
      * The settings for the skill which include configurable stats
@@ -184,16 +182,6 @@ public abstract class Skill implements IconHolder
         this.iconLore = SkillAPI.getLanguage().getMessage(SkillNodes.LAYOUT, true, FilterType.COLOR);
     }
 
-    /**
-     * Checks whether or not the skill has been assigned
-     * a click combination.
-     *
-     * @return true if has a combo, false otherwise
-     */
-    public boolean hasCombo()
-    {
-        return combo >= 0;
-    }
 
     /**
      * Checks whether or not the skill can automatically
@@ -259,34 +247,6 @@ public abstract class Skill implements IconHolder
         return message != null && message.length() > 0;
     }
 
-    /**
-     * Retrieves the ID of the skill's combo
-     *
-     * @return combo ID
-     */
-    public int getCombo()
-    {
-        return combo;
-    }
-
-    /**
-     * Sets the click combo for the skill
-     *
-     * @param combo new combo
-     */
-    public void setCombo(int combo)
-    {
-        this.combo = combo;
-    }
-
-    /**
-     * Clears the set combo for the skill.
-     * Only the API should call this.
-     */
-    public void clearCombo()
-    {
-        combo = -1;
-    }
 
     /**
      * Retrieves the message for the skill to display when cast.
@@ -633,17 +593,6 @@ public abstract class Skill implements IconHolder
             }
         }
 
-        // Click string at the bottom
-        if (SkillAPI.getSettings().isCombosEnabled() && canCast())
-        {
-            PlayerCombos combos = skillData.getPlayerData().getComboData();
-            if (combos.hasCombo(this))
-            {
-                lore.add("");
-                lore.add(combos.getComboString(this));
-            }
-        }
-
         // Binds
         if (SkillAPI.getSettings().isShowBinds() && skillData.getBind() != null) {
             lore.add("");
@@ -882,8 +831,7 @@ public abstract class Skill implements IconHolder
      *
      * @return true if caused by a skill, false otherwise
      */
-    public static boolean isSkillDamage()
-    {
+    public static boolean isSkillDamage() {
         return skillDamage;
     }
 
@@ -897,7 +845,6 @@ public abstract class Skill implements IconHolder
     private static final String PERM      = "needs-permission";
     private static final String DESC      = "desc";
     private static final String ATTR      = "attributes";
-    private static final String COMBO     = "combo";
 
     /**
      * Saves the skill data to the configuration, overwriting all previous data
@@ -912,11 +859,8 @@ public abstract class Skill implements IconHolder
         config.set(REQ, skillReq);
         config.set(REQLVL, skillReqLevel);
         config.set(PERM, needsPermission);
-        if (combo >= 0 && canCast())
-            config.set(COMBO, SkillAPI.getComboManager().getSaveString(combo));
         settings.save(config.createSection(ATTR));
-        if (hasMessage())
-        {
+        if (hasMessage()) {
             config.set(MSG, message.replace(ChatColor.COLOR_CHAR, '&'));
         }
         Data.serializeIcon(indicator, config);
@@ -944,8 +888,7 @@ public abstract class Skill implements IconHolder
      *
      * @param config config to load from
      */
-    public void load(DataSection config)
-    {
+    public void load(DataSection config) {
         name = config.getString(NAME, name);
         type = TextFormatter.colorString(config.getString(TYPE, name));
         indicator = Data.parseIcon(config);
@@ -955,7 +898,6 @@ public abstract class Skill implements IconHolder
         skillReqLevel = config.getInt(REQLVL, skillReqLevel);
         message = TextFormatter.colorString(config.getString(MSG, message));
         needsPermission = config.getString(PERM, needsPermission + "").equalsIgnoreCase("true");
-        combo = SkillAPI.getComboManager().parseCombo(config.getString(COMBO));
 
         if (config.isList(DESC))
         {

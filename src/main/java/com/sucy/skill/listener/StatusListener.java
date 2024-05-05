@@ -34,6 +34,7 @@ import com.sucy.skill.api.event.TrueDamageEvent;
 import com.sucy.skill.api.util.FlagManager;
 import com.sucy.skill.api.util.StatusFlag;
 import com.sucy.skill.data.TitleType;
+import com.sucy.skill.dynamic.data.MetaSkills;
 import com.sucy.skill.language.RPGFilter;
 import com.sucy.skill.manager.TitleManager;
 import org.bukkit.entity.LivingEntity;
@@ -59,16 +60,14 @@ import java.util.HashSet;
  */
 public class StatusListener extends SkillAPIListener {
 
-    private static final HashMap<String, Long> messageTimers = new HashMap<String, Long>();
+    private static final HashMap<String, Long> messageTimers = new HashMap<>();
 
-    private static final HashSet<String> interrupts = new HashSet<String>()
-    {{
+    private static final HashSet<String> interrupts = new HashSet<String>() {{
         add(StatusFlag.STUN);
         add(StatusFlag.SILENCE);
     }};
 
-    private static final HashMap<String, String> messageMap = new HashMap<String, String>()
-    {{
+    private static final HashMap<String, String> messageMap = new HashMap<String, String>() {{
         put(StatusFlag.STUN, "stunned");
         put(StatusFlag.ROOT, "rooted");
         put(StatusFlag.INVINCIBLE, "invincible");
@@ -96,9 +95,9 @@ public class StatusListener extends SkillAPIListener {
      * @param event event details
      */
     @EventHandler(priority = EventPriority.MONITOR)
-    public void onQuit(PlayerQuitEvent event)
-    {
+    public void onQuit(PlayerQuitEvent event) {
         FlagManager.clearFlags(event.getPlayer());
+        MetaSkills.delMetaStack(event.getPlayer().getUniqueId());
     }
 
     /**

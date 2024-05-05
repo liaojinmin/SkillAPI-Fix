@@ -91,12 +91,12 @@ public abstract class CustomProjectile extends BukkitRunnable implements Metadat
         }
     }
 
-    private final HashMap<String, List<MetadataValue>> metadata = new HashMap<String, List<MetadataValue>>();
+    private final HashMap<String, List<MetadataValue>> metadata = new HashMap<>();
 
-    private final Set<Integer> hit = new HashSet<Integer>();
+    private final Set<Integer> hit = new HashSet<>();
 
     private ProjectileCallback callback;
-    private LivingEntity thrower;
+    private final LivingEntity thrower;
 
     private boolean enemy = true;
     private boolean ally = false;
@@ -183,7 +183,7 @@ public abstract class CustomProjectile extends BukkitRunnable implements Metadat
     /**
      * Checks if the projectile collides with a given list of entities
      */
-    protected void checkCollision(final boolean pierce) {
+    protected boolean checkCollision(final boolean pierce) {
         for (LivingEntity entity : getColliding()) {
             if (entity == thrower || hit.contains(entity.getEntityId())) {
                 continue;
@@ -202,9 +202,10 @@ public abstract class CustomProjectile extends BukkitRunnable implements Metadat
 
             if (!pierce) {
                 cancel();
-                return;
+                return false;
             }
         }
+        return true;
     }
 
     /**

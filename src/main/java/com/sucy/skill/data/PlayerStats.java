@@ -38,17 +38,15 @@ import java.util.List;
 /**
  * Stat provider for the MCCore stat scoreboard
  */
-public class PlayerStats implements StatHolder
-{
-    private PlayerClass player;
+public class PlayerStats implements StatHolder {
+    private final PlayerClass player;
 
     /**
      * Constructor
      *
      * @param player player to show stats for
      */
-    public PlayerStats(PlayerClass player)
-    {
+    public PlayerStats(PlayerClass player) {
         this.player = player;
     }
 
@@ -56,8 +54,7 @@ public class PlayerStats implements StatHolder
      * @return map of stats for the scoreboard
      */
     @Override
-    public List<String> getNames()
-    {
+    public List<String> getNames() {
         List<String> stats = new ArrayList<String>();
         stats.add(statMap.get(HEALTH));
         if (SkillAPI.getSettings().isManaEnabled())
@@ -65,11 +62,7 @@ public class PlayerStats implements StatHolder
         stats.add(statMap.get(POINTS));
         stats.add(statMap.get(LEVEL));
         stats.add(statMap.get(EXP));
-        if (SkillAPI.getSettings().isAttributesEnabled())
-        {
-            stats.add(statMap.get(ATTRIB));
-        }
-
+        stats.add(statMap.get(ATTRIB));
         return stats;
     }
 
@@ -77,8 +70,7 @@ public class PlayerStats implements StatHolder
      * @return populated list of values
      */
     @Override
-    public ArrayList<Integer> getValues()
-    {
+    public ArrayList<Integer> getValues() {
         ArrayList<Integer> values = new ArrayList<Integer>();
         values.add((int) Math.ceil(player.getPlayerData().getPlayer().getHealth()));
         if (SkillAPI.getSettings().isManaEnabled())
@@ -86,9 +78,7 @@ public class PlayerStats implements StatHolder
         values.add(player.getPoints());
         values.add(player.getLevel());
         values.add((int) player.getExp());
-        if (SkillAPI.getSettings().isAttributesEnabled())
-            values.add(player.getPlayerData().getAttributePoints());
-
+        values.add(player.getPlayerData().getAttributePoints());
         return values;
     }
 
@@ -105,10 +95,8 @@ public class PlayerStats implements StatHolder
      * Initializes the offline players used by the scoreboard. This is done
      * by the API on startup so do not call this method.
      */
-    public static void init()
-    {
-        if (statMap.size() == 0)
-        {
+    public static void init() {
+        if (statMap.size() == 0) {
             load(EXP, BASE + EXP);
             load(HEALTH, BASE + HEALTH);
             load(LEVEL, BASE + LEVEL);
@@ -121,13 +109,11 @@ public class PlayerStats implements StatHolder
      * Clears the initialized offline players. This is done by the API
      * upon disable so do not call this method.
      */
-    public static void clear()
-    {
+    public static void clear() {
         statMap.clear();
     }
 
-    private static void load(String key, String node)
-    {
+    private static void load(String key, String node) {
         statMap.put(key, SkillAPI.getLanguage().getMessage(node, true, FilterType.COLOR).get(0));
     }
 }

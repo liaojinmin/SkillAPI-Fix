@@ -2,7 +2,6 @@ package com.sucy.skill.dynamic;
 
 import com.sucy.skill.SkillAPI;
 import com.sucy.skill.api.enums.ManaCost;
-import com.sucy.skill.api.event.PlayerLandEvent;
 import com.sucy.skill.api.player.PlayerData;
 import com.sucy.skill.api.player.PlayerSkill;
 import com.sucy.skill.dynamic.trigger.Trigger;
@@ -16,7 +15,6 @@ import org.bukkit.event.Listener;
 
 import java.util.HashMap;
 import java.util.Objects;
-import java.util.function.Consumer;
 
 /**
  * SkillAPI © 2017
@@ -119,29 +117,29 @@ public class TriggerHandler implements Listener {
         }
     }
 
-    boolean trigger(final LivingEntity user, final LivingEntity target, final int level) {
+    void trigger(final LivingEntity user, final LivingEntity target, final int level) {
         if (user == null || target == null || component.isRunning() || !SkillAPI.getSettings().isValidTarget(target)) {
-            return false;
+            return;
         }
 
         if (user instanceof Player) {
             final PlayerData data = SkillAPI.getPlayerData((Player) user);
+            if (data == null) {
+                return;
+            }
             final PlayerSkill skill = data.getSkill(this.skill.getName());
             final boolean cd = component.getSettings().getBool("cooldown", false);
             final boolean mana = component.getSettings().getBool("mana", false);
 
-            if ((cd || mana) && !data.check(skill, cd, mana)) { return false; }
+            if ((cd || mana) && !data.check(skill, cd, mana)) { return; }
 
             if (component.trigger(user, target, level)) {
                 if (cd) { skill.startCooldown(); }
                 if (mana) { data.useMana(skill.getManaCost(), ManaCost.SKILL_CAST); }
 
-                return true;
-            } else {
-                return false;
             }
         } else {
-            return component.trigger(user, target, level);
+            component.trigger(user, target, level);
         }
     }
 }

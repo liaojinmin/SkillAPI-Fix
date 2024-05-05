@@ -5,8 +5,8 @@
  *
  * @constructor
  */
-function Skill(name)
-{
+function Skill(name) {
+
 	this.components = [];
 
 	// Included to simplify code when adding components
@@ -19,31 +19,49 @@ function Skill(name)
     var iconList = materialList.slice(0);
     iconList.splice(materialList.indexOf('Arrow'), 1);
 	this.data = [
-		new StringValue('Name', 'name', name).setTooltip('The name of the skill. This should not contain color codes'),
-		new StringValue('Type', 'type', 'Dynamic').setTooltip('The flavor text describing the skill such as "AOE utility" or whatever you want it to be'),
-		new IntValue('Max Level', 'max-level', 5).setTooltip('The maximum level the skill can reach'),
-		new ListValue('Skill Req', 'skill-req', ['None'], 'None').setTooltip('The skill that needs to be upgraded before this one can be unlocked'),
-		new IntValue('Skill Req Level', 'skill-req-lvl', 1).setTooltip('The level that the required skill needs to reach before this one can be unlocked'),
-		new ListValue('Permission', 'needs-permission', ['True', 'False'], 'False').setTooltip('Whether or not this skill requires a permission to unlock. The permission would be "skillapi.skill.{skillName}"'),
-		new AttributeValue('Level Req', 'level', 1, 0).setTooltip('The class level the player needs to be before unlocking or upgrading this skill'),
-		new AttributeValue('Cost', 'cost', 1, 0).setTooltip('The amount of skill points needed to unlock and upgrade this skill'),
-		new AttributeValue('Cooldown', 'cooldown', 0, 0).setTooltip('The time in seconds before the skill can be cast again (only works with the Cast trigger)'),
-		new AttributeValue('Mana', 'mana', 0, 0).setTooltip('The amount of mana it takes to cast the skill (only works with the Cast trigger)'),
-		new AttributeValue('Min Spent', 'points-spent-req', 0, 0).setTooltip('The amount of skill points that need to be spent before upgrading this skill'),
-		new StringValue('Cast Message', 'msg', '&6{player} &2has cast &6{skill}').setTooltip('The message to display to players around the caster when the skill is cast. The radius of the area is in the config.yml options'),
-        new StringValue('Combo', 'combo', '').setTooltip('The click combo to assign the skill (if enabled). Use L, R, and S for the types of clicks separated by spaces. For example, "L L R R" would work for 4 click combos.'),
-        new ListValue('Indicator', 'indicator', [ '2D', '3D', 'None' ], '2D').setTooltip('[PREMIUM] What sort of display to use for cast previews. This applies to the "hover bar" in the casting bars setup.'),
-		new ListValue('Icon', 'icon', iconList, 'Jack O Lantern').setTooltip('The item used to represent the skill in skill trees'),
-		new IntValue('Icon Data', 'icon-data', 0).setTooltip('The data/durability value of the item used to represent the skill in skill trees'),
-		new StringListValue('Icon Lore', 'icon-lore', [
+		new StringValue('技能名称', 'name', name)
+			.setTooltip('技能的名称。这不应包含颜色代码'),
+		new StringValue('种类', 'type', 'Dynamic')
+			.setTooltip('The flavor text describing the skill such as "AOE utility" or whatever you want it to be'),
+		new IntValue('最大等级', 'max-level', 5)
+			.setTooltip('The maximum level the skill can reach'),
+		new ListValue('技能条件', 'skill-req', ['None'], 'None')
+			.setTooltip('The skill that needs to be upgraded before this one can be unlocked'),
+		new IntValue('技能等级条件', 'skill-req-lvl', 1)
+			.setTooltip('The level that the required skill needs to reach before this one can be unlocked'),
+		new ListValue('权限', 'needs-permission', ['True', 'False'], 'False')
+			.setTooltip('Whether or not this skill requires a permission to unlock. The permission would be "skillapi.skill.{skillName}"'),
+		new AttributeValue('等级条件', 'level', 1, 0)
+			.setTooltip('The class level the player needs to be before unlocking or upgrading this skill'),
+		new AttributeValue('技能点', 'cost', 1, 0)
+			.setTooltip('The amount of skill points needed to unlock and upgrade this skill'),
+		new AttributeValue('技能冷却', 'cooldown', 0, 0)
+			.setTooltip('The time in seconds before the skill can be cast again (only works with the Cast trigger)'),
+		new AttributeValue('Mana', 'mana', 0, 0)
+			.setTooltip('The amount of mana it takes to cast the skill (only works with the Cast trigger)'),
+		new IntValue('Mana Tick', 'mana-tick', 1000)
+			.setTooltip('法力值恢复延时'),
+		new AttributeValue('Min Spent', 'points-spent-req', 0, 0)
+			.setTooltip('The amount of skill points that need to be spent before upgrading this skill'),
+		new StringValue('释放消息', 'msg', '&6{player} &2has cast &6{skill}')
+			.setTooltip('The message to display to players around the caster when the skill is cast. The radius of the area is in the config.yml options'),
+        new StringValue('Combo', 'combo', '')
+			.setTooltip('The click combo to assign the skill (if enabled). Use L, R, and S for the types of clicks separated by spaces. For example, "L L R R" would work for 4 click combos.'),
+        new ListValue('Indicator', 'indicator', [ '2D', '3D', 'None' ], '2D')
+			.setTooltip('[PREMIUM] What sort of display to use for cast previews. This applies to the "hover bar" in the casting bars setup.'),
+		new ListValue('图标', 'icon', iconList, 'Jack O Lantern')
+			.setTooltip('The item used to represent the skill in skill trees'),
+		new IntValue('图标 Data', 'icon-data', 0)
+			.setTooltip('The data/durability value of the item used to represent the skill in skill trees'),
+		new StringListValue('图标 Lore', 'icon-lore', [
 			'&d{name} &7({level}/{max})',
-			'&2Type: &6{type}',
+			'&2种类: &6{type}',
 			'',
-			'{req:level}Level: {attr:level}',
-			'{req:cost}Cost: {attr:cost}',
+			'{req:level}等级: {attr:level}',
+			'{req:cost}技能点: {attr:cost}',
 			'',
 			'&2Mana: {attr:mana}',
-			'&2Cooldown: {attr:cooldown}'
+			'&2冷却: {attr:cooldown}'
 		]).setTooltip('The description shown for the item in skill trees. Include values of mechanics such as damage dealt using their "Icon Key" values'),
 		new StringListValue('Incompatible', 'incompatible', []).setTooltip('List of skill names that must not be upgraded in order to upgrade this skill')
 	];
@@ -73,7 +91,7 @@ Skill.prototype.createFormHTML = function()
 	var form = document.createElement('form');
 	
 	var header = document.createElement('h4');
-	header.innerHTML = 'Skill Details';
+	header.innerHTML = '技能-基本信息';
 	form.appendChild(header);
 	
     form.appendChild(document.createElement('hr'));
@@ -106,7 +124,7 @@ Skill.prototype.createFormHTML = function()
 Skill.prototype.createEditButton = function(form) {
     var done = document.createElement('h5');
 	done.className = 'doneButton';
-	done.innerHTML = 'Edit Effects',
+	done.innerHTML = '返回';
 	done.skill = this;
 	done.form = form;
 	done.addEventListener('click', function(e) {
@@ -122,21 +140,17 @@ Skill.prototype.createEditButton = function(form) {
 /**
  * Updates the skill data from the details form if it exists
  */
-Skill.prototype.update = function()
-{
+Skill.prototype.update = function() {
 	var index;
 	var list = document.getElementById('skillList');
-	for (var i = 0; i < skills.length; i++)
-	{
-		if (skills[i] == this)
-		{
+	for (var i = 0; i < skills.length; i++) {
+		if (skills[i] === this) {
 			index = i;
 			break;
 		}
 	}
 	var prevName = this.data[0].value;
-	for (var j = 0; j < this.data.length; j++)
-	{
+	for (var j = 0; j < this.data.length; j++) {
 		this.data[j].update();
 	}
 	var newName = this.data[0].value;
@@ -153,10 +167,8 @@ Skill.prototype.update = function()
  *
  * @returns {boolean} true if using it, false otherwise
  */ 
-Skill.prototype.usingTrigger = function(trigger)
-{
-	for (var i = 0; i < this.components.length; i++)
-	{
+Skill.prototype.usingTrigger = function(trigger) {
+	for (var i = 0; i < this.components.length; i++) {
 		if (this.components[i].name == trigger) return true;
 	}
 	return false;
@@ -165,8 +177,7 @@ Skill.prototype.usingTrigger = function(trigger)
 /**
  * Creates and returns a save string for the skill
  */ 
-Skill.prototype.getSaveString = function()
-{
+Skill.prototype.getSaveString = function() {
 	var saveString = '';
 	
 	saveString += this.data[0].value + ":\n";
@@ -176,19 +187,15 @@ Skill.prototype.getSaveString = function()
 		saveString += this.data[i].getSaveString('  ');
 	}
 	saveString += '  attributes:\n';
-	for (var i = 0; i < this.data.length; i++)
-	{
-		if (isAttribute(this.data[i]))
-		{
+	for (var i = 0; i < this.data.length; i++) {
+		if (isAttribute(this.data[i])) {
 			saveString += this.data[i].getSaveString('    ');
 		}
 	}
-	if (this.components.length > 0)
-	{
+	if (this.components.length > 0) {
 		saveString += '  components:\n';
 		saveIndex = 0;
-		for (var i = 0; i < this.components.length; i++)
-		{
+		for (var i = 0; i < this.components.length; i++) {
 			saveString += this.components[i].getSaveString('    ');
 		}
 	}
@@ -206,14 +213,10 @@ function isAttribute(input) {
  *
  * @returns {Number} the index of the last line of data for this skill
  */
-Skill.prototype.load = function(data)
-{
-	if (data.active || data.embed || data.passive)
-	{
+Skill.prototype.load = function(data) {
+	if (data.active || data.embed || data.passive) {
 		// Load old skill config for conversion
-	}
-	else 
-	{
+	} else {
 		this.loadBase(data);
 	}
 }
@@ -225,8 +228,7 @@ Skill.prototype.loadBase = loadSection;
  *
  * @returns {Skill} the new skill
  */ 
-function newSkill()
-{
+function newSkill() {
 	var id = 1;
 	while (isSkillNameTaken('Skill ' + id)) id++;
 	
@@ -238,7 +240,6 @@ function newSkill()
 	activeSkill.apply();
 	activeSkill.createFormHTML();
 	showSkillPage('skillForm');
-	
 	return activeSkill;
 }
 
@@ -249,8 +250,7 @@ function newSkill()
  *
  * @returns {Skill} the added skill
  */ 
-function addSkill(name) 
-{
+function addSkill(name) {
 	var skill = new Skill(name);
 	skills.push(skill);
 	
@@ -281,8 +281,7 @@ function isSkillNameTaken(name)
  *
  * @returns {Skill} the skill with the given name or null if not found
  */
-function getSkill(name)
-{
+function getSkill(name) {
 	name = name.toLowerCase();
 	for (var i = 0; i < skills.length; i++)
 	{
