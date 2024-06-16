@@ -441,7 +441,14 @@ AttributeValue.prototype.update = function() {
  * @param {string} spacing - the spacing to go before the value
  */ 
 AttributeValue.prototype.getSaveString = function(spacing) {
+	if (this.key === "mana-tick") {
+		return spacing + this.key + ": " + this.base + "\n"
+	}
 	return spacing + this.key + "-base: " + this.base + "\n" + spacing + this.key + "-scale: " + this.scale + "\n";
+}
+
+AttributeValue.prototype.loadValue = function(value) {
+	this.base = value;
 }
 
 /**
@@ -556,8 +563,7 @@ DoubleValue.prototype.update = function()
  *
  * @param {string} spacing - the spacing to go before the value
  */ 
-DoubleValue.prototype.getSaveString = function(spacing)
-{	
+DoubleValue.prototype.getSaveString = function(spacing) {
 	return spacing + this.key + ": " + this.value + "\n";
 }
 

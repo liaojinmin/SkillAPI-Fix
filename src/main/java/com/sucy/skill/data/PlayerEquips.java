@@ -104,7 +104,10 @@ public class PlayerEquips {
             other[i] = swap(inv, SkillAPI.getSettings().getSlots()[i], other[i], i == offhand);
 
         // 直接更新扩展槽位
-        expand.values().forEach(EquipData::apply);
+        expand.values().forEach(it -> {
+            it.revert();
+            it.apply();
+        });
     }
 
     @Nullable
@@ -114,7 +117,11 @@ public class PlayerEquips {
 
     @Nullable
     public EquipData removeExpandData(String key) {
-        return expand.remove(key);
+        EquipData data = expand.remove(key);
+        if (data != null) {
+            data.revert();
+        }
+        return data;
     }
 
     @Nullable
@@ -123,7 +130,7 @@ public class PlayerEquips {
         if (!to.isMet()) {
             return null;
         } else {
-            to.apply();
+            //to.apply();
             expand.put(key, to);
             return to;
         }
@@ -131,6 +138,7 @@ public class PlayerEquips {
 
     /**
      * Handles swapping two items, handling any requirements
+     * 处理交换两个项目，处理任何要求
      *
      * @param inv   inventory to manage
      * @param index related index
@@ -204,7 +212,7 @@ public class PlayerEquips {
     /**
      * Represents one available item's data
      */
-    private class EquipData {
+    public class EquipData {
 
         private HashMap<String, Integer> skillReq;
         private HashMap<String, Integer> attrReq;
@@ -295,14 +303,13 @@ public class PlayerEquips {
                                 break;
                             }
 
-                            text = settings.getAttrGiveText(attr);
-                            if (lower.startsWith(text)) {
+                            if (lower.startsWith(attr) || lower.startsWith(settings.getAttrGiveText(attr))) {
                                 if (attribs == null)
                                     attribs = new HashMap<>();
-
                                 String normalized = SkillAPI.getAttributeManager().normalize(attr);
                                 int current = attribs.getOrDefault(attr, 0);
                                 int extra = AttributeParseUtils.toInt(lower);
+                                //System.out.println("key: " +lower +" extra "+extra);
                                 attribs.put(normalized, current + extra);
                                 break;
                             }

@@ -29,8 +29,7 @@ package com.sucy.skill.api.util;
 /**
  * Flag keys used by statuses
  */
-public class StatusFlag
-{
+public class StatusFlag {
     public static final String STUN       = "stun";
     public static final String ROOT       = "root";
     public static final String INVINCIBLE = "invincible";
@@ -39,7 +38,6 @@ public class StatusFlag
     public static final String SILENCE    = "silence";
     public static final String CHANNELING = "channeling";
     public static final String CHANNEL    = "channel";
-    public static final String RETURN = "return";
 
     public static final String[] ALL = new String[] {
         STUN, ROOT, INVINCIBLE, ABSORB, DISARM, SILENCE, CHANNELING

@@ -26,6 +26,7 @@
  */
 package com.sucy.skill.dynamic.mechanic;
 
+import com.sucy.skill.api.skills.SkillContext;
 import com.sucy.skill.api.util.FlagManager;
 import com.sucy.skill.dynamic.TempEntity;
 import com.sucy.skill.hook.DisguiseHook;
@@ -62,7 +63,7 @@ public class DisguiseMechanic extends MechanicComponent {
      * @return true if applied to something, false otherwise
      */
     @Override
-    public boolean execute(LivingEntity caster, int level, List<LivingEntity> targets) {
+    public boolean execute(LivingEntity caster, SkillContext context, int level, List<LivingEntity> targets) {
         if (!PluginChecker.isDisguiseActive()) { return false; }
 
         String type = settings.getString(TYPE);

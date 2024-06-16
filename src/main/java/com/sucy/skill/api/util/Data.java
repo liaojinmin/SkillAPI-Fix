@@ -1,35 +1,10 @@
-/**
- * SkillAPI
- * com.sucy.util.api.skill.Data
- *
- * The MIT License (MIT)
- *
- * Copyright (c) 2014 Steven Sucy
- *
- * Permission is hereby granted, free of charge, to any person obtaining a copy
- * of this software and associated documentation files (the "Software") to deal
- * in the Software without restriction, including without limitation the rights
- * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
- * copies of the Software, and to permit persons to whom the Software is
- * furnished to do so, subject to the following conditions:
- *
- * The above copyright notice and this permission notice shall be included in
- * all copies or substantial portions of the Software.
- *
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
- * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
- * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
- * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
- * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
- * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
- * THE SOFTWARE.
- */
 package com.sucy.skill.api.util;
 
 import com.rit.sucy.config.parse.DataSection;
 import com.rit.sucy.text.TextFormatter;
 import org.bukkit.ChatColor;
 import org.bukkit.Material;
+import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.material.MaterialData;
@@ -109,5 +84,17 @@ public class Data {
                 (short) config.getInt(DURABILITY, data),
                 (byte) data,
                 config.getList(LORE, null));
+    }
+
+    public static ItemStack parseIconAtSection(ConfigurationSection config) {
+        if (config == null) {
+            return new ItemStack(Material.JACK_O_LANTERN);
+        }
+        final int data = Integer.parseInt(config.getString(DATA, "0"));
+        return parse(
+                config.getString(MAT, "JACK_O_LANTERN"),
+                (short) Integer.parseInt(config.getString(DURABILITY, String.valueOf(data))),
+                (byte) data,
+                config.getStringList(LORE));
     }
 }

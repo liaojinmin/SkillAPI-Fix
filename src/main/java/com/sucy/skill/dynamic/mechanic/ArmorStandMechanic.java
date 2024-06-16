@@ -6,9 +6,11 @@ import com.sucy.skill.api.armorstand.ArmorStandManager;
 import com.sucy.skill.api.attribute.AttributeAPI;
 import com.sucy.skill.api.skills.Skill;
 import com.sucy.skill.api.skills.SkillCastAPI;
+import com.sucy.skill.api.skills.SkillContext;
 import com.sucy.skill.dynamic.DynamicSkill;
 import com.sucy.skill.listener.MechanicListener;
 import com.sucy.skill.task.RemoveTask;
+import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.entity.ArmorStand;
 import org.bukkit.entity.LivingEntity;
@@ -24,7 +26,6 @@ import java.util.List;
 public class ArmorStandMechanic extends MechanicComponent {
 
     private static final Vector UP = new Vector(0, 1, 0);
-    private static final String KEY = "key"; // 标记名称，默认是盔甲架名称
     private static final String DURATION = "duration"; // 移除时间
     private static final String NAME = "name"; // 盔甲架名称
     private static final String NAME_VISIBLE = "name-visible"; // 盔甲架名称是否可见 true、false
@@ -46,10 +47,9 @@ public class ArmorStandMechanic extends MechanicComponent {
     }
 
     @Override
-    public boolean execute(LivingEntity caster, int level, List<LivingEntity> targets) {
+    public boolean execute(LivingEntity caster, SkillContext context, int level, List<LivingEntity> targets) {
         int duration = (int) (20 * parseValues(caster, DURATION, level, 5));
         String name = settings.getString(NAME, "Armor Stand");
-        String key = settings.getString(KEY, name);
         boolean nameVisible = settings.getBool(NAME_VISIBLE, false);
         boolean follow = settings.getBool(FOLLOW, false);
         boolean gravity = settings.getBool(GRAVITY, false);
@@ -65,6 +65,7 @@ public class ArmorStandMechanic extends MechanicComponent {
         List<String> skills = settings.getStringList(SKILLS);
 
         List<LivingEntity> armorStands = new ArrayList<>();
+        List<Integer> keys = context.getIntegerList(getKey());
         for (LivingEntity target : targets) {
             Location loc = target.getLocation().clone();
             Vector dir = loc.getDirection().setY(0).normalize();
@@ -103,9 +104,16 @@ public class ArmorStandMechanic extends MechanicComponent {
             } else {
                 instance = new ArmorStandInstance(armorStand, target);
             }
-            ArmorStandManager.register(instance, target, key);
+            instance.setRunnable(it ->
+                    Bukkit.getScheduler().runTask(SkillAPI.singleton(), () -> {
+                        if (it.get()) {
+                            executeChildren(caster, context, level, armorStands);
+                        }
+                    })
+            );
+            keys.add(instance.hashCode());
+            ArmorStandManager.register(instance, target, instance.hashCode());
         }
-        executeChildren(caster, level, armorStands);
         new RemoveTask(armorStands, duration);
         return targets.size() > 0;
     }

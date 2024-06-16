@@ -26,6 +26,7 @@
  */
 package com.sucy.skill.dynamic.mechanic;
 
+import com.sucy.skill.api.skills.SkillContext;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.LivingEntity;
 
@@ -54,7 +55,7 @@ public class DelayMechanic extends MechanicComponent {
      * @return true if applied to something, false otherwise
      */
     @Override
-    public boolean execute(final LivingEntity caster, final int level, final List<LivingEntity> targets) {
+    public boolean execute(final LivingEntity caster, SkillContext context, final int level, final List<LivingEntity> targets) {
         if (targets.size() == 0) {
             return false;
         }
@@ -74,11 +75,11 @@ public class DelayMechanic extends MechanicComponent {
                             return;
                         }
                      //   System.out.println("触发 delay 0");
-                        executeChildren(caster, level, targets);
+                        executeChildren(caster, context, level, targets);
                     } else {
                         if (list2 == null) {
                          //   System.out.println("触发 delay 1");
-                            executeChildren(caster, level, targets);
+                            executeChildren(caster, context, level, targets);
                         } else {
                             if (list2.remove("盾牌打断")) {
                              //   System.out.println("已被盾牌阻断 delay 执行");
@@ -86,7 +87,7 @@ public class DelayMechanic extends MechanicComponent {
                             }
                             if (list2.remove(mark)) {
                            //     System.out.println("触发 delay 2");
-                                executeChildren(caster, level, targets);
+                                executeChildren(caster, context, level, targets);
                             }
                         }
                     }

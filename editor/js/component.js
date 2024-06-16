@@ -57,7 +57,8 @@ var Target = {
     OFFSET   : { name: 'Offset',   container: true, construct: TargetOffset   },
     REMEMBER : { name: 'Remember', container: true, construct: TargetRemember },
     SELF     : { name: 'Self',     container: true, construct: TargetSelf     },
-    SINGLE   : { name: 'Single',   container: true, construct: TargetSingle   }
+    SINGLE   : { name: 'Single',   container: true, construct: TargetSingle   },
+    CONTEXT_ARMOR_STAND   : { name: 'ContextArmorStand',   container: true, construct: TargetContextArmorStand   }
 };
 
 /**
@@ -169,6 +170,7 @@ var Mechanic = {
     VALUE_MANA:          { name: 'Value Mana',          container: false, construct: MechanicValueMana,         premium: true },
     VALUE_MULTIPLY:      { name: 'Value Multiply',      container: false, construct: MechanicValueMultiply      },
     VALUE_PLACEHOLDER:   { name: 'Value Placeholder',   container: false, construct: MechanicValuePlaceholder,  premium: true },
+    VALUE_MMOITEMS_ATTR:   { name: 'Value MMoItem Attr',   container: false, construct: MechanicValueMMoItemAttr,  premium: true },
     VALUE_RANDOM:        { name: 'Value Random',        container: false, construct: MechanicValueRandom        },
     VALUE_SET:           { name: 'Value Set',           container: false, construct: MechanicValueSet           },
     WARP:                { name: 'Warp',                container: false, construct: MechanicWarp               },
@@ -178,11 +180,13 @@ var Mechanic = {
     WARP_TARGET:         { name: 'Warp Target',         container: false, construct: MechanicWarpTarget         },
     WARP_VALUE:          { name: 'Warp Value',          container: false, construct: MechanicWarpValue          },
     WOLF:                { name: 'Wolf',                container: true,  construct: MechanicWolf               },
-    ARMOR_STAND:         { name: '实体盔甲架生成',         container: true,  construct: MechanicArmorStand         },
-    ARMOR_STAND_REMOVE:  { name: '实体盔甲架删除',         container: true,  construct: MechanicArmorStandRemove   },
-    RETURM:              { name: 'Delay 中断器',         container: true,  construct: MechanicReturn             },
-    MYTHIC_CAST:         { name: 'Mythic cast',          container: false, construct: MechanicMythicCast         },
-    MYTHIC_CAST_TARGET:  { name: 'Mythic cast target',   container: false, construct: MechanicMythicCastTarget   },
+    ARMOR_STAND:         { name: 'Armor Stand',         container: true,  construct: MechanicArmorStand         },
+    ARMOR_STAND_REMOVE:  { name: 'Armor Stand Remove',  container: true,  construct: MechanicArmorStandRemove   },
+    GERM_ANIMATION_START:{ name: 'Germ Animation Start',container: true,  construct: MechanicGermAnimationStart },
+    GERM_ANIMATION_STOP: { name: 'Germ Animation Stop', container: true,  construct: MechanicGermAnimationStop  },
+    RETURN:              { name: 'Return',              container: true,  construct: MechanicReturn             },
+    MYTHIC_CAST:         { name: 'Mythic cast',         container: false, construct: MechanicMythicCast         },
+    MYTHIC_CAST_TARGET:  { name: 'Mythic cast target',  container: false, construct: MechanicMythicCastTarget   },
 };
 
 var saveIndex;
@@ -937,6 +941,21 @@ function TargetSingle()
     );
 }
 
+extend('TargetContextArmorStand', 'Component');
+function TargetContextArmorStand()
+{
+    this.super('ContextArmorStand', Type.TARGET, true);
+
+    this.description = '选择技能上下文所创建的盔甲架生物为目标...';
+
+    this.data.push(new ListValue("target", "target", ['True', 'False'], 'True')
+        .setTooltip('如果为FALSE则选择施法者所创建的盔甲架实例...')
+    );
+    this.data.push(new ListValue("lock", "lock", ['True', 'False'], 'True')
+        .setTooltip('选择盔甲架后，锁定异步任务，尽可能防止重复触发...')
+    );
+}
+
 // -- Condition constructors --------------------------------------------------- //
 
 extend('ConditionArmor', 'Component');
@@ -1640,6 +1659,9 @@ function MechanicDamage()
     this.data.push(new StringValue('Classifier', 'classifier', 'default')
         .setTooltip('[PREMIUM ONLY] The type of damage to deal. Can act as elemental damage or fake physical damage')
     );
+    this.data.push(new ListValue('knockback', 'true', [ 'True', 'False' ], 'False')
+        .setTooltip('是否击退，准确的来说该攻击是否有攻击源，也就是攻击生物')
+    );
 }
 
 extend('MechanicDamageBuff', 'Component');
@@ -2167,6 +2189,9 @@ function MechanicParticleProjectile()
     this.data.push(new DoubleValue('Lifespan', 'lifespan', 3)
         .setTooltip('How long in seconds before the projectile will expire in case it doesn\'t hit anything')
     );
+    this.data.push(new DoubleValue('radius', 'radius', 0.0)
+        .setTooltip('碰撞半径')
+    );
 
     this.data.push(new ListValue('是否使用发包盔甲架', 'armor-stand', ['True', 'False'], 'False'));
     this.data.push(new StringValue('盔甲架名称', 'name', 'Armor Stand'));
@@ -2648,6 +2673,27 @@ function MechanicValuePlaceholder()
     );
 }
 
+extend('MechanicValueMMoItemAttr', 'Component');
+function MechanicValueMMoItemAttr()
+{
+    this.super('Value MMoItem Attr', Type.MECHANIC, false);
+
+    this.description = '取指定槽位装备的MMO物品属性';
+
+    this.data.push(new StringValue('Key', 'key', 'value')
+        .setTooltip('储存的KEY，取得数据后储存')
+    );
+    this.data.push(new StringValue('Nbt', 'nbt', "ATTACK_DAMAGE")
+        .setTooltip('要取的 MMoitem 属性 nbt 键')
+    );
+    this.data.push(
+        new ListValue(
+            'Slot', 'slot',
+        [ 'HAND', 'OFF_HAND' , 'HELMET', 'CHEST_PLATE', 'LEGGINGS', 'BOOTS'], "HAND"
+        ).setTooltip('要取的装备槽位')
+    );
+}
+
 extend('MechanicValueRandom', 'Component')
 function MechanicValueRandom()
 {
@@ -2816,12 +2862,10 @@ function MechanicWolf() {
 
 extend('MechanicArmorStand', 'Component');
 function MechanicArmorStand() {
-    this.super('ArmorStand', Type.MECHANIC, true);
+    this.super('Armor Stand', Type.MECHANIC, true);
 
     this.description = '召唤实体盔甲架';
 
-    this.data.push(new StringValue('自定义Key', 'key', 'default')
-    );
     this.data.push(new AttributeValue('删除时间', 'duration', 5, 0)
     );
     this.data.push(new StringValue('盔甲架名称', 'name', 'Armor Stand')
@@ -2856,13 +2900,35 @@ function MechanicArmorStand() {
 
 extend('MechanicArmorStandRemove', 'Component');
 function MechanicArmorStandRemove() {
-    this.super('ArmorStandRemove', Type.MECHANIC, true);
+    this.super('Armor Stand Remove', Type.MECHANIC, true);
 
     this.description = '删除盔甲架';
 
-    this.data.push(new StringValue('自定义Key', 'key', 'default'));
     this.data.push(new ListValue('移除目标', 'target', ['True', 'False'], 'True')
         .setTooltip('是否是移除目标的盔甲架，而不是施法者'));
+}
+
+extend('MechanicGermAnimationStart', 'Component');
+function MechanicGermAnimationStart() {
+    this.super('Germ Animation Start', Type.MECHANIC, true);
+
+    this.description = '开始播放萌芽动作';
+
+    this.data.push(new StringValue('动画名称', 'name', 'default')
+        .setTooltip('要播放的动画名称'));
+    this.data.push(new StringValue('动画时间', 'time', '1000')
+        .setTooltip('要播放的动画时间'));
+}
+extend('MechanicGermAnimationStop', 'Component');
+function MechanicGermAnimationStop() {
+    this.super('Germ Animation Stop', Type.MECHANIC, true);
+
+    this.description = '停止播放萌芽动作';
+
+    this.data.push(new StringValue('动画名称', 'name', 'default')
+        .setTooltip('要停止播放的动画名称'));
+    this.data.push(new StringValue('动画时间', 'time', '1000')
+        .setTooltip('要停止播放的动画时间'));
 }
 
 extend('MechanicReturn', 'Component');

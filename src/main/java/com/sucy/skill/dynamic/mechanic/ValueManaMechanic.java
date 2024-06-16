@@ -28,6 +28,7 @@ package com.sucy.skill.dynamic.mechanic;
 
 import com.sucy.skill.SkillAPI;
 import com.sucy.skill.api.player.PlayerData;
+import com.sucy.skill.api.skills.SkillContext;
 import com.sucy.skill.dynamic.DynamicSkill;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
@@ -55,7 +56,7 @@ public class ValueManaMechanic extends MechanicComponent
      * @return true if applied to something, false otherwise
      */
     @Override
-    public boolean execute(LivingEntity caster, int level, List<LivingEntity> targets) {
+    public boolean execute(LivingEntity caster, SkillContext context, int level, List<LivingEntity> targets) {
         if (!(targets.get(0) instanceof Player)) return false;
 
         final PlayerData player = SkillAPI.getPlayerData((targets.get(0)).getUniqueId());

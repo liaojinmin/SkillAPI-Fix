@@ -75,6 +75,9 @@ public class ParticleProjectile extends CustomProjectile {
     private final Settings settings;
 
     @Nullable
+    private Double radius;
+
+    @Nullable
     private ArmorStandCarrier carrier;
 
     private Vector   vel;
@@ -108,7 +111,10 @@ public class ParticleProjectile extends CustomProjectile {
         this.life = (int) (settings.getDouble(LIFESPAN, 2) * 20);
         this.gravity = new Vector(0, settings.getDouble(GRAVITY, 0), 0);
         this.pierce = settings.getBool(PIERCE, false);
-
+        this.radius = settings.getDouble("radius");
+        if (this.radius <= 0) {
+            this.radius = null;
+        }
         steps = (int) Math.ceil(vel.length() * 2);
         vel.multiply(1.0 / steps);
         gravity.multiply(1.0 / steps);
@@ -173,7 +179,7 @@ public class ParticleProjectile extends CustomProjectile {
      */
     @Override
     protected double getCollisionRadius() {
-        return 1.5;
+        return radius != null ? radius : 1.5;
     }
 
     /**

@@ -26,6 +26,7 @@
  */
 package com.sucy.skill.dynamic.condition;
 
+import com.sucy.skill.api.skills.SkillContext;
 import org.bukkit.entity.LivingEntity;
 
 import java.util.List;
@@ -39,8 +40,8 @@ public class PermissionCondition extends ConditionComponent {
     }
 
     @Override
-    public boolean execute(LivingEntity caster, int level, List<LivingEntity> targets) {
-        return test(caster, level, null) && executeChildren(caster, level, targets);
+    public boolean execute(LivingEntity caster, SkillContext context, int level, List<LivingEntity> targets) {
+        return test(caster, level, null) && executeChildren(caster, context, level, targets);
     }
 
     @Override

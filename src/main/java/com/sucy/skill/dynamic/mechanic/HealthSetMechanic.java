@@ -1,5 +1,6 @@
 package com.sucy.skill.dynamic.mechanic;
 
+import com.sucy.skill.api.skills.SkillContext;
 import org.bukkit.entity.LivingEntity;
 
 import java.util.List;
@@ -18,7 +19,7 @@ public class HealthSetMechanic extends MechanicComponent {
     }
 
     @Override
-    public boolean execute(final LivingEntity caster, final int level, final List<LivingEntity> targets) {
+    public boolean execute(final LivingEntity caster, SkillContext context, final int level, final List<LivingEntity> targets) {
         final double health = Math.max(1, parseValues(caster, HEALTH, level, 1));
 
         for (final LivingEntity target : targets) {

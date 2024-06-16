@@ -32,6 +32,7 @@ import com.sucy.skill.api.attribute.mob.MobAttribute;
 import com.sucy.skill.api.attribute.mob.MobAttributeData;
 import com.sucy.skill.api.event.TempAttributeAddEvent;
 import com.sucy.skill.api.player.PlayerData;
+import com.sucy.skill.api.skills.SkillContext;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
@@ -65,7 +66,7 @@ public class AttributeMechanic extends MechanicComponent {
      * @return true if applied to something, false otherwise
      */
     @Override
-    public boolean execute(LivingEntity caster, int level, List<LivingEntity> targets) {
+    public boolean execute(LivingEntity caster, SkillContext context, int level, List<LivingEntity> targets) {
 
       //  System.out.println("execute 属性触发者: "+caster.getName());
         String key = settings.getString(KEY, "");

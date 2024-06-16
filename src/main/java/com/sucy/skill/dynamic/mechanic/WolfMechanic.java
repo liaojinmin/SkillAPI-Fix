@@ -30,6 +30,7 @@ import com.rit.sucy.text.TextFormatter;
 import com.sucy.skill.SkillAPI;
 import com.sucy.skill.api.skills.PassiveSkill;
 import com.sucy.skill.api.skills.Skill;
+import com.sucy.skill.api.skills.SkillContext;
 import com.sucy.skill.dynamic.DynamicSkill;
 import com.sucy.skill.listener.MechanicListener;
 import com.sucy.skill.task.RemoveTask;
@@ -70,7 +71,7 @@ public class WolfMechanic extends MechanicComponent {
      * @return true if applied to something, false otherwise
      */
     @Override
-    public boolean execute(LivingEntity caster, int level, List<LivingEntity> targets) {
+    public boolean execute(LivingEntity caster, SkillContext context, int level, List<LivingEntity> targets) {
         if (!(caster instanceof Player)) {
             return false;
         }
@@ -137,7 +138,7 @@ public class WolfMechanic extends MechanicComponent {
 
         // Apply children to the wolves
         if (wolves.size() > 0) {
-            executeChildren(player, level, wolves);
+            executeChildren(player, context, level, wolves);
             return true;
         }
         return false;

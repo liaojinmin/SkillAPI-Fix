@@ -26,6 +26,7 @@
  */
 package com.sucy.skill.dynamic.condition;
 
+import com.sucy.skill.api.skills.SkillContext;
 import com.sucy.skill.dynamic.data.MetaSkills;
 import org.bukkit.entity.LivingEntity;
 
@@ -40,13 +41,13 @@ public class MetaCondition extends ConditionComponent {
     }
 
     @Override
-    public boolean execute(LivingEntity caster, int level, List<LivingEntity> targets) {
+    public boolean execute(LivingEntity caster, SkillContext context, int level, List<LivingEntity> targets) {
         for (LivingEntity target : targets) {
             if (target != null) {
-                return test(caster, level, target) && executeChildren(caster, level, targets);
+                return test(caster, level, target) && executeChildren(caster,context,  level, targets);
             }
         }
-        return executeChildren(caster, level, targets);
+        return executeChildren(caster, context, level, targets);
     }
 
     @Override

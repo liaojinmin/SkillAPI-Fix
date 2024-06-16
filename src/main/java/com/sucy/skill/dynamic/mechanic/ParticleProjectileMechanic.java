@@ -34,6 +34,7 @@ import com.sucy.skill.api.particle.target.FollowTarget;
 import com.sucy.skill.api.projectile.CustomProjectile;
 import com.sucy.skill.api.projectile.ParticleProjectile;
 import com.sucy.skill.api.projectile.ProjectileCallback;
+import com.sucy.skill.api.skills.SkillContext;
 import com.sucy.skill.api.util.ParticleHelper;
 import com.sucy.skill.cast.CircleIndicator;
 import com.sucy.skill.cast.CylinderIndicator;
@@ -42,8 +43,7 @@ import com.sucy.skill.cast.IndicatorType;
 import com.sucy.skill.cast.ProjectileIndicator;
 import com.sucy.skill.dynamic.ArmorStandCarrier;
 import com.sucy.skill.dynamic.TempEntity;
-import me.neon.libs.carrier.meta.ArmorStandMeta;
-import me.neon.libs.util.RunnerDslKt;
+import me.neon.libs.carrier.minecraft.meta.ArmorStandMeta;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.entity.LivingEntity;
@@ -89,17 +89,11 @@ public class ParticleProjectileMechanic extends MechanicComponent implements Pro
         return "particle projectile";
     }
 
-    /**
-     * Executes the component
-     *
-     * @param caster  caster of the skill
-     * @param level   level of the skill
-     * @param targets targets to apply to
-     *
-     * @return true if applied to something, false otherwise
-     */
+    private SkillContext skillContext = null;
+
     @Override
-    public boolean execute(LivingEntity caster, int level, List<LivingEntity> targets) {
+    public boolean execute(LivingEntity caster, SkillContext context, int level, List<LivingEntity> targets) {
+        skillContext = context;
         // Get common values
         int amount = (int) parseValues(caster, AMOUNT, level, 1.0);
         String spread = settings.getString(SPREAD, "cone").toLowerCase();
@@ -119,7 +113,6 @@ public class ParticleProjectileMechanic extends MechanicComponent implements Pro
                 // 修正数量
                 amount = 1;
                 String name = settings.getString(NAME, "Armor Stand Packet");
-                boolean nameVisible = settings.getBool(NAME_VISIBLE, false);
                 boolean small = settings.getBool(SMALL, false);
                 boolean visible = settings.getBool(VISIBLE, true);
                 boolean marker = settings.getBool(MARKER, false);
@@ -171,7 +164,7 @@ public class ParticleProjectileMechanic extends MechanicComponent implements Pro
             if (carrier1 != null) {
                 final ArmorStandMeta meta1 = meta;
                 Bukkit.getScheduler().runTaskLater(SkillAPI.singleton(), () -> {
-                    carrier1.setMeta(meta1);
+                    carrier1.setCarrierMeta(meta1);
                 },5);
             }
 
@@ -192,7 +185,8 @@ public class ParticleProjectileMechanic extends MechanicComponent implements Pro
         }
         ArrayList<LivingEntity> targets = new ArrayList<>();
         targets.add(hit);
-        executeChildren(projectile.getShooter(), SkillAPI.getMetaInt(projectile, LEVEL), targets);
+        if (skillContext == null) skillContext = new SkillContext();
+        executeChildren(projectile.getShooter(), skillContext, SkillAPI.getMetaInt(projectile, LEVEL), targets);
     }
 
     @Override

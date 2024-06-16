@@ -28,6 +28,7 @@ package com.sucy.skill.dynamic.mechanic;
 
 import com.sucy.skill.api.particle.EffectPlayer;
 import com.sucy.skill.api.particle.target.EntityTarget;
+import com.sucy.skill.api.skills.SkillContext;
 import org.bukkit.entity.LivingEntity;
 
 import java.util.List;
@@ -43,7 +44,7 @@ public class ParticleEffectMechanic extends MechanicComponent
     }
 
     @Override
-    public boolean execute(LivingEntity caster, int level, List<LivingEntity> targets)
+    public boolean execute(LivingEntity caster, SkillContext context, int level, List<LivingEntity> targets)
     {
         String key = settings.getString(KEY, skill.getName());
         int duration = (int) (20 * parseValues(caster, DURATION, level, 5));

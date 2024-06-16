@@ -360,8 +360,7 @@ public class PlayerClass
      *
      * @param percent percent of experience to lose
      */
-    public void loseExp(double percent)
-    {
+    public void loseExp(double percent) {
         double amount = percent * getRequiredExp();
 
         // Launch the event
@@ -393,8 +392,7 @@ public class PlayerClass
      * <p>Checks whether or not the player has leveled up based on
      * their current experience.</p>
      */
-    private void checkLevelUp()
-    {
+    private void checkLevelUp() {
         // Count the number of levels gained, if any
         int levels = 0;
         int required;

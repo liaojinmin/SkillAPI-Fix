@@ -300,6 +300,13 @@ public class Settings {
         }
     }
 
+    public int getKeyTimer() {
+        if (settings.containsKey("key-timer")) {
+            return Integer.parseInt(String.valueOf(settings.get("key-timer")));
+        }
+        return 0;
+    }
+
     /**
      * <p>Gets the base value of an attribute</p>
      * <p>If the attribute is not set, this will return 0.</p>

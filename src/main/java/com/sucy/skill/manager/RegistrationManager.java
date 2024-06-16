@@ -289,11 +289,6 @@ public class RegistrationManager {
 
         mode = Mode.DONE;
 
-        // Arrange skill trees
-        for (RPGClass c : SkillAPI.getClasses().values()) {
-            c.arrange();
-        }
-
         Logger.log(LogType.REGISTRATION, 0, "Registration complete");
         Logger.log(LogType.REGISTRATION, 0, " - " + SkillAPI.getSkills().size() + " skills");
         Logger.log(LogType.REGISTRATION, 0, " - " + SkillAPI.getClasses().size() + " classes");

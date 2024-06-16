@@ -21,28 +21,35 @@ import java.util.List;
  */
 public class MythicMobsHook {
 
+    private static MythicMobs mythicMobs = null;
+
+    private static MythicMobs getMythicMobs() {
+        if (mythicMobs == null) mythicMobs = MythicMobs.inst();
+        return mythicMobs;
+    }
+
     public static void taunt(final LivingEntity target, final LivingEntity source, final double amount) {
         if (amount > 0) {
-            MythicMobs.inst().getAPIHelper().addThreat(target, source, amount);
+            getMythicMobs().getAPIHelper().addThreat(target, source, amount);
         }
         else if (amount < 0) {
-            MythicMobs.inst().getAPIHelper().reduceThreat(target, source, -amount);
+            getMythicMobs().getAPIHelper().reduceThreat(target, source, -amount);
         }
     }
 
     public static boolean isMonster(final LivingEntity target) {
-        return MythicMobs.inst().getAPIHelper().isMythicMob(target);
+        return getMythicMobs().getAPIHelper().isMythicMob(target);
     }
 
     public static boolean castSkill(LivingEntity caster, String skillName) {
-        return MythicMobs.inst().getAPIHelper().castSkill(caster, skillName);
+        return getMythicMobs().getAPIHelper().castSkill(caster, skillName);
     }
 
     public static void castSkill(LivingEntity caster, String skillName, Float power) {
         LivingEntity target = getTargetedEntity(caster);
         ArrayList<Entity> targets = new ArrayList<>();
         targets.add(target);
-        MythicMobs.inst().getAPIHelper().castSkill(caster, skillName, caster, caster.getLocation(), targets, null, power);
+        getMythicMobs().getAPIHelper().castSkill(caster, skillName, caster, caster.getLocation(), targets, null, power);
     }
 
     public static void castSkill(LivingEntity caster, String skillName, Collection<Entity> targets, Float power) {
@@ -51,9 +58,9 @@ public class MythicMobsHook {
             locations.add(target.getLocation());
         }
         if (locations.stream().findFirst().isPresent()) {
-            MythicMobs.inst().getAPIHelper().castSkill(caster, skillName, locations.stream().findFirst().get(), targets, locations, power);
+            getMythicMobs().getAPIHelper().castSkill(caster, skillName, locations.stream().findFirst().get(), targets, locations, power);
         } else {
-            MythicMobs.inst().getAPIHelper().castSkill(caster, skillName, null, targets, locations, power);
+            getMythicMobs().getAPIHelper().castSkill(caster, skillName, null, targets, locations, power);
         }
     }
 

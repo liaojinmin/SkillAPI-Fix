@@ -3,6 +3,7 @@ package com.sucy.skill.dynamic.target;
 import com.rit.sucy.config.parse.DataSection;
 import com.rit.sucy.player.TargetHelper;
 import com.sucy.skill.SkillAPI;
+import com.sucy.skill.api.skills.SkillContext;
 import com.sucy.skill.cast.CircleIndicator;
 import com.sucy.skill.cast.ConeIndicator;
 import com.sucy.skill.cast.IIndicator;
@@ -18,6 +19,8 @@ import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
 
 import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
 import java.util.function.Function;
 
@@ -52,9 +55,12 @@ public abstract class TargetComponent extends EffectComponent {
      * @return true if applied to something, false otherwise
      */
     @Override
-    public boolean execute(LivingEntity caster, int level, List<LivingEntity> targets) {
-        final List<LivingEntity> list = getTargets(caster, level, targets);
-        return (!list.isEmpty() && executeChildren(caster, level, list));
+    public boolean execute(LivingEntity caster, SkillContext context, int level, List<LivingEntity> targets) {
+        List<LivingEntity> list = getTargets(caster, level, targets);
+        if (list.isEmpty()) {
+            list = getTargets(caster, context, level, targets);
+        }
+        return (!list.isEmpty() && executeChildren(caster, context, level, list));
     }
 
     @Override
@@ -74,6 +80,15 @@ public abstract class TargetComponent extends EffectComponent {
             final List<LivingEntity> targets);
 
     abstract void makeIndicators(final List<IIndicator> list, final Player caster, final LivingEntity target, final int level);
+
+    List<LivingEntity> getTargets(
+            final LivingEntity caster,
+            final SkillContext context,
+            final int level,
+            final List<LivingEntity> targets) {
+        return Collections.emptyList();
+    }
+
 
     /**
      * Creates the list of indicators for the skill
@@ -125,7 +140,8 @@ public abstract class TargetComponent extends EffectComponent {
             final LivingEntity caster,
             final int level,
             final List<LivingEntity> from,
-            final Function<LivingEntity, List<LivingEntity>> conversion) {
+            final Function<LivingEntity, List<LivingEntity>> conversion
+    ) {
 
         final double max = parseValues(caster, MAX, level, 99);
 

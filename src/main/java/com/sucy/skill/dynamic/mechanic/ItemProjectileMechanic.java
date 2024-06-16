@@ -32,6 +32,7 @@ import com.sucy.skill.api.particle.target.FollowTarget;
 import com.sucy.skill.api.projectile.CustomProjectile;
 import com.sucy.skill.api.projectile.ItemProjectile;
 import com.sucy.skill.api.projectile.ProjectileCallback;
+import com.sucy.skill.api.skills.SkillContext;
 import com.sucy.skill.cast.CircleIndicator;
 import com.sucy.skill.cast.CylinderIndicator;
 import com.sucy.skill.cast.IIndicator;
@@ -125,17 +126,11 @@ public class ItemProjectileMechanic extends MechanicComponent implements Project
         return "item projectile";
     }
 
-    /**
-     * Executes the component
-     *
-     * @param caster  caster of the skill
-     * @param level   level of the skill
-     * @param targets targets to apply to
-     *
-     * @return true if applied to something, false otherwise
-     */
+    private SkillContext skillContext = null;
+
     @Override
-    public boolean execute(LivingEntity caster, int level, List<LivingEntity> targets) {
+    public boolean execute(LivingEntity caster, SkillContext context, int level, List<LivingEntity> targets) {
+        skillContext = context;
         Material mat = Material.JACK_O_LANTERN;
         try {
             mat = Material.valueOf(settings.getString(ITEM).toUpperCase().replace(" ", "_"));
@@ -224,7 +219,10 @@ public class ItemProjectileMechanic extends MechanicComponent implements Project
         }
         ArrayList<LivingEntity> targets = new ArrayList<LivingEntity>();
         targets.add(hit);
-        executeChildren(projectile.getShooter(), SkillAPI.getMetaInt(projectile, LEVEL), targets);
+        if (skillContext == null) {
+            skillContext = new SkillContext();
+        }
+        executeChildren(projectile.getShooter(), skillContext, SkillAPI.getMetaInt(projectile, LEVEL), targets);
         projectile.setCallback(null);
     }
 }

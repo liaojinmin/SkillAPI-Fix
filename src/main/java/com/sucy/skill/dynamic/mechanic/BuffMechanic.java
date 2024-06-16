@@ -1,5 +1,6 @@
 package com.sucy.skill.dynamic.mechanic;
 
+import com.sucy.skill.api.skills.SkillContext;
 import com.sucy.skill.api.util.Buff;
 import com.sucy.skill.api.util.BuffManager;
 import com.sucy.skill.api.util.BuffType;
@@ -35,7 +36,7 @@ public class BuffMechanic extends MechanicComponent {
      * @return true if applied to something, false otherwise
      */
     @Override
-    public boolean execute(LivingEntity caster, int level, List<LivingEntity> targets) {
+    public boolean execute(LivingEntity caster, SkillContext context, int level, List<LivingEntity> targets) {
         if (targets.size() == 0) return false;
 
         boolean immediate = settings.getString(IMMEDIATE, "false").equalsIgnoreCase("true");

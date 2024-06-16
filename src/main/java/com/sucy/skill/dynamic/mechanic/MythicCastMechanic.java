@@ -1,5 +1,6 @@
 package com.sucy.skill.dynamic.mechanic;
 
+import com.sucy.skill.api.skills.SkillContext;
 import com.sucy.skill.hook.MythicMobsHook;
 import org.bukkit.entity.LivingEntity;
 
@@ -24,7 +25,7 @@ public class MythicCastMechanic extends MechanicComponent{
 
 
     @Override
-    public boolean execute(LivingEntity caster, int level, List<LivingEntity> targets) {
+    public boolean execute(LivingEntity caster, SkillContext context, int level, List<LivingEntity> targets) {
         if (!settings.has(SKILLNAME)) {
             return false;
         }

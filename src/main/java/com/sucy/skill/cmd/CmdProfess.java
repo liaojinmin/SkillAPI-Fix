@@ -74,17 +74,11 @@ public class CmdProfess implements IFunction
                 sender.sendMessage("玩家数据未加载...");
                 return;
             }
-            if (args.length == 0)
-            {
-                if (!data.showProfession((Player) sender))
-                    cmd.sendMessage(sender, NOT_AVAILABLE, ChatColor.RED + "There's no profession available at this time");
-            }
-            else
-            {
-                String name = args[0];
-                for (int i = 1; i < args.length; i++) name += ' ' + args[i];
+            if (args.length > 0) {
+                StringBuilder name = new StringBuilder(args[0]);
+                for (int i = 1; i < args.length; i++) name.append(' ').append(args[i]);
 
-                RPGClass target = SkillAPI.getClass(name);
+                RPGClass target = SkillAPI.getClass(name.toString());
 
                 // Invalid class
                 if (target == null)

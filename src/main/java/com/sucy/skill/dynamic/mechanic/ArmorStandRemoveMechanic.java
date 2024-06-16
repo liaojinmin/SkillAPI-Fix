@@ -28,6 +28,7 @@ package com.sucy.skill.dynamic.mechanic;
 
 import com.sucy.skill.api.armorstand.ArmorStandInstance;
 import com.sucy.skill.api.armorstand.ArmorStandManager;
+import com.sucy.skill.api.skills.SkillContext;
 import org.bukkit.entity.LivingEntity;
 import java.util.List;
 
@@ -35,7 +36,6 @@ import java.util.List;
  * 结束动作
  */
 public class ArmorStandRemoveMechanic extends MechanicComponent {
-    private static final String KEY = "key";
 
     private static final String TARGET = "target";
 
@@ -44,23 +44,27 @@ public class ArmorStandRemoveMechanic extends MechanicComponent {
         return "armor stand remove";
     }
 
-    @Override
-    public boolean execute(LivingEntity caster, int level, List<LivingEntity> targets) {
-        String key = settings.getString(KEY);
-        boolean target = settings.getBool(TARGET, false);
-        if (target) {
-            for (LivingEntity entity : targets) {
-                ArmorStandInstance armorStandInstance = ArmorStandManager.getArmorStand(entity, key);
-                if (armorStandInstance != null) {
-                    armorStandInstance.remove();
-                }
-            }
-        } else {
-            ArmorStandInstance armorStandInstance = ArmorStandManager.getArmorStand(caster, key);
+    private void remove(LivingEntity entity, List<Integer> list) {
+        for (int a : list) {
+            ArmorStandInstance armorStandInstance = ArmorStandManager.getArmorStand(entity, a);
             if (armorStandInstance != null) {
                 armorStandInstance.remove();
             }
         }
+    }
+
+    @Override
+    public boolean execute(LivingEntity caster, SkillContext context, int level, List<LivingEntity> targets) {
+        boolean target = settings.getBool(TARGET, false);
+        List<Integer> list = context.delIntegerList("armor stand");
+        if (target) {
+            for (LivingEntity entity : targets) {
+                remove(entity, list);
+            }
+        } else {
+            remove(caster, list);
+        }
+        executeChildren(caster, context, level, targets);
         return true;
     }
 }

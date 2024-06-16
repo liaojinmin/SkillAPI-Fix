@@ -8,8 +8,7 @@ import java.lang.reflect.Method;
 
 import static com.rit.sucy.reflect.Reflection.getNMSClass;
 
-public class Title
-{
+public class Title {
     private static Constructor<?> timesConstructor;
     private static Constructor<?> contentConstructor;
 
@@ -21,8 +20,7 @@ public class Title
     private static Object titleType;
     private static Object subtitleType;
 
-    private static void loadClasses() throws Exception
-    {
+    private static void loadClasses() throws Exception {
         packetTitle = getNMSClass("PacketPlayOutTitle");
         Class<?> chatBaseComponent = getNMSClass("IChatBaseComponent");
         serialize = chatBaseComponent.getDeclaredClasses()[0].getDeclaredMethod("a", String.class);
@@ -36,8 +34,7 @@ public class Title
         contentConstructor = packetTitle.getConstructor(titleSerializer, chatBaseComponent);
     }
 
-    public static void send(Player player, String title, String subtitle, int fadeIn, int duration, int fadeOut)
-    {
+    public static void send(Player player, String title, String subtitle, int fadeIn, int duration, int fadeOut) {
         try
         {
             if (packetTitle == null)

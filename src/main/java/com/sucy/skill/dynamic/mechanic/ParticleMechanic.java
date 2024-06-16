@@ -27,6 +27,7 @@
 package com.sucy.skill.dynamic.mechanic;
 
 import com.sucy.skill.api.Settings;
+import com.sucy.skill.api.skills.SkillContext;
 import com.sucy.skill.api.util.ParticleHelper;
 import org.bukkit.Location;
 import org.bukkit.entity.LivingEntity;
@@ -60,7 +61,7 @@ public class ParticleMechanic extends MechanicComponent
      * @return true if applied to something, false otherwise
      */
     @Override
-    public boolean execute(LivingEntity caster, int level, List<LivingEntity> targets)
+    public boolean execute(LivingEntity caster, SkillContext context, int level, List<LivingEntity> targets)
     {
         if (targets.size() == 0)
         {

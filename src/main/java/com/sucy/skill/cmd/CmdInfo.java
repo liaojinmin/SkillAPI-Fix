@@ -41,6 +41,9 @@ import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.Plugin;
 
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
+
 /**
  * A command that displays a player's current class information
  */
@@ -75,8 +78,7 @@ public class CmdInfo implements IFunction
         }
 
         // Only can show info of a player so console needs to provide a name
-        else if (sender instanceof Player || args.length >= 1)
-        {
+        else if (sender instanceof Player || args.length >= 1) {
             OfflinePlayer target = args.length == 0 ? (OfflinePlayer) sender : VersionManager.getOfflinePlayer(args[0], false);
             if (target == null) {
                 cmd.sendMessage(sender, NOT_PLAYER, ChatColor.RED + "That is not a valid player name");
@@ -91,6 +93,21 @@ public class CmdInfo implements IFunction
             cmd.sendMessage(sender, TITLE, ChatColor.DARK_GRAY + "--" + ChatColor.DARK_GREEN + " {player} " + ChatColor.DARK_GRAY + "-----------", Filter.PLAYER.setReplacement(target.getName()));
             String separator = cmd.getMessage(SEPARATOR, ChatColor.DARK_GRAY + "----------------------------");
             boolean first = true;
+            sender.sendMessage(ChatColor.GOLD + "基本属性:");
+            for (Map.Entry<String, Integer> it : data.attributes.entrySet()) {
+                sender.sendMessage("    key: " + it.getKey() + " value: " + it.getValue());
+            }
+            sender.sendMessage(ChatColor.GOLD + "额外属性:");
+            for (Map.Entry<String, Integer> it : data.bonusAttrib.entrySet()) {
+                sender.sendMessage("    key: " + it.getKey() + " value: " + it.getValue());
+            }
+            sender.sendMessage(ChatColor.GOLD + "临时属性:");
+            for (Map.Entry<String, ConcurrentHashMap<String, Integer>> it : data.addAttrib.entrySet()) {
+                sender.sendMessage("  属性源:"+it.getKey());
+                for (Map.Entry<String, Integer> it2 : it.getValue().entrySet()) {
+                    sender.sendMessage("    key: " + it2.getKey() + " value: " + it2.getValue());
+                }
+            }
             for (String group : SkillAPI.getGroups()) {
                 PlayerClass c = data.getClass(group);
 

@@ -28,6 +28,7 @@ package com.sucy.skill.dynamic.mechanic;
 
 import com.rit.sucy.config.parse.NumberParser;
 import com.rit.sucy.version.VersionManager;
+import com.sucy.skill.api.skills.SkillContext;
 import org.bukkit.ChatColor;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.inventory.ItemStack;
@@ -61,7 +62,7 @@ public class DamageLoreMechanic extends MechanicComponent {
      * @return true if applied to something, false otherwise
      */
     @Override
-    public boolean execute(LivingEntity caster, int level, List<LivingEntity> targets) {
+    public boolean execute(LivingEntity caster, SkillContext context, int level, List<LivingEntity> targets) {
         String regex = settings.getString(REGEX, "Damage: {value}");
         regex = regex.replace("{value}", "([0-9]+)");
         Pattern pattern = Pattern.compile(regex);

@@ -74,6 +74,8 @@ public class TempEntity implements LivingEntity {
 
     private EffectTarget target;
 
+    private final UUID uuid = UUID.randomUUID();
+
     /**
      * Sets up a new dummy entity
      *
@@ -553,7 +555,7 @@ public class TempEntity implements LivingEntity {
     }
 
     public UUID getUniqueId() {
-        return null;
+        return uuid;
     }
 
     public int getTicksLived() {

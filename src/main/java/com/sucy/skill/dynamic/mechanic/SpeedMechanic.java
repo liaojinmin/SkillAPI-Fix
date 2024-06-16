@@ -26,6 +26,7 @@
  */
 package com.sucy.skill.dynamic.mechanic;
 
+import com.sucy.skill.api.skills.SkillContext;
 import com.sucy.skill.api.util.FlagManager;
 import com.sucy.skill.listener.AttributeListener;
 import com.sucy.skill.listener.MechanicListener;
@@ -56,7 +57,7 @@ public class SpeedMechanic extends MechanicComponent {
      * @return true if applied to something, false otherwise
      */
     @Override
-    public boolean execute(LivingEntity caster, int level, List<LivingEntity> targets) {
+    public boolean execute(LivingEntity caster, SkillContext context, int level, List<LivingEntity> targets) {
         float multiplier = (float) parseValues(caster, MULTIPLIER, level, 1.2);
         double seconds = parseValues(caster, DURATION, level, 3.0);
         int ticks = (int) (seconds * 20);

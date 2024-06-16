@@ -36,7 +36,6 @@ public class CmdManager {
                 new ConfigurableCommand(api, "attAction", SenderType.ANYONE, new CmdAttributeAction(), "临时属性", "", Permissions.AttributeAction),
                 new ConfigurableCommand(api, "cast", SenderType.PLAYER_ONLY, new CmdCast(), "Casts a skill", "<skill>", Permissions.BASIC),
             new ConfigurableCommand(api, "changeclass", SenderType.ANYONE, new CmdChangeClass(), "Swaps classes", "<player> <group> <class>", Permissions.FORCE),
-            new ConfigurableCommand(api, "customize", SenderType.PLAYER_ONLY, new CmdCustomize(), "Opens GUI editor", "", Permissions.GUI),
             new ConfigurableCommand(api, "exp", SenderType.ANYONE, new CmdExp(), "Gives players exp", "[player] <amount> [group]", Permissions.LVL),
             new ConfigurableCommand(api, "info", SenderType.ANYONE, new CmdInfo(), "Shows class info", "[player]", Permissions.BASIC),
             new ConfigurableCommand(api, "level", SenderType.ANYONE, new CmdLevel(), "Gives players levels", "[player] <amount> [group]", Permissions.LVL),
@@ -46,8 +45,8 @@ public class CmdManager {
             new ConfigurableCommand(api, "points", SenderType.ANYONE, new CmdPoints(), "Gives player points", "[player] <amount>", Permissions.POINTS),
             PROFESS_COMMAND = new ConfigurableCommand(api, "profess", SenderType.PLAYER_ONLY, new CmdProfess(), "Professes classes", "<class>", Permissions.BASIC),
             new ConfigurableCommand(api, "reload", SenderType.ANYONE, new CmdReload(), "Reloads the plugin", "", Permissions.RELOAD),
+                new ConfigurableCommand(api, "reloadConfig", SenderType.ANYONE, new CmdReloadConfig(), "重载新配置、UI", "", Permissions.RELOAD),
             new ConfigurableCommand(api, "reset", SenderType.PLAYER_ONLY, new CmdReset(), "Resets account data", "", Permissions.BASIC),
-            new ConfigurableCommand(api, "skill", SenderType.PLAYER_ONLY, new CmdSkill(), "Shows player skills", "", Permissions.BASIC),
             new ConfigurableCommand(api, "world", SenderType.PLAYER_ONLY, new CmdWorld(), "Moves to world", "<world>", Permissions.WORLD)
         );
         root.addSubCommands(

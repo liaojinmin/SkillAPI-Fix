@@ -19,9 +19,7 @@ import org.bukkit.event.EventPriority;
 import org.bukkit.event.entity.EntityDamageEvent;
 import org.bukkit.event.entity.EntityRegainHealthEvent;
 import org.bukkit.event.entity.FoodLevelChangeEvent;
-import org.bukkit.event.player.PlayerChangedWorldEvent;
-import org.bukkit.event.player.PlayerQuitEvent;
-import org.bukkit.event.player.PlayerRespawnEvent;
+import org.bukkit.event.player.*;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.HashMap;
@@ -103,7 +101,7 @@ public class AttributeListener extends SkillAPIListener {
     public void onRespawn(PlayerRespawnEvent event) {
         if (event.getPlayer().hasMetadata("NPC"))
             return;
-        updatePlayer(SkillAPI.getPlayerData(event.getPlayer()));
+        Bukkit.getScheduler().runTaskLater(SkillAPI.singleton(), () -> updatePlayer(SkillAPI.getPlayerData(event.getPlayer())), 5);
     }
 
     /**
@@ -112,11 +110,9 @@ public class AttributeListener extends SkillAPIListener {
      * @param event event details
      */
     @EventHandler
-    public void onQuit(PlayerQuitEvent event)
-    {
+    public void onQuit(PlayerQuitEvent event) {
         if (event.getPlayer().hasMetadata("NPC"))
             return;
-
         clearBonuses(event.getPlayer());
     }
 
@@ -137,8 +133,7 @@ public class AttributeListener extends SkillAPIListener {
      * @param event event details
      */
     @EventHandler
-    public void onInvest(PlayerUpAttributeEvent event)
-    {
+    public void onInvest(PlayerUpAttributeEvent event) {
         updatePlayer(event.getPlayerData());
     }
 

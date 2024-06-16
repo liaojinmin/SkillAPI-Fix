@@ -26,6 +26,7 @@
  */
 package com.sucy.skill.dynamic.mechanic;
 
+import com.sucy.skill.api.skills.SkillContext;
 import com.sucy.skill.api.util.FlagManager;
 import com.sucy.skill.hook.PluginChecker;
 import org.bukkit.entity.LivingEntity;
@@ -54,7 +55,7 @@ public class PermissionMechanic extends MechanicComponent {
      * @return true if applied to something, false otherwise
      */
     @Override
-    public boolean execute(LivingEntity caster, int level, List<LivingEntity> targets) {
+    public boolean execute(LivingEntity caster, SkillContext context, int level, List<LivingEntity> targets) {
         if (targets.size() == 0 || !settings.has(PERM) || !PluginChecker.isVaultActive()) {
             return false;
         }

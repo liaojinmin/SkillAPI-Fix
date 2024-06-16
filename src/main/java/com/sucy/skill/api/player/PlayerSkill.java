@@ -180,6 +180,10 @@ public final class PlayerSkill
         return skill.getManaTick(level);
     }
 
+    public int getKeyTimer() {
+        return skill.getKeyTimer();
+    }
+
     /**
      * Retrieves the level requirement of the skill to get to the next level
      *

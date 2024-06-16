@@ -98,8 +98,7 @@ public class CmdExp implements IFunction
             amount = NumberParser.parseDouble(args[numberIndex]);
 
             // Invalid amount of experience
-            if (amount <= 0)
-            {
+            if (amount <= 0) {
                 cmd.sendMessage(sender, NOT_POSITIVE, ChatColor.RED + "You must give a positive amount of experience");
                 return;
             }
@@ -111,18 +110,15 @@ public class CmdExp implements IFunction
 
 
             // Give experience to a specific class group
-            if (numberIndex + 1 <= lastArg)
-            {
+            if (numberIndex + 1 <= lastArg) {
                 PlayerClass playerClass = data.getClass(CmdManager.join(args, numberIndex + 1, lastArg));
                 if (playerClass == null)
                     return;
-
                 playerClass.giveExp(amount, ExpSource.COMMAND, showMessage);
             }
 
             // Give experience
-            else
-                data.giveExp(amount, ExpSource.COMMAND, showMessage);
+            else data.giveExp(amount, ExpSource.COMMAND, showMessage);
 
             // Messages
             if (showMessage) {

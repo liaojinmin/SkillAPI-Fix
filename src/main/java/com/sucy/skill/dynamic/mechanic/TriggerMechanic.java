@@ -3,6 +3,7 @@ package com.sucy.skill.dynamic.mechanic;
 import com.google.common.base.Objects;
 import com.rit.sucy.config.parse.DataSection;
 import com.sucy.skill.SkillAPI;
+import com.sucy.skill.api.skills.SkillContext;
 import com.sucy.skill.dynamic.ComponentRegistry;
 import com.sucy.skill.dynamic.DynamicSkill;
 import com.sucy.skill.dynamic.TriggerHandler;
@@ -57,7 +58,7 @@ public class TriggerMechanic extends MechanicComponent {
 
     @Override
     public boolean execute(
-            final LivingEntity caster, final int level, final List<LivingEntity> targets) {
+            final LivingEntity caster, SkillContext context, final int level, final List<LivingEntity> targets) {
 
        // 将主动延时删除改为被动式，防止重复触发时刚好移除上下文导致触发器失效。
        // final int ticks = (int)(20 * parseValues(caster, DURATION, level, 5));
@@ -69,12 +70,12 @@ public class TriggerMechanic extends MechanicComponent {
             if (!CASTER_MAP.containsKey(target.getEntityId())) {
                 CASTER_MAP.put(target.getEntityId(), new ArrayList<>());
             }
-            final Context context = new Context(caster, level);
-            triggerHandler.init(target, level, new StopTask(target, context));
+            final Context context2 = new Context(caster, level);
+            triggerHandler.init(target, level, new StopTask(target, context2));
 
            // final Context context = new Context(caster, level);
 
-            CASTER_MAP.get(target.getEntityId()).add(context);
+            CASTER_MAP.get(target.getEntityId()).add(context2);
 
            // SkillAPI.schedule(new StopTask(target, context), ticks);
             worked = true;
@@ -118,7 +119,7 @@ public class TriggerMechanic extends MechanicComponent {
         }
 
         @Override
-        public boolean execute(final LivingEntity target, final int level, final List<LivingEntity> targets) {
+        public boolean execute(final LivingEntity target, SkillContext context, final int level, final List<LivingEntity> targets) {
             if (!CASTER_MAP.containsKey(target.getEntityId())) return false;
 
             final List<Context> contexts;
@@ -130,9 +131,9 @@ public class TriggerMechanic extends MechanicComponent {
             final List<LivingEntity> targetList = new ArrayList<>();
             targetList.add(target);
 
-            for (final Context context : contexts) {
-                DynamicSkill.getCastData(context.caster).put("listen-target", targetList);
-                TriggerMechanic.this.executeChildren(context.caster, context.level, targets);
+            for (final Context context2 : contexts) {
+                DynamicSkill.getCastData(context2.caster).put("listen-target", targetList);
+                TriggerMechanic.this.executeChildren(context2.caster, context, context2.level, targets);
             }
 
             return true;

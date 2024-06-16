@@ -27,6 +27,7 @@
 package com.sucy.skill.dynamic.mechanic;
 
 import com.sucy.skill.SkillAPI;
+import com.sucy.skill.api.skills.SkillContext;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
@@ -55,19 +56,19 @@ public class CommandMechanic extends MechanicComponent {
      * @return true if applied to something, false otherwise
      */
     @Override
-    public boolean execute(LivingEntity caster, int level, List<LivingEntity> targets) {
+    public boolean execute(LivingEntity caster, SkillContext context, int level, List<LivingEntity> targets) {
         if (targets.size() == 0 || !settings.has(COMMAND)) {
             return false;
         }
         String command = settings.getString(COMMAND);
         String type = settings.getString(TYPE).toLowerCase();
-        for (LivingEntity t : targets) {
-            if (t instanceof Player) {
-                Player p = (Player) t;
-                command = filter(caster, p, command);
+        for (LivingEntity target : targets) {
+            command = filter(caster, target, command);
+            final String finalCommand = command;
+            if (target instanceof Player) {
+                Player p = (Player) target;
                 if (type.equals("op")) {
                     boolean op = p.isOp();
-                    String finalCommand = command;
                     Bukkit.getScheduler().runTask(SkillAPI.singleton(), () -> {
                         try {
                             p.setOp(true);
@@ -79,11 +80,14 @@ public class CommandMechanic extends MechanicComponent {
                         }
                     });
                 } else {
-                    String finalCommand = command;
                     Bukkit.getScheduler().runTask(SkillAPI.singleton(), () ->
                             Bukkit.getServer().dispatchCommand(Bukkit.getConsoleSender(), finalCommand)
                     );
                 }
+            } else {
+                Bukkit.getScheduler().runTask(SkillAPI.singleton(), () ->
+                        Bukkit.getServer().dispatchCommand(Bukkit.getConsoleSender(), finalCommand)
+                );
             }
         }
 

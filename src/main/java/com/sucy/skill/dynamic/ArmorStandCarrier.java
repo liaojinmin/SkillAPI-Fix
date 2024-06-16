@@ -1,7 +1,7 @@
 package com.sucy.skill.dynamic;
 
 import me.neon.libs.carrier.CarrierBase;
-import me.neon.libs.carrier.meta.ArmorStandMeta;
+import me.neon.libs.carrier.minecraft.meta.ArmorStandMeta;
 import me.neon.libs.util.BoundingBox;
 import org.bukkit.Location;
 import org.jetbrains.annotations.NotNull;
@@ -24,7 +24,7 @@ public class ArmorStandCarrier extends CarrierBase {
     public ArmorStandCarrier(Location loc, ArmorStandMeta meta) {
         this.loc = loc;
         this.box = BoundingBox.Companion.of(loc, loc);
-        setMeta(meta);
+        setCarrierMeta(meta);
     }
 
 
@@ -59,5 +59,15 @@ public class ArmorStandCarrier extends CarrierBase {
 
     public void setLocation(Location location) {
         this.loc = location;
+    }
+
+    @Override
+    public boolean getDisplayNameVisible() {
+        return false;
+    }
+
+    @Override
+    public void setDisplayNameVisible(boolean b) {
+
     }
 }

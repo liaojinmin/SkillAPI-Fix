@@ -3,45 +3,64 @@ package com.sucy.skill.api.armorstand;
 import org.bukkit.Location;
 import org.bukkit.entity.ArmorStand;
 import org.bukkit.entity.LivingEntity;
-import org.bukkit.scheduler.BukkitRunnable;
 import org.bukkit.util.Vector;
 
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.function.BiConsumer;
+import java.util.function.Consumer;
+
 public class ArmorStandInstance {
+
+    private static final Vector UP = new Vector(0, 1, 0);
+
     private final ArmorStand armorStand;
-    private final LivingEntity target;
+    private final LivingEntity owner;
     private final boolean follow;
     private double forward;
     private double upward;
     private double right;
+    private Consumer<AtomicBoolean> runnable = null;
+    private int tick = 0;
+    private final AtomicBoolean tickAtomic = new AtomicBoolean(true);
 
-    private static final Vector UP = new Vector(0, 1, 0);
 
-    public ArmorStandInstance(ArmorStand armorStand, LivingEntity target) {
+    public ArmorStandInstance(ArmorStand armorStand, LivingEntity owner) {
         this.armorStand = armorStand;
-        this.target = target;
+        this.owner = owner;
         this.follow = false;
     }
 
-    public ArmorStandInstance(ArmorStand armorStand, LivingEntity target, double forward, double upward, double right) {
+    public ArmorStandInstance(ArmorStand armorStand, LivingEntity owner,
+                              double forward, double upward, double right
+    ) {
         this.armorStand = armorStand;
-        this.target = target;
+        this.owner = owner;
         this.forward = forward;
         this.upward = upward;
         this.right = right;
         this.follow = true;
     }
 
-    /**
-     * @return true if the instance is still valid
-     */
-    public boolean isValid() {
-        return target.isValid() && armorStand.isValid();
+    public void setRunnable(Consumer<AtomicBoolean> consumer) {
+        this.runnable = consumer;
     }
 
-    /**
-     * Removes the armor stand
-     */
+    public void startRunnable() {
+        tickAtomic.set(true);
+    }
+
+    public void stopRunnable() {
+        tickAtomic.set(false);
+    }
+
+
+    public boolean isValid() {
+        return owner.isValid() && armorStand.isValid();
+    }
+
     public void remove() {
+        tickAtomic.set(false);
+        armorStand.setHealth(0);
         armorStand.remove();
     }
 
@@ -55,16 +74,30 @@ public class ArmorStandInstance {
         }
     }
 
+    public ArmorStand getArmorStand() {
+        return armorStand;
+    }
+
+    public LivingEntity getOwner() {
+        return owner;
+    }
+
     /**
      * Ticks the armor stand
      */
     public void tick() {
-        if (follow) {
-            Location loc = target.getLocation().clone();
-            Vector dir = loc.getDirection().setY(0).normalize();
-            Vector side = dir.clone().crossProduct(UP);
-            loc.add(dir.multiply(forward)).add(0, upward, 0).add(side.multiply(right));
-            armorStand.teleport(loc);
+        if (tickAtomic.get()) {
+            if (follow) {
+                Location loc = owner.getLocation().clone();
+                Vector dir = loc.getDirection().setY(0).normalize();
+                Vector side = dir.clone().crossProduct(UP);
+                loc.add(dir.multiply(forward)).add(0, upward, 0).add(side.multiply(right));
+                armorStand.teleport(loc);
+            }
+            if (runnable != null && tick >= 20) {
+                tick = 0;
+                runnable.accept(tickAtomic);
+            } else tick++;
         }
     }
 }

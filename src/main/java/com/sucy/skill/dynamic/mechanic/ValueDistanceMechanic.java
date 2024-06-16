@@ -1,5 +1,6 @@
 package com.sucy.skill.dynamic.mechanic;
 
+import com.sucy.skill.api.skills.SkillContext;
 import com.sucy.skill.dynamic.DynamicSkill;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
@@ -30,7 +31,7 @@ public class ValueDistanceMechanic extends MechanicComponent
      * @return true if applied to something, false otherwise
      */
     @Override
-    public boolean execute(final LivingEntity caster, final int level, final List<LivingEntity> targets)
+    public boolean execute(final LivingEntity caster, SkillContext context, final int level, final List<LivingEntity> targets)
     {
         if (!settings.has(KEY) || !(caster instanceof Player))
         {

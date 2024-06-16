@@ -18,10 +18,10 @@ import com.sucy.skill.data.io.IOManager;
 import com.sucy.skill.data.io.SQLImpl;
 import com.sucy.skill.dynamic.DynamicClass;
 import com.sucy.skill.dynamic.DynamicSkill;
-import com.sucy.skill.gui.tool.GUITool;
 import com.sucy.skill.hook.PlaceholderAPIHook;
 import com.sucy.skill.hook.mechanic.MythicListener;
 import com.sucy.skill.listener.*;
+import com.sucy.skill.screen.ConfigManager;
 import com.sucy.skill.task.ManaTask;
 import com.sucy.skill.task.MobAttributeTask;
 import com.sucy.skill.thread.MainThread;
@@ -93,6 +93,7 @@ public class SkillAPI extends JavaPlugin {
         cmd = new CmdManager(this);
         ioManager = new SQLImpl(this);
         PlayerStats.init();
+        ConfigManager.INSTANCE.loader();
         attributeManager = new AttributeManager(this);
         // Load classes and skills
         registrationManager.initialize();
@@ -104,7 +105,6 @@ public class SkillAPI extends JavaPlugin {
         listen(new MainListener(), true);
         listen(new MechanicListener(), true);
         listen(new StatusListener(), true);
-        listen(new ToolListener(), true);
         listen(new KillListener(), true);
         listen(new AddonListener(), true);
         listen(new ItemListener(), settings.isCheckLore());
@@ -123,7 +123,6 @@ public class SkillAPI extends JavaPlugin {
                         SkillAPI.getSettings().getGainFreq()
                 );
         }
-        GUITool.init();
         // 加载数据
         for (Player player : Bukkit.getOnlinePlayers()) {
             loadPlayerData(player, it -> {
@@ -158,8 +157,6 @@ public class SkillAPI extends JavaPlugin {
             unloadPlayerData(player, false, true);
         }
         playerDataMap.clear();
-        
-        GUITool.cleanUp();
         EffectManager.cleanUp();
         ArmorStandManager.cleanUp();
         mainThread.disable();

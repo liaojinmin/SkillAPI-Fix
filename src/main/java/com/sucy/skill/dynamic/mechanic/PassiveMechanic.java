@@ -28,6 +28,7 @@ package com.sucy.skill.dynamic.mechanic;
 
 import com.sucy.skill.SkillAPI;
 import com.sucy.skill.api.player.PlayerSkill;
+import com.sucy.skill.api.skills.SkillContext;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
 import org.bukkit.scheduler.BukkitRunnable;
@@ -45,17 +46,11 @@ public class PassiveMechanic extends MechanicComponent {
 
     private final Map<Integer, PassiveTask> tasks = new HashMap<>();
 
-    /**
-     * Executes the component
-     *
-     * @param caster  caster of the skill
-     * @param level   level of the skill
-     * @param targets targets to apply to
-     *
-     * @return true if applied to something, false otherwise
-     */
+    private SkillContext skillContext = null;
+
     @Override
-    public boolean execute(LivingEntity caster, int level, List<LivingEntity> targets) {
+    public boolean execute(LivingEntity caster, SkillContext context, int level, List<LivingEntity> targets) {
+        skillContext = context;
         if (tasks.containsKey(caster.getEntityId())) { return false; }
 
         if (targets.size() > 0) {
@@ -118,7 +113,8 @@ public class PassiveMechanic extends MechanicComponent {
                 }
             }
             level = skill.getActiveLevel(caster);
-            executeChildren(caster, level, targets);
+            if (skillContext == null) skillContext = new SkillContext();
+            executeChildren(caster, skillContext, level, targets);
 
             if (skill.checkCancelled()) {
                 cancel();

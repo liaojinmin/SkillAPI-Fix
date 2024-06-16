@@ -6,15 +6,7 @@ import com.sucy.skill.dynamic.custom.CustomComponent;
 import com.sucy.skill.dynamic.custom.CustomEffectComponent;
 import com.sucy.skill.dynamic.custom.EditorOption;
 import com.sucy.skill.dynamic.mechanic.*;
-import com.sucy.skill.dynamic.target.AreaTarget;
-import com.sucy.skill.dynamic.target.ConeTarget;
-import com.sucy.skill.dynamic.target.LinearTarget;
-import com.sucy.skill.dynamic.target.LocationTarget;
-import com.sucy.skill.dynamic.target.NearestTarget;
-import com.sucy.skill.dynamic.target.OffsetTarget;
-import com.sucy.skill.dynamic.target.RememberTarget;
-import com.sucy.skill.dynamic.target.SelfTarget;
-import com.sucy.skill.dynamic.target.SingleTarget;
+import com.sucy.skill.dynamic.target.*;
 import com.sucy.skill.dynamic.trigger.BlockBreakTrigger;
 import com.sucy.skill.dynamic.trigger.BlockPlaceTrigger;
 import com.sucy.skill.dynamic.trigger.CrouchTrigger;
@@ -174,6 +166,7 @@ public class ComponentRegistry {
         register(new RememberTarget());
         register(new SelfTarget());
         register(new SingleTarget());
+        register(new ContextArmorStandTarget());
 
         // Conditions
         register(new ArmorCondition());
@@ -283,6 +276,7 @@ public class ComponentRegistry {
         register(new ValuePlaceholderMechanic());
         register(new ValueRandomMechanic());
         register(new ValueSetMechanic());
+        register(new ValueMMoItemAttrMechanic());
         register(new WarpMechanic());
         register(new WarpLocMechanic());
         register(new WarpRandomMechanic());
@@ -296,6 +290,9 @@ public class ComponentRegistry {
         // armorStand
         register(new ArmorStandMechanic());
         register(new ArmorStandRemoveMechanic());
+
+        register(new GermAnimationStartMechanic());
+        register(new GermAnimationStopMechanic());
 
         // meta
         register(new MetaEditMechanic());

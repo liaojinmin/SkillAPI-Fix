@@ -29,6 +29,7 @@ package com.sucy.skill.dynamic.mechanic;
 import com.rit.sucy.version.VersionManager;
 import com.sucy.skill.api.attribute.AttributeAPI;
 import com.sucy.skill.api.event.SkillHealEvent;
+import com.sucy.skill.api.skills.SkillContext;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.LivingEntity;
@@ -58,7 +59,7 @@ public class HealMechanic extends MechanicComponent {
      * @return true if applied to something, false otherwise
      */
     @Override
-    public boolean execute(LivingEntity caster, int level, List<LivingEntity> targets) {
+    public boolean execute(LivingEntity caster, SkillContext context, int level, List<LivingEntity> targets) {
         boolean percent = settings.getString(TYPE, "health").equalsIgnoreCase("percent");
 
         double value = 0;

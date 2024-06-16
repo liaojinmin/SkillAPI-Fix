@@ -63,10 +63,8 @@ public class TitleManager
      * @param msgKey  language config key for the message
      * @param filters filters to apply to the message
      */
-    public static void show(Player player, TitleType type, String msgKey, CustomFilter... filters)
-    {
-        if (SkillAPI.getSettings().useTitle(type) && msgKey != null)
-        {
+    public static void show(Player player, TitleType type, String msgKey, CustomFilter... filters) {
+        if (SkillAPI.getSettings().useTitle(type) && msgKey != null) {
             List<String> message = SkillAPI.getLanguage().getMessage(msgKey, true, FilterType.COLOR, filters);
             if (message != null && message.size() > 0)
             {

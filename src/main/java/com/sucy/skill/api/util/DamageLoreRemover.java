@@ -91,22 +91,18 @@ public class DamageLoreRemover
      *
      * @return the tool without the damage lore
      */
-    public static ItemStack removeAttackDmg(ItemStack item)
-    {
-        if (item == null)
-        {
-            return item;
+    public static ItemStack removeAttackDmg(ItemStack item) {
+        if (item == null) {
+            return null;
         }
         if (NBT_BASE == null) setup();
-        try
-        {
+        try {
             item = item.clone();
             Object nmsStack = AS_NMS.invoke(null, item);
             Object nbtCompound = GET_TAG.invoke(nmsStack);
 
             // Disable durability if needed
-            if (item.getType().getMaxDurability() > 0)
-            {
+            if (item.getType().getMaxDurability() > 0) {
                 SET_BOOL.invoke(nbtCompound, "Unbreakable", true);
                 SET_INT.invoke(nbtCompound, "HideFlags", 4);
             }
@@ -120,9 +116,7 @@ public class DamageLoreRemover
 
             // Return result
             return (ItemStack) AS_CRAFT.invoke(null, nmsStack);
-        }
-        catch (Exception ex)
-        {
+        } catch (Exception ex) {
             return item;
         }
     }

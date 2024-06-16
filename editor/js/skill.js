@@ -39,7 +39,7 @@ function Skill(name) {
 			.setTooltip('The time in seconds before the skill can be cast again (only works with the Cast trigger)'),
 		new AttributeValue('Mana', 'mana', 0, 0)
 			.setTooltip('The amount of mana it takes to cast the skill (only works with the Cast trigger)'),
-		new IntValue('Mana Tick', 'mana-tick', 1000)
+		new AttributeValue('Mana Tick', 'mana-tick', 1000, 0)
 			.setTooltip('法力值恢复延时'),
 		new AttributeValue('Min Spent', 'points-spent-req', 0, 0)
 			.setTooltip('The amount of skill points that need to be spent before upgrading this skill'),

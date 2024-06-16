@@ -28,6 +28,7 @@ package com.sucy.skill.dynamic.mechanic;
 
 import com.rit.sucy.version.VersionManager;
 import com.sucy.skill.SkillAPI;
+import com.sucy.skill.api.skills.SkillContext;
 import com.sucy.skill.dynamic.TempEntity;
 import com.sucy.skill.listener.MechanicListener;
 import org.bukkit.Location;
@@ -60,18 +61,11 @@ public class PotionProjectileMechanic extends MechanicComponent
         return "potion projectile";
     }
 
-    /**
-     * Executes the component
-     *
-     * @param caster  caster of the skill
-     * @param level   level of the skill
-     * @param targets targets to apply to
-     *
-     * @return true if applied to something, false otherwise
-     */
+    private SkillContext skillContext = null;
+
     @Override
-    public boolean execute(LivingEntity caster, int level, List<LivingEntity> targets)
-    {
+    public boolean execute(LivingEntity caster, SkillContext context, int level, List<LivingEntity> targets) {
+        skillContext = context;
         // Get common values
         String potion = settings.getString(POTION, "slowness").toUpperCase().replace(" ", "_");
         boolean linger = settings.getString(LINGER, "false").toLowerCase().equals("true") && VersionManager.isVersionAtLeast(VersionManager.V1_9_0);
@@ -143,6 +137,7 @@ public class PotionProjectileMechanic extends MechanicComponent
             LivingEntity locTarget = new TempEntity(loc);
             targets.add(locTarget);
         }
-        executeChildren(caster, level, targets);
+        if (skillContext == null) skillContext = new SkillContext();
+        executeChildren(caster, skillContext, level, targets);
     }
 }

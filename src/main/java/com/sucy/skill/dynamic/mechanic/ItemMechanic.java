@@ -27,6 +27,7 @@
 package com.sucy.skill.dynamic.mechanic;
 
 import com.rit.sucy.text.TextFormatter;
+import com.sucy.skill.api.skills.SkillContext;
 import org.bukkit.Material;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
@@ -63,7 +64,7 @@ public class ItemMechanic extends MechanicComponent
      * @return true if applied to something, false otherwise
      */
     @Override
-    public boolean execute(LivingEntity caster, int level, List<LivingEntity> targets)
+    public boolean execute(LivingEntity caster, SkillContext context, int level, List<LivingEntity> targets)
     {
         String mat = settings.getString(MATERIAL, "arrow").toUpperCase().replace(" ", "_");
         Material material;

@@ -1,6 +1,5 @@
 package com.sucy.skill.api.player;
 
-import com.rit.sucy.config.Filter;
 import com.rit.sucy.config.FilterType;
 import com.rit.sucy.player.TargetHelper;
 import com.rit.sucy.version.VersionManager;
@@ -17,18 +16,14 @@ import com.sucy.skill.api.skills.TargetSkill;
 import com.sucy.skill.data.GroupSettings;
 import com.sucy.skill.data.PlayerEquips;
 import com.sucy.skill.dynamic.EffectComponent;
-import com.sucy.skill.gui.handlers.AttributeHandler;
-import com.sucy.skill.gui.handlers.DetailsHandler;
-import com.sucy.skill.gui.handlers.ProfessHandler;
-import com.sucy.skill.gui.handlers.SkillHandler;
-import com.sucy.skill.gui.tool.GUITool;
 import com.sucy.skill.language.ErrorNodes;
-import com.sucy.skill.language.GUINodes;
 import com.sucy.skill.language.RPGFilter;
 import com.sucy.skill.listener.AttributeListener;
 import com.sucy.skill.log.LogType;
 import com.sucy.skill.log.Logger;
 import com.sucy.skill.manager.AttributeManager;
+import com.sucy.skill.screen.AttributeGermScreen;
+import com.sucy.skill.screen.AttributeScreenKt;
 import org.bukkit.Bukkit;
 import org.bukkit.OfflinePlayer;
 import org.bukkit.attribute.Attribute;
@@ -52,6 +47,7 @@ public class PlayerData {
 
     private final HashMap<String, PlayerSkill> skills = new HashMap<>();
 
+    /** key=属性 value=加点等级 **/
     public final HashMap<String, Integer> attributes = new HashMap<>();
 
     public final HashMap<String, Integer> bonusAttrib = new HashMap<>();
@@ -61,12 +57,10 @@ public class PlayerData {
             = new ConcurrentHashMap<>();
 
     private final AtomicLong manaRestoreTick = new AtomicLong(0);
-
     private final OfflinePlayer  player;
-
     private PlayerEquips   equips;
     private String         scheme;
-    private String         menuClass;
+    private int            keyTimer;
     private double         mana;
     private double         maxMana;
     private double         bonusHealth;
@@ -75,7 +69,6 @@ public class PlayerData {
     private double         hunger;
     private boolean        passive;
     private int            attribPoints;
-
     private boolean init = false;
 
 
@@ -400,21 +393,36 @@ public class PlayerData {
     /**
      * Refunds all spent attribute points for a specific attribute
      */
-    public void refundAttributes(String key) {
-        key = key.toLowerCase();
-        attribPoints += getInvestedAttribute(key);
-        attributes.remove(key);
-        AttributeListener.updatePlayer(this);
+    public void refundAttributes(String... key) {
+        boolean update = false;
+        for (String a : key) {
+            update = true;
+            a = a.toLowerCase();
+            attribPoints += getInvestedAttribute(a);
+            attributes.remove(a);
+        }
+        if (update) {
+            AttributeListener.updatePlayer(this);
+        }
+    }
+
+    /**
+     * @return 如果玩家有可返回的属性点，则true
+     */
+    public boolean hasInvestedAttributes() {
+        for (String key : attributes.keySet()) {
+            if (getInvestedAttribute(key) > 0) {
+                return true;
+            }
+        }
+        return false;
     }
 
     /**
      * Refunds all spent attribute points
      */
     public void refundAttributes() {
-        ArrayList<String> keys = new ArrayList<>(attributes.keySet());
-        for (String key : keys) {
-            refundAttributes(key);
-        }
+        refundAttributes(attributes.keySet().toArray(new String[0]));
     }
 
     /**
@@ -504,21 +512,12 @@ public class PlayerData {
     /**
      * Opens the attribute menu for the player
      */
-    public void openAttributeMenu() {
+    public void openAttributeMenu(boolean isGerm) {
         Player player = getPlayer();
         if (player != null) {
-            GUITool.getAttributesMenu().show(
-                    new AttributeHandler(),
-                    this,
-                    SkillAPI.getLanguage().getMessage(
-                            GUINodes.ATTRIB_TITLE,
-                            true,
-                            FilterType.COLOR,
-                            RPGFilter.POINTS.setReplacement(attribPoints + ""),
-                            Filter.PLAYER.setReplacement(player.getName())
-                    ).get(0),
-                    SkillAPI.getAttributeManager().getAttributes()
-            );
+            if (isGerm) {
+                new AttributeGermScreen(player, this).openGui(player);
+            } else AttributeScreenKt.openAttributeScreen(player, this);
         }
     }
 
@@ -831,134 +830,6 @@ public class PlayerData {
         }
     }
 
-    /**
-     * Shows the skill tree for the player. If the player has multiple trees,
-     * this will show the list of skill trees they can view.
-     */
-    public void showSkills() {
-        showSkills(getPlayer());
-    }
-
-    /**
-     * Shows the class details for the player
-     *
-     * @param player player to show to
-     *
-     * @return true if shown, false if nothing to show
-     */
-    public boolean showDetails(Player player) {
-        if (classes.size() > 0 && player != null) {
-            HashMap<String, RPGClass> iconMap = new HashMap<>();
-            for (Map.Entry<String, PlayerClass> entry : classes.entrySet()) {
-                iconMap.put(entry.getKey().toLowerCase(), entry.getValue().getData());
-            }
-
-            GUITool.getDetailsMenu().show(
-                    new DetailsHandler(),
-                    this,
-                    SkillAPI.getLanguage().getMessage(
-                            GUINodes.CLASS_LIST,
-                            true,
-                            FilterType.COLOR,
-                            Filter.PLAYER.setReplacement(player.getName())
-                    ).get(0),
-                    iconMap
-            );
-            return true;
-        } else { return false; }
-    }
-
-    /**
-     * Shows profession options of the first class group available
-     *
-     * @param player player to show profession options for
-     *
-     * @return true if shown profession options, false if none available
-     */
-    public boolean showProfession(Player player) {
-        for (String group : SkillAPI.getGroups()) {
-            PlayerClass c = getClass(group);
-            if (c == null || (c.getLevel() == c.getData().getMaxLevel() && c.getData().getOptions().size() > 0)) {
-                GUITool.getProfessMenu(c == null ? null : c.getData()).show(
-                        new ProfessHandler(),
-                        this,
-                        SkillAPI.getLanguage().getMessage(
-                                GUINodes.PROFESS_TITLE,
-                                true,
-                                FilterType.COLOR,
-                                Filter.PLAYER.setReplacement(player.getName()),
-                                RPGFilter.GROUP.setReplacement(group)
-                        ).get(0),
-                        SkillAPI.getClasses()
-                );
-                return true;
-            }
-        }
-        return false;
-    }
-
-    /**
-     * Shows the skill tree for the player. If the player has multiple trees,
-     * this will show the list of skill trees they can view.
-     *
-     * @param player player to show the skill tree for
-     *
-     * @return true if able to show the player, false otherwise
-     */
-    public boolean showSkills(Player player) {
-        // Cannot show an invalid player, and cannot show no skills
-        if (player == null || classes.size() == 0 || skills.size() == 0) {
-            return false;
-        }
-
-        // Show list of classes that have skill trees
-        if (classes.size() > 1) { return showDetails(player); }
-
-        // Show only class's skill tree otherwise
-        else { return showSkills(player, classes.values().iterator().next()); }
-    }
-
-    /**
-     * Shows the skill tree to the player for the given class
-     *
-     * @param player      player to show
-     * @param playerClass class to look for
-     *
-     * @return true if succeeded, false otherwise
-     */
-    public boolean showSkills(Player player, PlayerClass playerClass) {
-        // Cannot show an invalid player, and cannot show no skills
-        if (player == null || playerClass.getData().getSkills().size() == 0) {
-            return false;
-        }
-
-        // Show skill tree of the class
-        this.menuClass = playerClass.getData().getName();
-        GUITool.getSkillTree(playerClass.getData()).show(
-                new SkillHandler(),
-                this,
-                SkillAPI.getLanguage().getMessage(
-                        GUINodes.SKILL_TREE,
-                        true,
-                        FilterType.COLOR,
-                        RPGFilter.POINTS.setReplacement(playerClass.getPoints() + ""),
-                        RPGFilter.LEVEL.setReplacement(playerClass.getLevel() + ""),
-                        RPGFilter.CLASS.setReplacement(playerClass.getData().getName()),
-                        Filter.PLAYER.setReplacement(getPlayerName())
-                ).get(0),
-                playerClass.getData().getSkillMap()
-        );
-        return true;
-    }
-
-    /**
-     * Retrieves the name of the class shown in the skill tree
-     *
-     * @return class name
-     */
-    public String getShownClassName() {
-        return menuClass;
-    }
 
     ///////////////////////////////////////////////////////
     //                                                   //
@@ -1018,7 +889,7 @@ public class PlayerData {
         if (classes.containsKey(main)) {
             return classes.get(main);
         } else if (classes.size() > 0) {
-            return classes.values().toArray(new PlayerClass[classes.size()])[0];
+            return classes.values().toArray(new PlayerClass[0])[0];
         } else {
             return null;
         }
@@ -1522,6 +1393,14 @@ public class PlayerData {
         }
     }
 
+    public void setKeyTimer(int timer) {
+        this.keyTimer = timer;
+    }
+
+    public int getKeyTimer() {
+        return this.keyTimer;
+    }
+
     public void setManaRestoreTick(long tick) {
         if (tick <= 0) {
          //   System.out.println("取消设置 tick = 0");
@@ -1536,6 +1415,13 @@ public class PlayerData {
             return;
         }
 
+        ManaRestoreTickStartEvent startEvent = new ManaRestoreTickStartEvent(getPlayer(), timer);
+        Bukkit.getPluginManager().callEvent(startEvent);
+        //System.out.println("唤起 ManaRestoreTickStartEvent");
+        if (startEvent.isCancelled()) {
+            return;
+        }
+
        // System.out.println("成功设置 -> "+timer);
         this.manaRestoreTick.set(timer);
     }
@@ -1545,6 +1431,9 @@ public class PlayerData {
         long now = manaRestoreTick.get();
         if (now > 0 && timer >= now) {
             manaRestoreTick.set(0);
+            ManaRestoreTickEndEvent endEvent = new ManaRestoreTickEndEvent(getPlayer());
+            Bukkit.getPluginManager().callEvent(endEvent);
+            //System.out.println("唤起 ManaRestoreTickEndEvent");
             return 0;
         }
         return now - timer;
@@ -1682,7 +1571,7 @@ public class PlayerData {
                 try {
                     // 设置魔法值恢复等待时间
                     setManaRestoreTick(skill.getManaTick());
-
+                    setKeyTimer(skill.getKeyTimer());
                     if (((SkillShot) skill.getData()).cast(p, level)) {
                         return applyUse(p, skill, event.getManaCost());
                     } else {
@@ -1713,7 +1602,7 @@ public class PlayerData {
                 try {
                     // 设置魔法值恢复等待时间
                     setManaRestoreTick(skill.getManaTick());
-
+                    setKeyTimer(skill.getKeyTimer());
                     final boolean canAttack = !SkillAPI.getSettings().canAttack(p, target);
                     if (((TargetSkill) skill.getData()).cast(p, target, level, canAttack)) {
                         return applyUse(p, skill, event.getManaCost());

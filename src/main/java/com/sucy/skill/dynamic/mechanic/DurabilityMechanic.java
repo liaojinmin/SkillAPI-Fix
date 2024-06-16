@@ -1,6 +1,7 @@
 package com.sucy.skill.dynamic.mechanic;
 
 import com.rit.sucy.version.VersionManager;
+import com.sucy.skill.api.skills.SkillContext;
 import org.bukkit.Sound;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
@@ -24,7 +25,7 @@ public class DurabilityMechanic extends MechanicComponent {
 
     @Override
     public boolean execute(
-            final LivingEntity caster, final int level, final List<LivingEntity> targets) {
+            final LivingEntity caster, SkillContext context, final int level, final List<LivingEntity> targets) {
 
         if (!(caster instanceof Player)) {
             return false;

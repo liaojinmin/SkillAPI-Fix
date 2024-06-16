@@ -1,5 +1,6 @@
 package com.sucy.skill.dynamic.mechanic;
 
+import com.sucy.skill.api.skills.SkillContext;
 import com.sucy.skill.dynamic.DynamicSkill;
 import org.bukkit.entity.LivingEntity;
 
@@ -21,7 +22,7 @@ public class ValueCopyMechanic extends MechanicComponent {
 
     @Override
     public boolean execute(
-            final LivingEntity caster, final int level, final List<LivingEntity> targets) {
+            final LivingEntity caster, SkillContext context, final int level, final List<LivingEntity> targets) {
 
         if (targets.size() == 0 || !settings.has(KEY)) {
             return false;

@@ -9,7 +9,7 @@ import java.util.regex.Pattern;
 
 public class AttributeParseUtils {
 
-    private static final Pattern p = Pattern.compile("[^0-9]");
+    private static final Pattern intParse = Pattern.compile("(?<![&§])\\d+");
 
     public static Pair<String, Integer> getAttribute(String lore) {
         for (String attr : SkillAPI.getAttributeManager().getLookupKeys()) {
@@ -30,12 +30,10 @@ public class AttributeParseUtils {
         if (a.isEmpty()) {
             return 0;
         }
-        Matcher m = p.matcher(a);
-        a = m.replaceAll("").trim();
-        if (a.isEmpty()) {
-            return 0;
-        }
-        return NumberParser.parseInt(a);
+        Matcher m = intParse.matcher(a);
+        if (m.find()) {
+            return NumberParser.parseInt(m.group());
+        } else return 0;
     }
 
 }

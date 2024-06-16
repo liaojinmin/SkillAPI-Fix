@@ -47,9 +47,8 @@ public class Nearby
      *
      * @return nearby entities
      */
-    public static List<Entity> getNearby(Location loc, double radius)
-    {
-        List<Entity> result = new ArrayList<Entity>();
+    public static List<Entity> getNearby(Location loc, double radius) {
+        List<Entity> result = new ArrayList<>();
 
         int minX = (int) (loc.getX() - radius) >> 4;
         int maxX = (int) (loc.getX() + radius) >> 4;

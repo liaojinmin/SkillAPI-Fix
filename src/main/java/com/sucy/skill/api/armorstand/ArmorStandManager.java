@@ -65,7 +65,7 @@ public class ArmorStandManager {
      *
      * @return active armor stand or null if not found
      */
-    public static ArmorStandInstance getArmorStand(LivingEntity target, String key) {
+    public static ArmorStandInstance getArmorStand(LivingEntity target, int key) {
         if (!instances.containsKey(target)) {
             return null;
         }
@@ -79,10 +79,9 @@ public class ArmorStandManager {
      * @param target target to register the armor stand for
      * @param key    armor stand key
      */
-    public static void register(ArmorStandInstance armorStand, LivingEntity target, String key) {
+    public static void register(ArmorStandInstance armorStand, LivingEntity target, int key) {
         ArmorStandData data = instances.computeIfAbsent(target, (a) -> new ArmorStandData(target) );
         data.register(armorStand, key);
-
     }
 
     /**

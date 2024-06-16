@@ -466,35 +466,26 @@ function loadClassText(text) {
 function loadSection(data) 
 {	
 	this.components = [];
-	for (var x in data)
-	{
-		if (x == this.dataKey)
-		{
+	for (var x in data) {
+		if (x == this.dataKey) {
 			var attribs = data[x];
-			for (var y in attribs)
-			{
-				for (var i = 0; i < this.data.length; i++)
-				{
-					if (this.data[i].key == y && this.data[i].load)
-					{
+			for (var y in attribs) {
+				for (var i = 0; i < this.data.length; i++) {
+					if (this.data[i].key == y && this.data[i].load) {
 						this.data[i].load(attribs[y]);
 						break;
-					}
-					else if (this.data[i].key + '-base' == y && this.data[i].loadBase)
-					{
+					} else if (this.data[i].key + '-base' == y && this.data[i].loadBase) {
 						this.data[i].loadBase(attribs[y]);
 						break;
-					}
-					else if (this.data[i].key + '-scale' == y && this.data[i].loadScale)
-					{
+					} else if (this.data[i].key + '-scale' == y && this.data[i].loadScale) {
 						this.data[i].loadScale(attribs[y]);
 						break;
+					} else if (this.data[i].key == y && y === "mana-tick") {
+						this.data[i].loadValue(attribs[y]);
 					}
 				}
 			}
-		}
-		else if (x == this.componentKey)
-		{
+		} else if (x == this.componentKey) {
 			var components = data[x];
 			for (var y in components)
 			{

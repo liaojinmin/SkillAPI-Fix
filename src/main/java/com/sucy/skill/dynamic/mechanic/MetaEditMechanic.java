@@ -26,6 +26,7 @@
  */
 package com.sucy.skill.dynamic.mechanic;
 
+import com.sucy.skill.api.skills.SkillContext;
 import com.sucy.skill.dynamic.data.CustomMetaStack;
 import com.sucy.skill.dynamic.data.MetaSkills;
 import org.bukkit.entity.LivingEntity;
@@ -56,7 +57,7 @@ public class MetaEditMechanic extends MechanicComponent {
      * @return true if applied to something, false otherwise
      */
     @Override
-    public boolean execute(LivingEntity caster, int level, List<LivingEntity> targets) {
+    public boolean execute(LivingEntity caster, SkillContext context, int level, List<LivingEntity> targets) {
         if (targets.size() == 0 || !settings.has(KEY)) {
             return false;
         }

@@ -35,7 +35,6 @@ function Class(name)
 			.setTooltip('The amount of mana the class has'),
 		new DoubleValue('魔法值恢复', 'mana-regen', 1, 0)
 			.setTooltip('The amount of mana the class regens each interval. The interval is in the config.yml and by default is once every second. If you want to regen a decimal amount per second, increase the interval.'),
-		new ListValue('技能树', 'tree', [ 'Basic Horizontal', 'Basic Vertical', 'Level Horizontal', 'Level Vertical', 'Flood', 'Requirement' ], 'Requirement'),
 		new StringListValue('Skills (one per line)', 'skills', [])
 			.setTooltip('The skills the class is able to use'),
 		new ListValue('Icon', 'icon', materialList, 'Jack O Lantern')

@@ -52,29 +52,19 @@ public class CmdAttribute implements IFunction
      * @param args   argument list
      */
     @Override
-    public void execute(ConfigurableCommand cmd, Plugin plugin, CommandSender sender, String[] args)
-    {
+    public void execute(ConfigurableCommand cmd, Plugin plugin, CommandSender sender, String[] args) {
         // Disabled world
-        if (sender instanceof Player && !SkillAPI.getSettings().isWorldEnabled(((Player) sender).getWorld()))
-        {
+        if (sender instanceof Player && !SkillAPI.getSettings().isWorldEnabled(((Player) sender).getWorld())) {
             cmd.sendMessage(sender, DISABLED, "&4You cannot use this command in this world");
-        }
-
-        // Only plays have skills to view
-        else if (sender instanceof Player)
-        {
+        } else if (sender instanceof Player) {
             Player p = (Player) sender;
             PlayerData data = SkillAPI.getPlayerData(p.getUniqueId());
             if (data == null) {
                 sender.sendMessage("玩家数据未加载...");
                 return;
             }
-            data.openAttributeMenu();
-        }
-
-        // Console doesn't have profession options
-        else
-        {
+            data.openAttributeMenu(args.length != 0 && args[0].equalsIgnoreCase("germ"));
+        } else {
             cmd.sendMessage(sender, CANNOT_USE, ChatColor.RED + "This cannot be used by the console");
         }
     }

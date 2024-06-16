@@ -62,17 +62,14 @@ public class CmdPoints implements IFunction
      * @param args   argument list
      */
     @Override
-    public void execute(ConfigurableCommand cmd, Plugin plugin, CommandSender sender, String[] args)
-    {
+    public void execute(ConfigurableCommand cmd, Plugin plugin, CommandSender sender, String[] args) {
         // Disabled world
-        if (sender instanceof Player && !SkillAPI.getSettings().isWorldEnabled(((Player) sender).getWorld()) && args.length == 1)
-        {
+        if (sender instanceof Player && !SkillAPI.getSettings().isWorldEnabled(((Player) sender).getWorld()) && args.length == 1) {
             cmd.sendMessage(sender, DISABLED, "&4You cannot use this command in this world");
         }
 
         // Only can show info of a player so console needs to provide a name
-        else if (args.length >= 1 && (args.length >= 2 || sender instanceof Player))
-        {
+        else if (args.length >= 1 && (args.length >= 2 || sender instanceof Player)) {
             // Get the player data
             OfflinePlayer target = args.length == 1 ? (OfflinePlayer) sender : VersionManager.getOfflinePlayer(args[0], false);
             if (target == null)

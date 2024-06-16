@@ -26,6 +26,7 @@
  */
 package com.sucy.skill.dynamic.mechanic;
 
+import com.sucy.skill.api.skills.SkillContext;
 import com.sucy.skill.api.util.FlagManager;
 import com.sucy.skill.api.util.StatusFlag;
 import org.bukkit.Bukkit;
@@ -55,7 +56,7 @@ public class ChannelMechanic extends MechanicComponent {
      * @return true if applied to something, false otherwise
      */
     @Override
-    public boolean execute(final LivingEntity caster, final int level, final List<LivingEntity> targets) {
+    public boolean execute(final LivingEntity caster, SkillContext context, final int level, final List<LivingEntity> targets) {
         if (targets.size() == 0) {
             return false;
         }
@@ -69,7 +70,7 @@ public class ChannelMechanic extends MechanicComponent {
                     if (FlagManager.hasFlag(caster, StatusFlag.CHANNEL)) {
                         FlagManager.removeFlag(caster, StatusFlag.CHANNEL);
                         FlagManager.removeFlag(caster, StatusFlag.CHANNELING);
-                        executeChildren(caster, level, targets);
+                        executeChildren(caster, context, level, targets);
                     }
                 }, ticks
         );

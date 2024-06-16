@@ -30,6 +30,7 @@ import com.sucy.skill.SkillAPI;
 import com.sucy.skill.api.enums.ManaCost;
 import com.sucy.skill.api.enums.ManaSource;
 import com.sucy.skill.api.player.PlayerData;
+import com.sucy.skill.api.skills.SkillContext;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
 
@@ -59,7 +60,7 @@ public class ManaMechanic extends MechanicComponent {
      * @return true if applied to something, false otherwise
      */
     @Override
-    public boolean execute(LivingEntity caster, int level, List<LivingEntity> targets) {
+    public boolean execute(LivingEntity caster, SkillContext context, int level, List<LivingEntity> targets) {
         boolean percent = settings.getString(TYPE, "mana").toLowerCase().equals("percent");
         double value = parseValues(caster, VALUE, level, 1.0);
         long tick = (long) parseValues(caster, TICK, level, 0);

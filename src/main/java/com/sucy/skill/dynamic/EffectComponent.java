@@ -33,6 +33,7 @@ import com.sucy.skill.api.Settings;
 import com.sucy.skill.api.attribute.AttributeAPI;
 import com.sucy.skill.api.player.PlayerData;
 import com.sucy.skill.api.player.PlayerSkill;
+import com.sucy.skill.api.skills.SkillContext;
 import com.sucy.skill.cast.IIndicator;
 import com.sucy.skill.cast.IndicatorType;
 import com.sucy.skill.dynamic.data.CustomMeta;
@@ -239,24 +240,16 @@ public abstract class EffectComponent {
         return passed;
     }
 
-    /**
-     * Executes the children of the component using the given targets
-     *
-     * @param caster  caster of the skill
-     * @param level   level of the skill
-     * @param targets targets to execute on
-     *
-     * @return true if executed, false if conditions not met
-     */
-    protected boolean executeChildren(LivingEntity caster, int level, List<LivingEntity> targets) {
+
+    protected boolean executeChildren(LivingEntity caster, SkillContext context, int level, List<LivingEntity> targets) {
         if (targets.isEmpty()) {
             return false;
         }
 
         boolean worked = false;
         for (EffectComponent child : children) {
-            boolean counts = !child.settings.getString(COUNTS_KEY, "true").toLowerCase().equals("false");
-            passed = child.execute(caster, level, targets);
+            boolean counts = !child.settings.getString(COUNTS_KEY, "true").equalsIgnoreCase("false");
+            passed = child.execute(caster, context, level, targets);
             worked = (passed && counts) || worked;
         }
         return worked;
@@ -309,14 +302,19 @@ public abstract class EffectComponent {
                 builder.append(obj);
 
                 k = j + 1;
-            } else if (key.equals("player")) {
+            } else if (key.equalsIgnoreCase("player") || key.equalsIgnoreCase("caster") ) {
                 builder.append(text.substring(k, i));
                 builder.append(caster.getName());
 
                 k = j + 1;
-            } else if (key.equals("target")) {
+            } else if (key.equalsIgnoreCase("target")) {
                 builder.append(text.substring(k, i));
                 builder.append(target.getName());
+
+                k = j + 1;
+            } else if (key.equalsIgnoreCase("targetUUID")) {
+                builder.append(text.substring(k, i));
+                builder.append(target.getUniqueId().toString());
 
                 k = j + 1;
             }
@@ -327,16 +325,7 @@ public abstract class EffectComponent {
         return builder.toString();
     }
 
-    /**
-     * Executes the component (to be implemented)
-     *
-     * @param caster  caster of the skill
-     * @param level   level of the skill
-     * @param targets targets to execute on
-     *
-     * @return true if executed, false if conditions not met
-     */
-    public abstract boolean execute(LivingEntity caster, int level, List<LivingEntity> targets);
+    public abstract boolean execute(LivingEntity caster, SkillContext context, int level, List<LivingEntity> targets);
 
     /**
      * Creates the list of indicators for the skill

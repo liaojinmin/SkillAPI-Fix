@@ -1,29 +1,3 @@
-/**
- * SkillAPI
- * com.sucy.data.skill.Settings
- *
- * The MIT License (MIT)
- *
- * Copyright (c) 2014 Steven Sucy
- *
- * Permission is hereby granted, free of charge, to any person obtaining a copy
- * of this software and associated documentation files (the "Software") to deal
- * in the Software without restriction, including without limitation the rights
- * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
- * copies of the Software, and to permit persons to whom the Software is
- * furnished to do so, subject to the following conditions:
- *
- * The above copyright notice and this permission notice shall be included in
- * all copies or substantial portions of the Software.
- *
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
- * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
- * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
- * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
- * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
- * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
- * THE SOFTWARE.
- */
 package com.sucy.skill.data;
 
 import com.google.common.collect.ImmutableList;
@@ -41,11 +15,9 @@ import com.sucy.skill.api.DefaultCombatProtection;
 import com.sucy.skill.api.attribute.AttributeAPI;
 import com.sucy.skill.api.player.PlayerClass;
 import com.sucy.skill.api.skills.Skill;
-import com.sucy.skill.cast.IndicatorSettings;
 import com.sucy.skill.data.formula.Formula;
 import com.sucy.skill.data.formula.value.CustomValue;
 import com.sucy.skill.dynamic.DynamicSkill;
-import com.sucy.skill.gui.tool.GUITool;
 import com.sucy.skill.log.Logger;
 import me.geek.team.common.TeamHandler;
 import me.geek.team.common.TeamManager;
@@ -53,9 +25,7 @@ import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.World;
 import org.bukkit.entity.*;
-import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
-import org.bukkit.material.MaterialData;
 
 import java.util.*;
 
@@ -64,14 +34,11 @@ import java.util.*;
  */
 public class Settings {
 
-    private HashMap<String, GroupSettings> groups = new HashMap<>();
+    private final HashMap<String, GroupSettings> groups = new HashMap<>();
 
-    private SkillAPI    plugin;
-    private DataSection config;
+    private final SkillAPI    plugin;
+    private final DataSection config;
 
-    private boolean OLD_DURABILITY;
-
-    private boolean BOUNDING_BOX;
 
     /**
      * <p>Initializes a new settings manager.</p>
@@ -96,19 +63,6 @@ public class Settings {
      * and trim any values that aren't supposed to be there.</p>
      */
     public void reload() {
-        try {
-            Class.forName("org.bukkit.inventory.meta.Damageable");
-            OLD_DURABILITY = false;
-        } catch (ClassNotFoundException e) {
-            OLD_DURABILITY = true;
-        }
-        try {
-            Entity.class.getMethod("getBoundingBox");
-            BOUNDING_BOX = true;
-        } catch (NoSuchMethodException e) {
-            BOUNDING_BOX = false;
-        }
-
         loadExperienceSettings();
         loadAccountSettings();
         loadClassSettings();
@@ -124,13 +78,6 @@ public class Settings {
         loadWorldGuardSettings();
     }
 
-    public boolean useOldDurability() {
-        return OLD_DURABILITY;
-    }
-
-    public boolean useBoundingBoxes() {
-        return BOUNDING_BOX;
-    }
 
     ///////////////////////////////////////////////////////
     //                                                   //
@@ -162,9 +109,9 @@ public class Settings {
     }
 
     private Map<String, Map<String, Double>> loadYields(DataSection config) {
-        Map<String, Map<String, Double>> yields = new HashMap<String, Map<String, Double>>();
+        Map<String, Map<String, Double>> yields = new HashMap<>();
         for (String className : config.keys()) {
-            HashMap<String, Double> map = new HashMap<String, Double>();
+            HashMap<String, Double> map = new HashMap<>();
             DataSection classYields = config.getSection(className);
             for (String type : classYields.keys()) {
                 map.put(type.toUpperCase().replace(" ", "_"), classYields.getDouble(type));
@@ -255,13 +202,8 @@ public class Settings {
 
     private static final String ACCOUNT_BASE = "Accounts.";
     private static final String ACCOUNT_MAIN = ACCOUNT_BASE + "com-class-group";
-    private static final String ACCOUNT_MAX  = ACCOUNT_BASE + "max-accounts";
-    private static final String ACCOUNT_PERM = ACCOUNT_BASE + "perm-accounts";
 
     private String  mainGroup;
-    private int     maxAccounts;
-
-    private HashMap<String, Integer> permAccounts = new HashMap<String, Integer>();
 
     /**
      * Retrieves the com class group for displaying prefixes
@@ -273,59 +215,8 @@ public class Settings {
         return mainGroup;
     }
 
-
-    /**
-     * Retrieves the max accounts allowed for most players
-     *
-     * @return max accounts allowed for most players
-     */
-    public int getMaxAccounts() {
-        return maxAccounts;
-    }
-
-    /**
-     * Retrieves the max amount of accounts allowed for a specific player
-     * by checking permissions for additional accounts.
-     *
-     * @param player player to check the max allowed accounts for
-     *
-     * @return number of allowed accounts
-     */
-    public int getMaxAccounts(Player player) {
-        if (player == null) {
-            return maxAccounts;
-        }
-        int max = maxAccounts;
-        for (Map.Entry<String, Integer> entry : permAccounts.entrySet()) {
-            if (player.hasPermission(entry.getKey())) {
-                max = Math.max(max, entry.getValue());
-            }
-        }
-        return max;
-    }
-
     private void loadAccountSettings() {
         mainGroup = config.getString(ACCOUNT_MAIN);
-        maxAccounts = config.getInt(ACCOUNT_MAX);
-
-        // Permission account amounts
-        List<String> list = config.getList(ACCOUNT_PERM);
-        for (String item : list) {
-            if (!item.contains(":")) {
-                continue;
-            }
-
-            String[] pieces = item.split(":");
-            if (pieces.length != 2) {
-                continue;
-            }
-
-            try {
-                permAccounts.put(pieces[0], Integer.parseInt(pieces[1]));
-            } catch (Exception ex) {
-                // Invalid setting value
-            }
-        }
     }
 
     ///////////////////////////////////////////////////////
@@ -342,9 +233,9 @@ public class Settings {
     private static final String TARGET_NPC     = TARGET_BASE + "affect-npcs";
     private static final String TARGET_STANDS  = TARGET_BASE + "affect-armor-stands";
 
-    private ArrayList<String> monsterWorlds = new ArrayList<String>();
-    private ArrayList<String> passiveWorlds = new ArrayList<String>();
-    private ArrayList<String> playerWorlds  = new ArrayList<String>();
+    private final ArrayList<String> monsterWorlds = new ArrayList<>();
+    private final ArrayList<String> passiveWorlds = new ArrayList<>();
+    private final ArrayList<String> playerWorlds  = new ArrayList<>();
 
     private boolean monsterEnemy;
     private boolean passiveAlly;
@@ -488,7 +379,6 @@ public class Settings {
     private static final String SAVE_SQL  = SAVE_BASE + "sql-database";
     private static final String SAVE_SQLD = SAVE_BASE + "sql-details";
 
-    private boolean auto;
     private boolean useSql;
     private int     minutes;
     private int     sqlDelay;
@@ -498,15 +388,6 @@ public class Settings {
     private String sqlDatabase;
     private String sqlUser;
     private String sqlPass;
-
-    /**
-     * Checks whether or not auto saving is enabled
-     *
-     * @return true if enabled, false otherwise
-     */
-    public boolean isAutoSave() {
-        return auto;
-    }
 
     /**
      * Retrieves the amount of ticks in between each auto save
@@ -579,7 +460,6 @@ public class Settings {
     }
 
     private void loadSaveSettings() {
-        auto = config.getBoolean(SAVE_AUTO);
         minutes = config.getInt(SAVE_MINS);
         useSql = config.getBoolean(SAVE_SQL);
 
@@ -807,7 +687,7 @@ public class Settings {
             }
         }
 
-        filteredBlocks = new ArrayList<Material>();
+        filteredBlocks = new ArrayList<>();
         List<String> list = config.getList(SKILL_BLOCKS);
         for (String item : list) {
             item = item.toUpperCase().replace(' ', '_');
@@ -1167,7 +1047,7 @@ public class Settings {
     //                                                   //
     ///////////////////////////////////////////////////////
 
-    private final HashMap<String, Double> yields = new HashMap<String, Double>();
+    private final HashMap<String, Double> yields = new HashMap<>();
 
     private ExpFormula expFormula;
     private Formula    expCustom;

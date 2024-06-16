@@ -1,5 +1,6 @@
 package com.sucy.skill.dynamic.trigger;
 
+import com.sucy.skill.api.skills.SkillContext;
 import com.sucy.skill.dynamic.ComponentType;
 import com.sucy.skill.dynamic.EffectComponent;
 import org.bukkit.entity.LivingEntity;
@@ -21,7 +22,7 @@ public class TriggerComponent extends EffectComponent {
     }
 
     public boolean trigger(final LivingEntity caster, final LivingEntity target, final int level) {
-        return execute(caster, level, new ArrayList<>(Collections.singletonList(target)));
+        return execute(caster, new SkillContext(""), level, new ArrayList<>(Collections.singletonList(target)));
     }
 
     @Override
@@ -35,10 +36,10 @@ public class TriggerComponent extends EffectComponent {
     }
 
     @Override
-    public boolean execute(final LivingEntity caster, final int level, final List<LivingEntity> targets) {
+    public boolean execute(final LivingEntity caster, SkillContext context, final int level, final List<LivingEntity> targets) {
         try {
             running = true;
-            return executeChildren(caster, level, targets);
+            return executeChildren(caster, context, level, targets);
         } finally {
             running = false;
         }

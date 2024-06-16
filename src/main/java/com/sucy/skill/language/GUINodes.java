@@ -26,8 +26,7 @@
  */
 package com.sucy.skill.language;
 
-public class GUINodes
-{
+public class GUINodes {
     public static final String
         BASE          = "GUI.",
         ATTRIB_TITLE  = BASE + "attribute-title",

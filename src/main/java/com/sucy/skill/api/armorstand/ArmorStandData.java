@@ -6,7 +6,7 @@ import java.util.HashMap;
 import java.util.Iterator;
 
 public class ArmorStandData {
-    private final HashMap<String, ArmorStandInstance> armorStands = new HashMap<>();
+    private final HashMap<Integer, ArmorStandInstance> armorStands = new HashMap<>();
     private final LivingEntity target;
 
     /**
@@ -30,11 +30,11 @@ public class ArmorStandData {
      *
      * @return active armor stand or null if not found
      */
-    public ArmorStandInstance getArmorStands(String key) {
+    public ArmorStandInstance getArmorStands(int key) {
         return armorStands.get(key);
     }
 
-    public void register(ArmorStandInstance armorStand, String key) {
+    public void register(ArmorStandInstance armorStand, int key) {
         ArmorStandInstance oldArmorStand = armorStands.put(key, armorStand);
        // if (oldArmorStand != null) oldArmorStand.remove();
     }

@@ -28,6 +28,7 @@ package com.sucy.skill.dynamic.mechanic;
 
 import com.sucy.skill.SkillAPI;
 import com.sucy.skill.api.projectile.CustomProjectile;
+import com.sucy.skill.api.skills.SkillContext;
 import com.sucy.skill.dynamic.TempEntity;
 import com.sucy.skill.listener.MechanicListener;
 import com.sucy.skill.task.RemoveTask;
@@ -81,18 +82,11 @@ public class ProjectileMechanic extends MechanicComponent
         return "projectile";
     }
 
-    /**
-     * Executes the component
-     *
-     * @param caster  caster of the skill
-     * @param level   level of the skill
-     * @param targets targets to apply to
-     *
-     * @return true if applied to something, false otherwise
-     */
+    private SkillContext skillContext = null;
+
     @Override
-    public boolean execute(LivingEntity caster, int level, List<LivingEntity> targets)
-    {
+    public boolean execute(LivingEntity caster, SkillContext context, int level, List<LivingEntity> targets) {
+        skillContext = context;
         // Get common values
         int amount = (int) parseValues(caster, AMOUNT, level, 1.0);
         double speed = parseValues(caster, SPEED, level, 2.0);
@@ -205,7 +199,8 @@ public class ProjectileMechanic extends MechanicComponent
 
         ArrayList<LivingEntity> targets = new ArrayList<LivingEntity>();
         targets.add(hit);
-        executeChildren((LivingEntity) projectile.getShooter(), SkillAPI.getMetaInt(projectile, LEVEL), targets);
+        if (skillContext == null) skillContext = new SkillContext();
+        executeChildren((LivingEntity) projectile.getShooter(), skillContext, SkillAPI.getMetaInt(projectile, LEVEL), targets);
         SkillAPI.removeMeta(projectile, MechanicListener.P_CALL);
         projectile.remove();
     }

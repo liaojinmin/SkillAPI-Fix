@@ -26,6 +26,7 @@
  */
 package com.sucy.skill.dynamic.condition;
 
+import com.sucy.skill.api.skills.SkillContext;
 import org.bukkit.entity.LivingEntity;
 
 import java.util.ArrayList;
@@ -54,7 +55,7 @@ public class ElevationCondition extends ConditionComponent {
      * @return true if applied to something, false otherwise
      */
     @Override
-    public boolean execute(LivingEntity caster, int level, List<LivingEntity> targets) {
+    public boolean execute(LivingEntity caster, SkillContext context, int level, List<LivingEntity> targets) {
         String type = settings.getString(TYPE).toLowerCase();
         double min = parseValues(caster, MIN, level, 0);
         double max = parseValues(caster, MAX, level, 255);
@@ -71,7 +72,7 @@ public class ElevationCondition extends ConditionComponent {
                 list.add(target);
             }
         }
-        return list.size() > 0 && executeChildren(caster, level, list);
+        return list.size() > 0 && executeChildren(caster, context, level, list);
     }
 
     @Override

@@ -26,6 +26,7 @@
  */
 package com.sucy.skill.dynamic.target;
 
+import com.sucy.skill.api.skills.SkillContext;
 import com.sucy.skill.api.util.Nearby;
 import com.sucy.skill.cast.IIndicator;
 import org.bukkit.entity.LivingEntity;
@@ -47,8 +48,7 @@ public class AreaTarget extends TargetComponent {
 
     /** {@inheritDoc} */
     @Override
-    List<LivingEntity> getTargets(
-            final LivingEntity caster, final int level, final List<LivingEntity> targets) {
+    List<LivingEntity> getTargets(final LivingEntity caster, final int level, final List<LivingEntity> targets) {
 
         final double radius = parseValues(caster, RADIUS, level, 3.0);
         final boolean random = settings.getBool(RANDOM, false);

@@ -37,10 +37,8 @@ import com.sucy.skill.api.skills.Skill;
 import com.sucy.skill.api.util.Data;
 import com.sucy.skill.data.GroupSettings;
 import com.sucy.skill.data.Permissions;
-import com.sucy.skill.gui.tool.IconHolder;
-import com.sucy.skill.log.LogType;
+import com.sucy.skill.gui.IconHolder;
 import com.sucy.skill.log.Logger;
-import com.sucy.skill.tree.basic.InventoryTree;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.Material;
@@ -64,12 +62,9 @@ public abstract class RPGClass implements IconHolder
 
     private final HashSet<Material> blacklist = new HashSet<Material>();
 
-    private InventoryTree skillTree;
-
     private String    actionBar;
     private String    parent;
     private ItemStack icon;
-    private TreeType  tree;
     private String    name;
     private String    prefix;
     private String    group;
@@ -141,8 +136,7 @@ public abstract class RPGClass implements IconHolder
      * @param group    class group
      * @param parent   parent class to profess from
      */
-    protected RPGClass(String name, ItemStack icon, int maxLevel, String group, String parent)
-    {
+    protected RPGClass(String name, ItemStack icon, int maxLevel, String group, String parent) {
         this.parent = parent;
         this.icon = icon;
         this.name = name;
@@ -150,7 +144,6 @@ public abstract class RPGClass implements IconHolder
         this.group = group == null ? "class" : group.toLowerCase();
         this.mana = "Mana";
         this.maxLevel = maxLevel;
-        this.tree = DefaultTreeType.REQUIREMENT;
 
         setAllowedExpSources(ExpSource.MOB, ExpSource.COMMAND, ExpSource.QUEST);
 
@@ -210,16 +203,6 @@ public abstract class RPGClass implements IconHolder
             return ChatColor.WHITE;
         }
         return ChatColor.getByChar(colors.charAt(1));
-    }
-
-    /**
-     * Retrieves the skill tree representing the class skills
-     *
-     * @return class skill tree
-     */
-    public InventoryTree getSkillTree()
-    {
-        return skillTree;
     }
 
     /**
@@ -655,8 +638,7 @@ public abstract class RPGClass implements IconHolder
      *
      * @param config config to save to
      */
-    public void save(DataSection config)
-    {
+    public void save(DataSection config) {
         config.set(NAME, name);
         config.set(ACTION_BAR, actionBar.replace(ChatColor.COLOR_CHAR, '&'));
         config.set(PREFIX, prefix.replace(ChatColor.COLOR_CHAR, '&'));
@@ -667,7 +649,6 @@ public abstract class RPGClass implements IconHolder
         config.set(PERM, needsPermission);
         settings.save(config.createSection(ATTR));
         config.set(REGEN, manaRegen);
-        config.set(TREE, tree.toString());
         config.set(BLACKLIST, new ArrayList<Material>(blacklist));
 
         ArrayList<String> skillNames = new ArrayList<String>();
@@ -701,8 +682,7 @@ public abstract class RPGClass implements IconHolder
      *
      * @param config config to load from
      */
-    public void load(DataSection config)
-    {
+    public void load(DataSection config) {
         parent = config.getString(PARENT);
         icon = Data.parseIcon(config);
         name = config.getString(NAME, name);
@@ -714,7 +694,6 @@ public abstract class RPGClass implements IconHolder
         expSources = config.getInt(EXP, expSources);
         manaRegen = config.getDouble(REGEN, manaRegen);
         needsPermission = config.getString(PERM, needsPermission + "").equalsIgnoreCase("true");
-        tree = DefaultTreeType.getByName(config.getString(TREE, "requirement"));
         for (final String type : config.getList(BLACKLIST)) {
             if (type.isEmpty()) continue;
             final Material mat = Material.matchMaterial(type.toUpperCase().replace(' ', '_'));
@@ -741,22 +720,7 @@ public abstract class RPGClass implements IconHolder
             }
         }
 
-        this.skillTree = this.tree.getTree((SkillAPI) Bukkit.getPluginManager().getPlugin("SkillAPI"), this);
     }
 
-    /**
-     * Arranges the skill tree for the class
-     */
-    public void arrange()
-    {
-        try
-        {
-            Logger.log(LogType.REGISTRATION, 2, "Arranging for \"" + name + "\" - " + skills.size() + " skills");
-            this.skillTree.arrange();
-        }
-        catch (Exception ex)
-        {
-            Logger.invalid("Failed to arrange skill tree for class \"" + name + "\" - " + ex.getMessage());
-        }
-    }
+
 }

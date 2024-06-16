@@ -44,7 +44,7 @@ import com.sucy.skill.api.util.Data;
 import com.sucy.skill.cast.IIndicator;
 import com.sucy.skill.data.Permissions;
 import com.sucy.skill.dynamic.TempEntity;
-import com.sucy.skill.gui.tool.IconHolder;
+import com.sucy.skill.gui.IconHolder;
 import com.sucy.skill.language.NotificationNodes;
 import com.sucy.skill.language.RPGFilter;
 import com.sucy.skill.language.SkillNodes;
@@ -356,6 +356,10 @@ public abstract class Skill implements IconHolder
         return settings.getManaTick(level, 0);
     }
 
+    public int getKeyTimer() {
+        return settings.getKeyTimer();
+    }
+
     /**
      * Retrieves the cooldown of the skill in seconds
      *
@@ -494,8 +498,7 @@ public abstract class Skill implements IconHolder
      *
      * @return filtered skill indicator
      */
-    public ItemStack getIndicator(PlayerSkill skillData, boolean brief)
-    {
+    public ItemStack getIndicator(PlayerSkill skillData, boolean brief) {
         Player player = skillData.getPlayerData().getPlayer();
 
         ItemStack item = indicator.clone();
@@ -851,14 +854,14 @@ public abstract class Skill implements IconHolder
      *
      * @param config config to save to
      */
-    public void save(DataSection config)
-    {
+    public void save(DataSection config) {
         config.set(NAME, name);
         config.set(TYPE, type.replace(ChatColor.COLOR_CHAR, '&'));
         config.set(MAX, maxLevel);
         config.set(REQ, skillReq);
         config.set(REQLVL, skillReqLevel);
         config.set(PERM, needsPermission);
+        //config.set("mana-tick", settings.getManaTick(1, 0));
         settings.save(config.createSection(ATTR));
         if (hasMessage()) {
             config.set(MSG, message.replace(ChatColor.COLOR_CHAR, '&'));
@@ -899,8 +902,7 @@ public abstract class Skill implements IconHolder
         message = TextFormatter.colorString(config.getString(MSG, message));
         needsPermission = config.getString(PERM, needsPermission + "").equalsIgnoreCase("true");
 
-        if (config.isList(DESC))
-        {
+        if (config.isList(DESC)) {
             description.clear();
             description.addAll(config.getList(DESC));
         }

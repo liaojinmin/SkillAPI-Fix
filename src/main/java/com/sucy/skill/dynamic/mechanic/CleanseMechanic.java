@@ -27,6 +27,7 @@
 package com.sucy.skill.dynamic.mechanic;
 
 import com.google.common.collect.ImmutableSet;
+import com.sucy.skill.api.skills.SkillContext;
 import com.sucy.skill.api.util.FlagManager;
 import com.sucy.skill.api.util.StatusFlag;
 import org.bukkit.entity.LivingEntity;
@@ -63,7 +64,7 @@ public class CleanseMechanic extends MechanicComponent {
      * @return true if applied to something, false otherwise
      */
     @Override
-    public boolean execute(LivingEntity caster, int level, List<LivingEntity> targets) {
+    public boolean execute(LivingEntity caster, SkillContext context, int level, List<LivingEntity> targets) {
         boolean worked = false;
         String status = settings.getString(STATUS, "None").toLowerCase();
         String potion = settings.getString(POTION).toUpperCase().replace(' ', '_');

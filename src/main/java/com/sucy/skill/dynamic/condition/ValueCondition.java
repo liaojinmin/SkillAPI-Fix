@@ -26,6 +26,7 @@
  */
 package com.sucy.skill.dynamic.condition;
 
+import com.sucy.skill.api.skills.SkillContext;
 import com.sucy.skill.dynamic.DynamicSkill;
 import org.bukkit.entity.LivingEntity;
 
@@ -42,8 +43,8 @@ public class ValueCondition extends ConditionComponent {
     }
 
     @Override
-    public boolean execute(LivingEntity caster, int level, List<LivingEntity> targets) {
-        return test(caster, level, null) && executeChildren(caster, level, targets);
+    public boolean execute(LivingEntity caster, SkillContext context, int level, List<LivingEntity> targets) {
+        return test(caster, level, null) && executeChildren(caster, context, level, targets);
     }
 
     @Override
