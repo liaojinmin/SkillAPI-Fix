@@ -159,18 +159,13 @@ public class Formula implements IValue
             }
 
             // Operators
-            else if (parens == 0 && OPS.containsKey(c))
-            {
-                if (c == '-' && lastOp == i - 1)
-                {
+            else if (parens == 0 && OPS.containsKey(c)) {
+                if (c == '-' && lastOp == i - 1) {
                     negative = !negative;
                     valStart++;
                     lastOp++;
-                }
-                else
-                {
-                    if (valStart != i)
-                    {
+                } else {
+                    if (valStart != i) {
                         vals.add(makeVal(equation.substring(valStart, i), defined));
                     }
                     ops.add(OPS.get(c));
@@ -298,12 +293,10 @@ public class Formula implements IValue
      *
      * @return computed value
      */
-    public double compute(double... input)
-    {
+    public double compute(double... input) {
         double result = values[0].compute(input);
         int i;
-        for (i = 1; i < values.length; i++)
-        {
+        for (i = 1; i < values.length; i++) {
             double val = values[i].compute(input);
             result = operations[i - 1].compute(result, val);
         }

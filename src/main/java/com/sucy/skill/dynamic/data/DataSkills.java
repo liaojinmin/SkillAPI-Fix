@@ -5,9 +5,9 @@ import org.jetbrains.annotations.Nullable;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 
-public class MetaSkills {
+public class DataSkills {
 
-    private final static ConcurrentHashMap<UUID, CustomMetaStack> data = new ConcurrentHashMap<>();
+    private final static ConcurrentHashMap<UUID, CustomDataStack> data = new ConcurrentHashMap<>();
 
     public static double getValue(UUID uuid, String key) {
         return getValue(uuid, key, 0.0);
@@ -20,11 +20,11 @@ public class MetaSkills {
         if (!data.containsKey(uuid)) {
             return def;
         }
-        CustomMetaStack gets = data.get(uuid);
+        CustomDataStack gets = data.get(uuid);
         if (gets == null) {
             return def;
         }
-        CustomMeta tagData = gets.getMeta(key);
+        CustomData tagData = gets.getMeta(key);
         if (tagData == null) {
             return def;
         }
@@ -32,8 +32,8 @@ public class MetaSkills {
     }
 
     public static void setValue(UUID uuid, String key, Double value, Integer time) {
-        CustomMetaStack customMetaStack = data.computeIfAbsent(uuid, (it) -> new CustomMetaStack(uuid));
-        customMetaStack.putMeta(key, value, time);
+        CustomDataStack customDataStack = data.computeIfAbsent(uuid, (it) -> new CustomDataStack(uuid));
+        customDataStack.putMeta(key, value, time);
     }
 
     public static void delMetaStack(UUID uuid) {
@@ -41,10 +41,10 @@ public class MetaSkills {
     }
 
     @Nullable
-    public static CustomMetaStack getMetaStack(UUID uuid, boolean create) {
+    public static CustomDataStack getMetaStack(UUID uuid, boolean create) {
         if (!data.containsKey(uuid)) {
             if (create) {
-                data.put(uuid, new CustomMetaStack(uuid));
+                data.put(uuid, new CustomDataStack(uuid));
             } else {
                 return null;
             }

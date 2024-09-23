@@ -1,6 +1,6 @@
 /**
  * SkillAPI
- * com.sucy.skill.dynamic.mechanic.ValueAddMechanic
+ * com.sucy.skill.dynamic.condition.ValueCondition
  * <p>
  * The MIT License (MIT)
  * <p>
@@ -24,53 +24,43 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-package com.sucy.skill.dynamic.mechanic;
+package com.sucy.skill.dynamic.condition;
 
 import com.sucy.skill.api.skills.SkillContext;
-import com.sucy.skill.dynamic.data.CustomMetaStack;
-import com.sucy.skill.dynamic.data.MetaSkills;
+import com.sucy.skill.dynamic.data.DataSkills;
 import org.bukkit.entity.LivingEntity;
 
 import java.util.List;
 
-/**
- * Adds to a cast data value
- */
-public class MetaEditMechanic extends MechanicComponent {
+public class DataCondition extends ConditionComponent {
     private static final String KEY = "key";
-
-    private static final String ACTION = "action";
-
-    private static final String VALUE = "value";
+    private static final String MIN = "min-value";
+    private static final String MAX = "max-value";
 
     @Override
     public String getKey() {
-        return "meta edit";
+        return "data";
     }
 
-    /**
-     * Executes the component
-     *
-     * @param caster  caster of the skill
-     * @param level   level of the skill
-     * @param targets targets to apply to
-     * @return true if applied to something, false otherwise
-     */
     @Override
     public boolean execute(LivingEntity caster, SkillContext context, int level, List<LivingEntity> targets) {
-        if (targets.size() == 0 || !settings.has(KEY)) {
-            return false;
-        }
-
-        String key = settings.getString(KEY).replace("{uuid}", caster.getUniqueId().toString());
-        String action = settings.getString(ACTION);
-        double value = parseValues(caster, VALUE, level, 1);
         for (LivingEntity target : targets) {
-            CustomMetaStack data = MetaSkills.getMetaStack(target.getUniqueId(), true);
-            if (data != null) {
-                data.putMeta(key, value, -1, action);
+
+            if (target != null && !test(caster, level, target)) {
+                return false;
             }
+
         }
-        return true;
+        return executeChildren(caster, context,  level, targets);
+    }
+
+    @Override
+    boolean test(final LivingEntity caster, final int level, final LivingEntity target) {
+        final String key = settings.getString(KEY)
+                .replace("{caster}", caster.getName());
+        final double min = parseValues(caster, MIN, level, 1);
+        final double max = parseValues(caster, MAX, level, 999);
+        double value = DataSkills.getValue(target.getUniqueId(), key);
+        return value >= min && value <= max;
     }
 }

@@ -31,12 +31,7 @@ import com.sucy.skill.api.particle.target.EffectTarget;
 import com.sucy.skill.api.particle.target.EntityTarget;
 import com.sucy.skill.api.particle.target.FixedTarget;
 import com.sucy.skill.api.util.Nearby;
-import org.bukkit.Bukkit;
-import org.bukkit.EntityEffect;
-import org.bukkit.Location;
-import org.bukkit.Material;
-import org.bukkit.Server;
-import org.bukkit.World;
+import org.bukkit.*;
 import org.bukkit.attribute.Attribute;
 import org.bukkit.attribute.AttributeInstance;
 import org.bukkit.block.Block;
@@ -52,6 +47,7 @@ import org.bukkit.entity.Snowball;
 import org.bukkit.event.entity.EntityDamageEvent;
 import org.bukkit.event.player.PlayerTeleportEvent;
 import org.bukkit.inventory.EntityEquipment;
+import org.bukkit.inventory.ItemStack;
 import org.bukkit.metadata.MetadataValue;
 import org.bukkit.permissions.Permission;
 import org.bukkit.permissions.PermissionAttachment;
@@ -60,6 +56,7 @@ import org.bukkit.plugin.Plugin;
 import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
 import org.bukkit.util.Vector;
+import org.jetbrains.annotations.Nullable;
 
 import java.util.Collection;
 import java.util.HashSet;
@@ -189,6 +186,11 @@ public class TempEntity implements LivingEntity {
         return null;
     }
 
+    @Override
+    public void setKiller(@Nullable Player player) {
+
+    }
+
     public boolean addPotionEffect(PotionEffect potionEffect) {
         return false;
     }
@@ -313,6 +315,26 @@ public class TempEntity implements LivingEntity {
         return null;
     }
 
+    @Override
+    public Spigot spigot() {
+        return null;
+    }
+
+    @Override
+    public Location getOrigin() {
+        return null;
+    }
+
+    @Override
+    public boolean fromMobSpawner() {
+        return false;
+    }
+
+    @Override
+    public Chunk getChunk() {
+        return null;
+    }
+
     public boolean isLeashed() {
         return false;
     }
@@ -348,6 +370,46 @@ public class TempEntity implements LivingEntity {
     }
 
     public boolean isCollidable() {
+        return false;
+    }
+
+    @Override
+    public int getArrowsStuck() {
+        return 0;
+    }
+
+    @Override
+    public void setArrowsStuck(int i) {
+
+    }
+
+    @Override
+    public int getShieldBlockingDelay() {
+        return 0;
+    }
+
+    @Override
+    public void setShieldBlockingDelay(int i) {
+
+    }
+
+    @Override
+    public ItemStack getActiveItem() {
+        return null;
+    }
+
+    @Override
+    public int getItemUseRemainingTime() {
+        return 0;
+    }
+
+    @Override
+    public int getHandRaisedTime() {
+        return 0;
+    }
+
+    @Override
+    public boolean isHandRaised() {
         return false;
     }
 

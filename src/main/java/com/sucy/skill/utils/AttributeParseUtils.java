@@ -36,4 +36,14 @@ public class AttributeParseUtils {
         } else return 0;
     }
 
+    public static double round(double value, int places) {
+        if (places < 0) throw new IllegalArgumentException();
+
+        // 创建一个表示"10^places"的double值
+        double factor = Math.pow(10, places);
+        value = value * factor;
+        double tmp = Math.round(value);
+        return tmp / factor;
+    }
+
 }

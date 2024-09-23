@@ -329,13 +329,18 @@ public class AttributeManager {
          *
          * @return modified value
          */
-        public double modify(EffectComponent component, String key, double value, int amount) {
+        public double modify(EffectComponent component, String key, double value, double amount) {
             key = component.getKey() + "-" + key.toLowerCase();
             final Map<String, AttributeValue[]> map = dynamicModifiers.get(component.getType());
             if (map.containsKey(key)) {
                 AttributeValue[] list = map.get(key);
                 for (AttributeValue attribValue : list) {
-                    if (attribValue.passes(component)) { return attribValue.apply(value, amount); }
+                    if (attribValue.passes(component)) {
+                        //if (key.contains("heal")) {
+                           // System.out.println("key " + key + " value " + value + " amount " + amount + " 结果: " + a);
+                    //    }
+                        return attribValue.apply(value, amount);
+                    }
                 }
             }
             return value;
@@ -350,9 +355,12 @@ public class AttributeManager {
          *
          * @return modified stat value
          */
-        public double modifyStat(String key, double base, int amount) {
+        public double modifyStat(String key, double base, double amount) {
             if (statModifiers.containsKey(key)) {
-                return statModifiers.get(key).compute(base, amount);
+                double a = statModifiers.get(key).compute(base, amount);
+                //System.out.println("key "+key + " base " + base +" amount " + amount+ " 结果: " + a);
+                return a;
+                //return statModifiers.get(key).compute(base, amount);
             }
             return base;
         }
@@ -374,10 +382,14 @@ public class AttributeManager {
                 final String[] formulas = value.split("\\|");
                 final AttributeValue[] values = new AttributeValue[formulas.length];
                 int i = 0;
-                for (final String formula : formulas) { values[i++] = new AttributeValue(formula); }
+                for (final String formula : formulas) {
+                    values[i++] = new AttributeValue(formula);
+                }
                 target.put(lower, values);
 
-                if (!byComponent.containsKey(lower)) { byComponent.put(lower, new ArrayList<>()); }
+                if (!byComponent.containsKey(lower)) {
+                    byComponent.put(lower, new ArrayList<>());
+                }
                 byComponent.get(lower).add(this);
             }
         }
@@ -394,7 +406,9 @@ public class AttributeManager {
                 statModifiers.put(key,
                         new Formula(data.getString(key, "v"), new CustomValue("v"), new CustomValue("a")));
 
-                if (!byStat.containsKey(key)) { byStat.put(key, new ArrayList<>()); }
+                if (!byStat.containsKey(key)) {
+                    byStat.put(key, new ArrayList<>());
+                }
                 byStat.get(key).add(this);
             }
         }
@@ -446,7 +460,7 @@ public class AttributeManager {
          *
          * @return the modified value if the conditions passed or the base value if they failed
          */
-        public double apply(double value, int amount) {
+        public double apply(double value, double amount) {
             return formula.compute(value, amount);
         }
     }

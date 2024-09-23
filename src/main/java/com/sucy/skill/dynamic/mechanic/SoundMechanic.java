@@ -20,15 +20,6 @@ public class SoundMechanic extends MechanicComponent {
         return "sound";
     }
 
-    /**
-     * Executes the component
-     *
-     * @param caster  caster of the skill
-     * @param level   level of the skill
-     * @param targets targets to apply to
-     *
-     * @return true if applied to something, false otherwise
-     */
     @Override
     public boolean execute(LivingEntity caster, SkillContext context, int level, List<LivingEntity> targets) {
         if (targets.size() == 0) {
@@ -37,15 +28,16 @@ public class SoundMechanic extends MechanicComponent {
         float volume = (float) parseValues(caster, VOLUME, level, 100.0) / 100;
         float pitch = (float) parseValues(caster, PITCH, level, 0.0);
 
-        String type = settings.getString(SOUND, "").toUpperCase().replace(" ", "_");
+        String type = settings.getString(SOUND, "");
         volume = Math.max(0, volume);
         pitch = Math.min(2, Math.max(0.5f, pitch));
         try {
-            Sound sound = Sound.valueOf(type);
+            Sound sound = Sound.valueOf(type.toUpperCase().replace(" ", "_"));
             for (LivingEntity target : targets) {
                 target.getWorld().playSound(target.getLocation(), sound, volume, pitch);
             }
         } catch (Exception ex) {
+            //System.out.println("GermPacketAPI "+type + " "+volume);
             for (LivingEntity target : targets) {
                 GermPacketAPI.playSound(
                         target.getLocation(),

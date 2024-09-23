@@ -24,6 +24,7 @@ import com.sucy.skill.log.Logger;
 import com.sucy.skill.manager.AttributeManager;
 import com.sucy.skill.screen.AttributeGermScreen;
 import com.sucy.skill.screen.AttributeScreenKt;
+import com.sucy.skill.utils.AttributeParseUtils;
 import org.bukkit.Bukkit;
 import org.bukkit.OfflinePlayer;
 import org.bukkit.attribute.Attribute;
@@ -47,19 +48,27 @@ public class PlayerData {
 
     private final HashMap<String, PlayerSkill> skills = new HashMap<>();
 
-    /** key=属性 value=加点等级 **/
-    public final HashMap<String, Integer> attributes = new HashMap<>();
+    /**
+     * 入库数据
+     * key=属性
+     * value=加点等级
+     **/
+    public final HashMap<String, Integer> points = new HashMap<>();
 
-    public final HashMap<String, Integer> bonusAttrib = new HashMap<>();
+    /**
+     * 无源临时数据
+     */
+    public final HashMap<String, Double> bonusAttrib = new HashMap<>();
 
-    /** 临时属性 **/
+    /**
+     * 有源临时属性
+     **/
     public final ConcurrentHashMap<String, ConcurrentHashMap<String, Integer>> addAttrib
             = new ConcurrentHashMap<>();
 
     private final AtomicLong manaRestoreTick = new AtomicLong(0);
     private final OfflinePlayer  player;
     private PlayerEquips   equips;
-    private String         scheme;
     private int            keyTimer;
     private double         mana;
     private double         maxMana;
@@ -80,7 +89,6 @@ public class PlayerData {
     public PlayerData(OfflinePlayer player) {
         this.player = player;
         this.equips = new PlayerEquips(this);
-        this.scheme = "default";
         this.hunger = 1;
         for (String group : SkillAPI.getGroups()) {
             GroupSettings settings = SkillAPI.getSettings().getGroupSettings(group);
@@ -191,43 +199,12 @@ public class PlayerData {
         init = false;
     }
 
-    /**
-     * Retrieves the name of the active map menu scheme for the player
-     *
-     * @return map menu scheme name
-     */
-    public String getScheme() {
-        return scheme;
-    }
-
-    /**
-     * Sets the active scheme name for the player
-     *
-     * @param name name of the scheme
-     */
-    public void setScheme(String name) {
-        scheme = name;
-    }
 
     ///////////////////////////////////////////////////////
     //                                                   //
     //                    Attributes                     //
     //                                                   //
     ///////////////////////////////////////////////////////
-
-    /**
-     * Retrieves a map of all player attribute totals. Modifying
-     * the map will not change actual player attributes.
-     *
-     * @return attribute totals
-     */
-    public HashMap<String, Integer> getAttributes() {
-        HashMap<String, Integer> map = new HashMap<>();
-        for (String key : SkillAPI.getAttributeManager().getKeys()) {
-            map.put(key, getAttribute(key));
-        }
-        return map;
-    }
 
     public int getAddAttribute(String key) {
         int infos = 0;
@@ -239,44 +216,25 @@ public class PlayerData {
         return infos;
     }
 
-    /**
-     * Retrieves a map of all attributes the player invested.
-     * This doesn't count base attributes from classes or
-     * bonus attributes from effects. Modifying the map will
-     * not change actual player attributes.
-     *
-     * @return attribute totals
-     */
-    public HashMap<String, Integer> getInvestedAttributes() {
-        return new HashMap<>(attributes);
-    }
 
-    /**
-     * Gets the number of attribute points the player has
-     * between invested and bonus sources.
-     *
-     * @param key attribute key
-     *
-     * @return number of total points
-     */
-    /*
-    public int getAttribute(String key) {
-        key = key.toLowerCase();
-        int total = 0;
-        if (attributes.containsKey(key)) { total += attributes.get(key); }
-        if (bonusAttrib.containsKey(key)) { total += bonusAttrib.get(key); }
-        for (PlayerClass playerClass : classes.values()) {
+
+    public double getAttribute(String key) {
+        double total = 0;
+        if (points.containsKey(key)) {
+            total += points.get(key);
+        }
+        if (bonusAttrib.containsKey(key)) {
+            total += bonusAttrib.get(key);
+        }
+        for (ConcurrentHashMap<String, Integer> map : addAttrib.values()) {
+            if (map.containsKey(key)) {
+                total += map.get(key);
+            }
+        }
+        for (PlayerClass playerClass : getClasses()) {
             total += playerClass.getData().getAttribute(key, playerClass.getLevel());
         }
-        return Math.max(0, total);
-    }
-
-     */
-    public int getAttribute(String key) {
-        if (!getPlayer().isOnline()) {
-            return 0;
-        }
-        return AttributeAPI.getAttribute(getPlayer(), key);
+        return AttributeParseUtils.round(total, 1);
     }
 
     /**
@@ -288,20 +246,9 @@ public class PlayerData {
      * @return number of invested points
      */
     public int getInvestedAttribute(String key) {
-        return attributes.getOrDefault(key.toLowerCase(), 0);
+        return points.getOrDefault(key.toLowerCase(), 0);
     }
 
-    /**
-     * Checks whether or not the player has any
-     * points invested in a given attribute
-     *
-     * @param key attribute key
-     *
-     * @return true if any points are invested, false otherwise
-     */
-    public boolean hasAttribute(String key) {
-        return getAttribute(key) > 0;
-    }
 
     /**
      * Invests a point in the attribute if the player
@@ -317,13 +264,13 @@ public class PlayerData {
         int current = getInvestedAttribute(key);
         int max = SkillAPI.getAttributeManager().getAttribute(key).getMax();
         if (attribPoints > 0 && current < max) {
-            attributes.put(key, current + 1);
+            points.put(key, current + 1);
             attribPoints--;
 
             PlayerUpAttributeEvent event = new PlayerUpAttributeEvent(this, key);
             Bukkit.getPluginManager().callEvent(event);
             if (event.isCancelled()) {
-                attributes.put(key, current);
+                points.put(key, current);
                 attribPoints++;
             } else { return true; }
         }
@@ -343,7 +290,7 @@ public class PlayerData {
         int max = SkillAPI.getAttributeManager().getAttribute(key).getMax();
         amount = Math.min(amount + current, max);
         if (amount > current) {
-            attributes.put(key, amount);
+            points.put(key, amount);
             AttributeListener.updatePlayer(this);
         }
     }
@@ -355,11 +302,11 @@ public class PlayerData {
      * @param key    attribute key
      * @param amount amount to add
      */
-    public void addBonusAttributes(String key, int amount) {
+    public void addBonusAttributes(String key, Double amount) {
         key = SkillAPI.getAttributeManager().normalize(key);
-        amount += bonusAttrib.getOrDefault(key, 0);
+        amount += bonusAttrib.getOrDefault(key, 0.0);
         if (amount <= 0) {
-            amount = 0;
+            amount = 0.0;
         }
         bonusAttrib.put(key, amount);
         AttributeListener.updatePlayer(this);
@@ -381,8 +328,8 @@ public class PlayerData {
             if (event.isCancelled()) { return false; }
 
             attribPoints += 1;
-            attributes.put(key, current - 1);
-            if (current - 1 <= 0) { attributes.remove(key); }
+            points.put(key, current - 1);
+            if (current - 1 <= 0) { points.remove(key); }
             AttributeListener.updatePlayer(this);
 
             return true;
@@ -399,7 +346,7 @@ public class PlayerData {
             update = true;
             a = a.toLowerCase();
             attribPoints += getInvestedAttribute(a);
-            attributes.remove(a);
+            points.remove(a);
         }
         if (update) {
             AttributeListener.updatePlayer(this);
@@ -410,7 +357,7 @@ public class PlayerData {
      * @return 如果玩家有可返回的属性点，则true
      */
     public boolean hasInvestedAttributes() {
-        for (String key : attributes.keySet()) {
+        for (String key : points.keySet()) {
             if (getInvestedAttribute(key) > 0) {
                 return true;
             }
@@ -422,7 +369,7 @@ public class PlayerData {
      * Refunds all spent attribute points
      */
     public void refundAttributes() {
-        refundAttributes(attributes.keySet().toArray(new String[0]));
+        refundAttributes(points.keySet().toArray(new String[0]));
     }
 
     /**
@@ -461,11 +408,6 @@ public class PlayerData {
      * @return modified value
      */
     public double scaleStat(final String stat, final double value) {
-        return AttributeAPI.scaleStat(getPlayer(), stat, value);
-    }
-
-    /*
-    public double scaleStat(final String stat, final double value) {
         final AttributeManager manager = SkillAPI.getAttributeManager();
         if (manager == null) { return value; }
 
@@ -474,7 +416,7 @@ public class PlayerData {
 
         double modified = value;
         for (final AttributeManager.Attribute attribute : matches) {
-            int amount = getAttribute(attribute.getKey());
+            double amount = getAttribute(attribute.getKey());
             if (amount > 0) {
                 modified = attribute.modifyStat(stat, modified, amount);
             }
@@ -482,32 +424,8 @@ public class PlayerData {
         return modified;
     }
 
-     */
 
-    /**
-     * Scales a dynamic skill's value using global modifiers
-     *
-     * @param component component holding the value
-     * @param key       key of the value
-     * @param value     unmodified value
-     *
-     * @return the modified value
-     */
-    public double scaleDynamic(EffectComponent component, String key, double value) {
-        final AttributeManager manager = SkillAPI.getAttributeManager();
-        if (manager == null) { return value; }
 
-        final List<AttributeManager.Attribute> matches = manager.forComponent(component, key);
-        if (matches == null) { return value; }
-
-        for (final AttributeManager.Attribute attribute : matches) {
-            int amount = getAttribute(attribute.getKey());
-            if (amount > 0) {
-                value = attribute.modify(component, key, value, amount);
-            }
-        }
-        return value;
-    }
 
     /**
      * Opens the attribute menu for the player
@@ -529,7 +447,7 @@ public class PlayerData {
      * @return the player's attribute data
      */
     public HashMap<String, Integer> getAttributeData() {
-        return attributes;
+        return points;
     }
 
     ///////////////////////////////////////////////////////
@@ -1036,7 +954,7 @@ public class PlayerData {
      * Resets attributes for the player
      */
     public void resetAttribs() {
-        attributes.clear();
+        points.clear();
         attribPoints = 0;
         for (PlayerClass c : classes.values()) {
             GroupSettings s = c.getData().getGroupSettings();
@@ -1394,36 +1312,36 @@ public class PlayerData {
     }
 
     public void setKeyTimer(int timer) {
+        if (timer == 0) return;
         this.keyTimer = timer;
-    }
-
-    public int getKeyTimer() {
-        return this.keyTimer;
     }
 
     public void setManaRestoreTick(long tick) {
         if (tick <= 0) {
-         //   System.out.println("取消设置 tick = 0");
             return;
         }
-
         long timer = System.currentTimeMillis() + tick;
-
         if (timer <= manaRestoreTick.get()) {
-          //  System.out.println("取消设置 timer "+timer);
-        //    System.out.println("取消设置 manaRestoreTick "+manaRestoreTick);
             return;
         }
-
         ManaRestoreTickStartEvent startEvent = new ManaRestoreTickStartEvent(getPlayer(), timer);
         Bukkit.getPluginManager().callEvent(startEvent);
-        //System.out.println("唤起 ManaRestoreTickStartEvent");
         if (startEvent.isCancelled()) {
             return;
         }
-
-       // System.out.println("成功设置 -> "+timer);
         this.manaRestoreTick.set(timer);
+    }
+
+    public int getKeyTimer(boolean reset) {
+        if (reset) {
+            int out = keyTimer;
+            keyTimer = 0;
+            return out;
+        } else return keyTimer;
+    }
+
+    public int getKeyTimer() {
+        return keyTimer;
     }
 
     public long getManaRestoreTick() {
@@ -1563,6 +1481,7 @@ public class PlayerData {
 
         // Skill Shots
         if (skill.getData() instanceof SkillShot) {
+          //  System.out.println("instanceof SkillShot "+ skill.getData().getName());
             PlayerCastSkillEvent event = new PlayerCastSkillEvent(this, skill, p);
             Bukkit.getPluginManager().callEvent(event);
 
@@ -1573,8 +1492,10 @@ public class PlayerData {
                     setManaRestoreTick(skill.getManaTick());
                     setKeyTimer(skill.getKeyTimer());
                     if (((SkillShot) skill.getData()).cast(p, level)) {
+                        //System.out.println(" skill applyUse");
                         return applyUse(p, skill, event.getManaCost());
                     } else {
+                      //  System.out.println(" skill cast EFFECT_FAILED");
                         return PlayerSkillCastFailedEvent.invoke(skill, EFFECT_FAILED);
                     }
                 } catch (Exception ex) {
@@ -1583,12 +1504,14 @@ public class PlayerData {
                     return PlayerSkillCastFailedEvent.invoke(skill, EFFECT_FAILED);
                 }
             } else {
+              //  System.out.println("  技能 " + skill.getData().getName() + " 执行事件被阻断");
                 return PlayerSkillCastFailedEvent.invoke(skill, CANCELED);
             }
         }
 
         // Target Skills
         else if (skill.getData() instanceof TargetSkill) {
+           // System.out.println("instanceof TargetSkill" + skill.getData().getName());
             LivingEntity target = TargetHelper.getLivingTarget(p, skill.getData().getRange(level));
 
             // Must have a target
@@ -1605,8 +1528,10 @@ public class PlayerData {
                     setKeyTimer(skill.getKeyTimer());
                     final boolean canAttack = !SkillAPI.getSettings().canAttack(p, target);
                     if (((TargetSkill) skill.getData()).cast(p, target, level, canAttack)) {
+                     //   System.out.println(" skill applyUse");
                         return applyUse(p, skill, event.getManaCost());
                     } else {
+                      //  System.out.println(" skill cast EFFECT_FAILED");
                         return PlayerSkillCastFailedEvent.invoke(skill, EFFECT_FAILED);
                     }
                 } catch (Exception ex) {
@@ -1614,7 +1539,10 @@ public class PlayerData {
                     ex.printStackTrace();
                     return PlayerSkillCastFailedEvent.invoke(skill, EFFECT_FAILED);
                 }
-            } else { PlayerSkillCastFailedEvent.invoke(skill, CANCELED); }
+            } else {
+               // System.out.println("  技能 " + skill.getData().getName() + " 执行事件被阻断");
+                PlayerSkillCastFailedEvent.invoke(skill, CANCELED);
+            }
         }
 
         return false;

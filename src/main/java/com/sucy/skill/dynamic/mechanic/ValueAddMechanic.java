@@ -34,6 +34,7 @@ import org.bukkit.entity.LivingEntity;
 
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 /**
  * Adds to a cast data value
@@ -64,7 +65,7 @@ public class ValueAddMechanic extends MechanicComponent {
 
         String key = settings.getString(KEY);
         double amount = parseValues(caster, AMOUNT, level, 1) * targets.size();
-        HashMap<String, Object> data = DynamicSkill.getCastData(caster);
+        Map<String, Object> data = DynamicSkill.getCastData(caster);
         if (!data.containsKey(key)) {
             data.put(key, amount);
             Bukkit.getPluginManager().callEvent(

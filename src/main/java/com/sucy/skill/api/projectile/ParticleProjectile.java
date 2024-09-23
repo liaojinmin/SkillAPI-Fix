@@ -77,9 +77,6 @@ public class ParticleProjectile extends CustomProjectile {
     @Nullable
     private Double radius;
 
-    @Nullable
-    private ArmorStandCarrier carrier;
-
     private Vector   vel;
     private int      steps;
     private int      count;
@@ -88,24 +85,15 @@ public class ParticleProjectile extends CustomProjectile {
     private Vector   gravity;
     private boolean pierce;
 
-    /**
-     * Constructor
-     *
-     * @param shooter  entity that shot the projectile
-     * @param level    level to use for scaling the speed
-     * @param loc      initial location of the projectile
-     * @param settings settings for the projectile
-     */
-    public ParticleProjectile(LivingEntity shooter, int level, Location loc, Settings settings) {
-        this(shooter, level, loc, settings, null);
-    }
+    private final boolean isCarrier;
+
 
     public ParticleProjectile(LivingEntity shooter, int level, Location loc, Settings settings,
                               @Nullable ArmorStandCarrier carrier) {
-        super(shooter);
+        super(shooter, carrier);
+        this.isCarrier = carrier != null;
         this.loc = loc;
         this.settings = settings;
-        this.carrier = carrier;
         this.vel = loc.getDirection().multiply(settings.getAttr(SPEED, level, 1.0));
         this.freq = (int) (20 * settings.getDouble(FREQUENCY, 0.5));
         this.life = (int) (settings.getDouble(LIFESPAN, 2) * 20);
@@ -136,9 +124,6 @@ public class ParticleProjectile extends CustomProjectile {
      */
     @Override
     protected Event expire() {
-        if (carrier != null) {
-            carrier.setDead(true);
-        }
         return new ParticleProjectileExpireEvent(this);
     }
 
@@ -147,71 +132,38 @@ public class ParticleProjectile extends CustomProjectile {
      */
     @Override
     protected Event land() {
-        if (carrier != null) {
-            carrier.setDead(true);
-        }
         return new ParticleProjectileLandEvent(this);
     }
 
-    /**
-     * Handles hitting an entity
-     *
-     * @param entity entity the projectile hit
-     */
     @Override
     protected Event hit(LivingEntity entity) {
-        if (carrier != null) {
-            carrier.setDead(true);
-        }
         return new ParticleProjectileHitEvent(this, entity);
     }
 
-    /**
-     * @return true if passing through a solid block, false otherwise
-     */
     @Override
     protected boolean landed() {
         return getLocation().getBlock().getType().isSolid();
     }
 
-    /**
-     * @return squared radius for colliding
-     */
     @Override
     protected double getCollisionRadius() {
         return radius != null ? radius : 1.5;
     }
 
-    /**
-     * @return velocity of the projectile
-     */
     @Override
     public Vector getVelocity() {
         return vel;
     }
 
-    /**
-     * Teleports the projectile to a location
-     *
-     * @param loc location to teleport to
-     */
     public void teleport(Location loc) {
         this.loc = loc;
     }
 
-    /**
-     * Sets the velocity of the projectile
-     *
-     * @param vel new velocity
-     */
     @Override
     public void setVelocity(Vector vel) {
         this.vel = vel;
     }
 
-    /**
-     * Updates the projectiles position and checks for collisions
-     */
     @Override
     public void run() {
         // Go through multiple steps to avoid tunneling
@@ -229,8 +181,10 @@ public class ParticleProjectile extends CustomProjectile {
         count++;
         if (count >= freq) {
             count = 0;
-            if (carrier != null) {
-                carrier.teleport(loc);
+            if (isCarrier) {
+                if (carrier != null) {
+                    carrier.teleport(loc);
+                }
             } else {
                 ParticleHelper.play(loc, settings, getShooter());
             }

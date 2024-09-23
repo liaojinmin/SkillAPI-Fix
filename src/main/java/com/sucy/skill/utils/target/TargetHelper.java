@@ -1,20 +1,25 @@
 package com.sucy.skill.utils.target;
 
+import com.google.common.cache.Cache;
+import com.google.common.cache.CacheBuilder;
+import com.google.common.cache.CacheLoader;
 import com.sucy.skill.hook.DisguiseHook;
 import com.sucy.skill.hook.PluginChecker;
+import com.sucy.skill.utils.ExpiringMap;
+import me.geek.team.common.TeamHandler;
+import me.geek.team.common.TeamManager;
 import me.libraryaddict.disguise.DisguiseAPI;
 import me.libraryaddict.disguise.utilities.reflection.FakeBoundingBox;
 import org.bukkit.Location;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.LivingEntity;
+import org.bukkit.entity.Player;
 import org.bukkit.util.Vector;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.TreeMap;
+import java.util.*;
+import java.util.concurrent.TimeUnit;
 
 public abstract class TargetHelper {
-
 
     /**
      * <p>Number of pixels that end up displaying about 1 degree of vision in the client window</p>
@@ -22,6 +27,57 @@ public abstract class TargetHelper {
      * it becomes useful sometime</p>
      */
     private static final int PIXELS_PER_DEGREE = 35;
+
+    private static final ExpiringMap<UUID, List<UUID>> freeTarget = new ExpiringMap<>();
+
+    /**
+     * 推荐召唤生物为队友
+     * @param owner 召唤物拥有者
+     * @param target 目标生物
+     * @param delay 延迟时间
+     */
+    public static void addSummonAlly(UUID owner, UUID target, double delay) {
+        List<UUID> old = freeTarget.renew(owner, (long) (delay * 1000), TimeUnit.MILLISECONDS);
+        if (old != null) {
+            old.add(target);
+        } else {
+            List<UUID> list = new ArrayList<>();
+            list.add(target);
+            freeTarget.put(owner, list, (long) (delay * 1000), TimeUnit.MILLISECONDS);
+        }
+    }
+
+    public static boolean hasSummonAlly(UUID owner, UUID target) {
+        List<UUID> old = freeTarget.get(owner);
+        if (old != null) {
+            return old.contains(target);
+        }
+        return false;
+    }
+
+    public static boolean isAlly(LivingEntity attacker, LivingEntity target) {
+        if (attacker instanceof Player) {
+            try {
+                TeamHandler teamHandler = TeamManager.INSTANCE.getTeamByPlayerID(attacker.getUniqueId());
+                if (teamHandler != null) {
+                    if (target instanceof Player) {
+                        return teamHandler.getPart().containPlayer(target.getUniqueId());
+                    } else {
+                        UUID targetUuid = target.getUniqueId();
+                        for (UUID uuid : teamHandler.getPart().getPart()) {
+                            if (hasSummonAlly(uuid, targetUuid)) {
+                                return true;
+                            }
+                        }
+                    }
+                }
+                return false;
+            } catch (NoClassDefFoundError e) {
+                e.printStackTrace();
+            }
+        }
+        return false;
+    }
 
     /**
      * <p>Gets all entities the player is looking at within the range</p>

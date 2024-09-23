@@ -27,7 +27,7 @@
 package com.sucy.skill.dynamic.mechanic;
 
 import com.sucy.skill.api.skills.SkillContext;
-import com.sucy.skill.dynamic.data.MetaSkills;
+import com.sucy.skill.dynamic.data.DataSkills;
 import org.bukkit.entity.LivingEntity;
 
 import java.util.List;
@@ -46,14 +46,7 @@ public class MetaSetMechanic extends MechanicComponent {
         return "meta set";
     }
 
-    /**
-     * Executes the component
-     *
-     * @param caster  caster of the skill
-     * @param level   level of the skill
-     * @param targets targets to apply to
-     * @return true if applied to something, false otherwise
-     */
+
     @Override
     public boolean execute(LivingEntity caster, SkillContext context, int level, List<LivingEntity> targets) {
         if (targets.size() == 0 || !settings.has(KEY)) {
@@ -65,7 +58,7 @@ public class MetaSetMechanic extends MechanicComponent {
         double tick = parseValues(caster, TICK, level, 1);
         for (LivingEntity target : targets) {
             double amount = parseValues(caster, AMOUNT, level, 1);
-            MetaSkills.setValue(target.getUniqueId(), key, amount, (int) tick);
+            DataSkills.setValue(target.getUniqueId(), key, amount, (int) tick);
         }
         return true;
     }

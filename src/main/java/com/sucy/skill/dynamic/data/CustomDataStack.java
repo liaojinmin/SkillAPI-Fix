@@ -6,13 +6,13 @@ import org.jetbrains.annotations.Nullable;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 
-public class CustomMetaStack {
+public class CustomDataStack {
 
     private final UUID uuid;
 
-    private final ConcurrentHashMap<String, CustomMeta> infos = new ConcurrentHashMap<>();
+    private final ConcurrentHashMap<String, CustomData> infos = new ConcurrentHashMap<>();
 
-    public CustomMetaStack(UUID uuid) {
+    public CustomDataStack(UUID uuid) {
         this.uuid = uuid;
     }
 
@@ -22,19 +22,19 @@ public class CustomMetaStack {
     }
 
     @Nullable
-    public CustomMeta getMeta(String key) {
+    public CustomData getMeta(String key) {
         return getMeta(key, false);
     }
 
     @Nullable
-    public CustomMeta getMeta(String key,  boolean create) {
+    public CustomData getMeta(String key, boolean create) {
         if (!infos.containsKey(key)) {
             if (create) {
-                infos.put(key, new CustomMeta(key, 0.0, -1));
+                infos.put(key, new CustomData(key, 0.0, -1));
             }
             return null;
         }
-        CustomMeta meta = infos.get(key);
+        CustomData meta = infos.get(key);
         if (meta.isTimerOut()) {
             infos.remove(key);
             return null;
@@ -49,9 +49,9 @@ public class CustomMetaStack {
 
     public void putMeta(String key, Double value, Integer tick, String action) {
         if (!infos.containsKey(key)) {
-            infos.put(key, new CustomMeta(key, value, tick));
+            infos.put(key, new CustomData(key, value, tick));
         } else {
-            CustomMeta meta = getMeta(key);
+            CustomData meta = getMeta(key);
             if (meta != null) {
                 meta.setValue(value, action);
             }

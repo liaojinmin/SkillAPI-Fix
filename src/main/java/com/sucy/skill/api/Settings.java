@@ -302,8 +302,10 @@ public class Settings {
 
     public int getKeyTimer() {
         if (settings.containsKey("key-timer")) {
+            //System.out.println("返回 -> " + settings.get("key-timer"));
             return Integer.parseInt(String.valueOf(settings.get("key-timer")));
         }
+        //System.out.println("返回 -> 默认");
         return 0;
     }
 

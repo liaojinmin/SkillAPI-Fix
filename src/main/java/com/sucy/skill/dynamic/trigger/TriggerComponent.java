@@ -3,6 +3,7 @@ package com.sucy.skill.dynamic.trigger;
 import com.sucy.skill.api.skills.SkillContext;
 import com.sucy.skill.dynamic.ComponentType;
 import com.sucy.skill.dynamic.EffectComponent;
+import com.sucy.skill.dynamic.mechanic.ReturnMechanic;
 import org.bukkit.entity.LivingEntity;
 
 import java.util.ArrayList;
@@ -38,6 +39,11 @@ public class TriggerComponent extends EffectComponent {
     @Override
     public boolean execute(final LivingEntity caster, SkillContext context, final int level, final List<LivingEntity> targets) {
         try {
+            if (context.get("trigger_use") != null) {
+                if (context.remove("trigger_mark") == null) {
+                    return false;
+                }
+            }
             running = true;
             return executeChildren(caster, context, level, targets);
         } finally {

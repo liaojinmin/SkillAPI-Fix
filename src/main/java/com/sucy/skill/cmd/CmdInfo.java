@@ -94,16 +94,16 @@ public class CmdInfo implements IFunction
             String separator = cmd.getMessage(SEPARATOR, ChatColor.DARK_GRAY + "----------------------------");
             boolean first = true;
             sender.sendMessage(ChatColor.GOLD + "基本属性:");
-            for (Map.Entry<String, Integer> it : data.attributes.entrySet()) {
+            for (Map.Entry<String, Integer> it : data.points.entrySet()) {
                 sender.sendMessage("    key: " + it.getKey() + " value: " + it.getValue());
             }
             sender.sendMessage(ChatColor.GOLD + "额外属性:");
-            for (Map.Entry<String, Integer> it : data.bonusAttrib.entrySet()) {
+            for (Map.Entry<String, Double> it : data.bonusAttrib.entrySet()) {
                 sender.sendMessage("    key: " + it.getKey() + " value: " + it.getValue());
             }
             sender.sendMessage(ChatColor.GOLD + "临时属性:");
             for (Map.Entry<String, ConcurrentHashMap<String, Integer>> it : data.addAttrib.entrySet()) {
-                sender.sendMessage("  属性源:"+it.getKey());
+                sender.sendMessage("  属性源: "+it.getKey());
                 for (Map.Entry<String, Integer> it2 : it.getValue().entrySet()) {
                     sender.sendMessage("    key: " + it2.getKey() + " value: " + it2.getValue());
                 }

@@ -39,7 +39,6 @@ public class Settings {
     private final SkillAPI    plugin;
     private final DataSection config;
 
-
     /**
      * <p>Initializes a new settings manager.</p>
      * <p>This is already set up by SkillAPI and shouldn't be
@@ -289,7 +288,7 @@ public class Settings {
                     // 检查 GeekTeamPlus 队伍
                     TeamHandler teamHandler = TeamManager.INSTANCE.getTeamByPlayerID(player.getUniqueId());
                     if (teamHandler != null) {
-                        if (teamHandler.getTeamPart().containPlayer(target.getUniqueId())) {
+                        if (teamHandler.getPart().containPlayer(target.getUniqueId())) {
                             return false;
                         }
                     }
@@ -312,18 +311,6 @@ public class Settings {
         } else { return !(target instanceof Monster); }
 
         return combatProtection.canAttack(attacker, target);
-    }
-
-    /**
-     * Checks whether or not something is an ally
-     *
-     * @param attacker the attacking entity
-     * @param target   the target entity
-     *
-     * @return true if an ally, false otherwise
-     */
-    public boolean isAlly(LivingEntity attacker, LivingEntity target) {
-        return !canAttack(attacker, target);
     }
 
     /**

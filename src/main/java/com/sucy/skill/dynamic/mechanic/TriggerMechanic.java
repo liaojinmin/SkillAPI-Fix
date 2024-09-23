@@ -9,13 +9,11 @@ import com.sucy.skill.dynamic.DynamicSkill;
 import com.sucy.skill.dynamic.TriggerHandler;
 import com.sucy.skill.dynamic.trigger.Trigger;
 import com.sucy.skill.dynamic.trigger.TriggerComponent;
+import org.bukkit.Bukkit;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.plugin.java.JavaPlugin;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 /**
  * SkillAPI © 2017
@@ -28,7 +26,7 @@ public class TriggerMechanic extends MechanicComponent {
     private static final String STACKABLE = "stackable";
     private static final String ONCE = "once";
 
-    private final Map<Integer, List<Context>> CASTER_MAP = new HashMap<Integer, List<Context>>();
+    private final Map<Integer, List<Context>> CASTER_MAP = new HashMap<>();
 
     private TriggerHandler triggerHandler;
     private boolean once;
@@ -43,10 +41,9 @@ public class TriggerMechanic extends MechanicComponent {
         if (trigger == null) {
             throw new IllegalArgumentException("Skill is using invalid trigger for mechanic: " + name);
         }
-
         final Receiver receiver = new Receiver();
         triggerHandler = new TriggerHandler(skill, "fake", trigger, receiver);
-        triggerHandler.register(JavaPlugin.getPlugin(SkillAPI.class));
+        triggerHandler.register();
         once = settings.getBool(ONCE, true);
         stackable = settings.getBool(STACKABLE, true);
     }
@@ -63,17 +60,24 @@ public class TriggerMechanic extends MechanicComponent {
        // 将主动延时删除改为被动式，防止重复触发时刚好移除上下文导致触发器失效。
        // final int ticks = (int)(20 * parseValues(caster, DURATION, level, 5));
         boolean worked = false;
+        final String mark = settings.getString(ReturnMechanic.MARK, "");
+
         for (final LivingEntity target : targets) {
             if (!stackable && CASTER_MAP.containsKey(target.getEntityId()))
                 return false;
-
+            if (!mark.isEmpty()) {
+              //  System.out.println("name: "+skill.getName() + " trigger: " + triggerHandler.getTrigger().getKey() +"  mark: "+mark);
+                ReturnMechanic.addMark(target, mark);
+               // Bukkit.getScheduler().runTaskLater(SkillAPI.singleton(),
+                  //      () -> ReturnMechanic.delMark(target, mark), 20);
+            }
             if (!CASTER_MAP.containsKey(target.getEntityId())) {
                 CASTER_MAP.put(target.getEntityId(), new ArrayList<>());
             }
             final Context context2 = new Context(caster, level);
             triggerHandler.init(target, level, new StopTask(target, context2));
 
-           // final Context context = new Context(caster, level);
+
 
             CASTER_MAP.get(target.getEntityId()).add(context2);
 
@@ -119,17 +123,17 @@ public class TriggerMechanic extends MechanicComponent {
         }
 
         @Override
-        public boolean execute(final LivingEntity target, SkillContext context, final int level, final List<LivingEntity> targets) {
-            if (!CASTER_MAP.containsKey(target.getEntityId())) return false;
+        public boolean execute(final LivingEntity caster, SkillContext context, final int level, final List<LivingEntity> targets) {
+            if (!CASTER_MAP.containsKey(caster.getEntityId())) return false;
 
             final List<Context> contexts;
             if (once)
-                contexts = CASTER_MAP.remove(target.getEntityId());
+                contexts = CASTER_MAP.remove(caster.getEntityId());
             else
-                contexts = CASTER_MAP.get(target.getEntityId());
+                contexts = CASTER_MAP.get(caster.getEntityId());
 
             final List<LivingEntity> targetList = new ArrayList<>();
-            targetList.add(target);
+            targetList.add(caster);
 
             for (final Context context2 : contexts) {
                 DynamicSkill.getCastData(context2.caster).put("listen-target", targetList);

@@ -32,10 +32,15 @@ public class GermAnimationStartMechanic extends MechanicComponent {
         final String key = settings.getString(NAME);
         final float time = (float) parseValues(caster, TIME, level, 1.0);
 
+
         Collection<? extends Player> players = Bukkit.getOnlinePlayers();
         for (LivingEntity target : targets) {
             for (Player player : players) {
-                GermPacketAPI.sendModelAnimation(player, target.getEntityId(), new AnimDataDTO(key, time, false));
+                if (target instanceof Player) {
+                    GermPacketAPI.sendBendAction(player, target.getEntityId(), new AnimDataDTO(key, time, false));
+                } else {
+                    GermPacketAPI.sendModelAnimation(player, target.getEntityId(), new AnimDataDTO(key, time, false));
+                }
             }
         }
         executeChildren(caster, context, level, targets);

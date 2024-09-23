@@ -7,6 +7,7 @@ import com.sucy.skill.api.event.FlagExpireEvent;
 import com.sucy.skill.api.event.PlayerLandEvent;
 import com.sucy.skill.api.projectile.ItemProjectile;
 import com.sucy.skill.dynamic.mechanic.BlockMechanic;
+import com.sucy.skill.dynamic.mechanic.BlockWallMechanic;
 import com.sucy.skill.dynamic.mechanic.PotionProjectileMechanic;
 import com.sucy.skill.dynamic.mechanic.ProjectileMechanic;
 import com.sucy.skill.hook.DisguiseHook;
@@ -174,10 +175,8 @@ public class MechanicListener extends SkillAPIListener {
      * @param event event details
      */
     @EventHandler(priority = EventPriority.LOWEST)
-    public void onShoot(EntityDamageByEntityEvent event)
-    {
-        if (event.getDamager() instanceof Projectile)
-        {
+    public void onShoot(EntityDamageByEntityEvent event) {
+        if (event.getDamager() instanceof Projectile) {
             Projectile p = (Projectile) event.getDamager();
             if (p.hasMetadata(P_CALL) && event.getEntity() instanceof LivingEntity) {
                 ((ProjectileMechanic) SkillAPI.getMeta(p, P_CALL))
@@ -224,7 +223,9 @@ public class MechanicListener extends SkillAPIListener {
     @EventHandler
     public void onBreak(BlockBreakEvent event)
     {
-        if (BlockMechanic.isPending(event.getBlock().getLocation()))
+        Location location = event.getBlock().getLocation();
+        if (BlockMechanic.isPending(location)
+                || BlockWallMechanic.isPending(location))
             event.setCancelled(true);
     }
 

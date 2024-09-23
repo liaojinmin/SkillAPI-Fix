@@ -1,5 +1,7 @@
 package com.sucy.skill.api.armorstand;
 
+import com.sucy.skill.SkillAPI;
+import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.entity.ArmorStand;
 import org.bukkit.entity.LivingEntity;
@@ -11,9 +13,15 @@ import java.util.function.Consumer;
 
 public class ArmorStandInstance {
 
+    private static int next = 0;
+
     private static final Vector UP = new Vector(0, 1, 0);
 
-    private final ArmorStand armorStand;
+    private static int getNext() {
+        next++;
+        return next;
+    }
+    private final LivingEntity armorStand;
     private final LivingEntity owner;
     private final boolean follow;
     private double forward;
@@ -23,14 +31,16 @@ public class ArmorStandInstance {
     private int tick = 0;
     private final AtomicBoolean tickAtomic = new AtomicBoolean(true);
 
+    public final int indexID = getNext();
 
-    public ArmorStandInstance(ArmorStand armorStand, LivingEntity owner) {
+
+    public ArmorStandInstance(LivingEntity armorStand, LivingEntity owner) {
         this.armorStand = armorStand;
         this.owner = owner;
         this.follow = false;
     }
 
-    public ArmorStandInstance(ArmorStand armorStand, LivingEntity owner,
+    public ArmorStandInstance(LivingEntity armorStand, LivingEntity owner,
                               double forward, double upward, double right
     ) {
         this.armorStand = armorStand;
@@ -60,8 +70,16 @@ public class ArmorStandInstance {
 
     public void remove() {
         tickAtomic.set(false);
-        armorStand.setHealth(0);
-        armorStand.remove();
+        if (armorStand instanceof ArmorStand) {
+            armorStand.setHealth(0);
+            armorStand.remove();
+        } else {
+            Bukkit.getScheduler().runTask(SkillAPI.singleton(), () -> {
+                armorStand.setHealth(0);
+                armorStand.remove();
+            });
+        }
+
     }
 
     public void move(Location location) {
@@ -74,7 +92,7 @@ public class ArmorStandInstance {
         }
     }
 
-    public ArmorStand getArmorStand() {
+    public LivingEntity getArmorStand() {
         return armorStand;
     }
 

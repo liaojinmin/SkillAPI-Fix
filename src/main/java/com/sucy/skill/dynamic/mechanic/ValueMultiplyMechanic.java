@@ -34,6 +34,7 @@ import org.bukkit.entity.LivingEntity;
 
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 /**
  * Adds to a cast data value
@@ -64,7 +65,7 @@ public class ValueMultiplyMechanic extends MechanicComponent {
 
         String key = settings.getString(KEY);
         double multiplier = parseValues(caster, MULTIPLIER, level, 1);
-        HashMap<String, Object> data = DynamicSkill.getCastData(caster);
+        Map<String, Object> data = DynamicSkill.getCastData(caster);
         if (data.containsKey(key)) {
             double a = multiplier * (Double) data.get(key);
             data.put(key, a);

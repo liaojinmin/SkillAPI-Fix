@@ -1,12 +1,18 @@
 package com.sucy.skill.api.armorstand;
 
+import com.sucy.skill.SkillAPI;
+import org.bukkit.Bukkit;
 import org.bukkit.entity.LivingEntity;
+import org.jetbrains.annotations.Nullable;
 
+import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.concurrent.ConcurrentHashMap;
 
 public class ArmorStandData {
-    private final HashMap<Integer, ArmorStandInstance> armorStands = new HashMap<>();
+    private final ConcurrentHashMap<Integer, ArmorStandInstance> armorStands = new ConcurrentHashMap<>();
     private final LivingEntity target;
 
     /**
@@ -16,9 +22,7 @@ public class ArmorStandData {
         this.target = target;
     }
 
-    /**
-     * @return true if should keep the data, false otherwise
-     */
+
     public boolean isValid() {
         return armorStands.size() > 0 && target.isValid();
     }
@@ -34,9 +38,19 @@ public class ArmorStandData {
         return armorStands.get(key);
     }
 
-    public void register(ArmorStandInstance armorStand, int key) {
-        ArmorStandInstance oldArmorStand = armorStands.put(key, armorStand);
-       // if (oldArmorStand != null) oldArmorStand.remove();
+    public Collection<ArmorStandInstance> getArmorStandInstances() {
+        return armorStands.values();
+    }
+
+    @Nullable
+    public ArmorStandInstance del(int key) {
+        return armorStands.remove(key);
+    }
+
+
+    public void add(ArmorStandInstance armorStand, int key) {
+
+        armorStands.put(key, armorStand);
     }
 
     /**
@@ -61,5 +75,6 @@ public class ArmorStandData {
     public void remove() {
         armorStands.values().forEach(ArmorStandInstance::remove);
         armorStands.clear();
+
     }
 }

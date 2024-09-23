@@ -32,6 +32,7 @@ import org.bukkit.entity.LivingEntity;
 
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 /**
  * Adds to a cast data value
@@ -63,7 +64,7 @@ public class ValueLocationMechanic extends MechanicComponent
         }
 
         String key = settings.getString(KEY);
-        HashMap<String, Object> data = DynamicSkill.getCastData(caster);
+        Map<String, Object> data = DynamicSkill.getCastData(caster);
         data.put(key, targets.get(0).getLocation());
         return true;
     }

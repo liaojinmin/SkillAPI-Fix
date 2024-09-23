@@ -64,10 +64,12 @@ dependencies {
     implementation("com.alibaba.fastjson2:fastjson2:2.0.31")
 
     compileOnly("me.neon.libs:NeonLibs:1.0.1.5-local")
+    compileOnly("me.neon.flash:NeonFlash:1.0.1-SNAPSHOT-local")
 
-   // compileOnly(kotlin("stdlib"))
+    compileOnly(kotlin("stdlib"))
 
     // Libraries
     compileOnly(fileTree("lib"))
+
 }
 

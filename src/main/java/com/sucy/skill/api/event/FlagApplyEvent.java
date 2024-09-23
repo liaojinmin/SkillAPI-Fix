@@ -61,8 +61,7 @@ public class FlagApplyEvent extends Event implements Cancellable
      *
      * @return the entity having the flag applied to
      */
-    public LivingEntity getEntity()
-    {
+    public LivingEntity getEntity() {
         return entity;
     }
 

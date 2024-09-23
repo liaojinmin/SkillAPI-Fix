@@ -29,7 +29,9 @@ package com.sucy.skill.api.projectile;
 import com.rit.sucy.reflect.Reflection;
 import com.sucy.skill.SkillAPI;
 import com.sucy.skill.api.particle.target.Followable;
+import com.sucy.skill.dynamic.ArmorStandCarrier;
 import com.sucy.skill.log.Logger;
+import com.sucy.skill.utils.target.TargetHelper;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.entity.Entity;
@@ -40,6 +42,7 @@ import org.bukkit.metadata.Metadatable;
 import org.bukkit.plugin.Plugin;
 import org.bukkit.scheduler.BukkitRunnable;
 import org.bukkit.util.Vector;
+import org.jetbrains.annotations.Nullable;
 
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Method;
@@ -102,14 +105,26 @@ public abstract class CustomProjectile extends BukkitRunnable implements Metadat
     private boolean ally = false;
     private boolean valid = true;
 
-    /**
-     * Constructs a new custom projectile and starts its timer task
-     *
-     * @param thrower entity firing the projectile
-     */
+    @Nullable
+    protected ArmorStandCarrier carrier;
+
+
     public CustomProjectile(LivingEntity thrower) {
         this.thrower = thrower;
         runTaskTimer(Bukkit.getPluginManager().getPlugin("SkillAPI"), 1, 1);
+    }
+
+    public CustomProjectile(LivingEntity thrower, @Nullable ArmorStandCarrier carrier) {
+        this.thrower = thrower;
+        this.carrier = carrier;
+        runTaskTimer(Bukkit.getPluginManager().getPlugin("SkillAPI"), 1, 1);
+    }
+
+    public CustomProjectile(LivingEntity thrower, boolean start) {
+        this.thrower = thrower;
+        if (start) {
+            runTaskTimer(Bukkit.getPluginManager().getPlugin("SkillAPI"), 1, 1);
+        }
     }
 
     /**
@@ -190,7 +205,7 @@ public abstract class CustomProjectile extends BukkitRunnable implements Metadat
             }
             hit.add(entity.getEntityId());
 
-            boolean ally = SkillAPI.getSettings().isAlly(getShooter(), entity);
+            boolean ally = TargetHelper.isAlly(getShooter(), entity);
             if (ally && !this.ally) continue;
             if (!ally && !this.enemy) continue;
             if (!SkillAPI.getSettings().isValidTarget(entity)) continue;
@@ -295,7 +310,18 @@ public abstract class CustomProjectile extends BukkitRunnable implements Metadat
     @Override
     public void cancel() {
         super.cancel();
+        if (carrier != null) {
+            carrier.setDead(true);
+            carrier = null;
+        }
         valid = false;
+    }
+
+    public void deleteCarrier() {
+        if (carrier != null) {
+            carrier.setDead(true);
+            carrier.lock();
+        }
     }
 
     /**
@@ -373,6 +399,33 @@ public abstract class CustomProjectile extends BukkitRunnable implements Metadat
     private static final Vector X_VEC = new Vector(1, 0, 0);
     private static final double DEGREE_TO_RAD = Math.PI / 180;
     private static final Vector vel = new Vector();
+
+
+    public static Vector calcSingleSpread(Vector dir, double angle) {
+        Vector normalizedDir = dir.clone().normalize();
+
+        Vector base = new Vector(normalizedDir.getX(), 0, normalizedDir.getZ()).normalize();
+        double vBaseAngle = Math.acos(Math.max(-1, Math.min(base.dot(normalizedDir), 1)));
+        if (dir.getY() < 0) {
+            vBaseAngle = -vBaseAngle;
+        }
+
+        double hAngle = Math.acos(Math.max(-1, Math.min(1, base.dot(X_VEC)))) / DEGREE_TO_RAD;
+        if (dir.getZ() < 0) {
+            hAngle = -hAngle;
+        }
+
+        double totalAngle = hAngle + angle;
+        double vAngle = vBaseAngle * Math.cos(angle * DEGREE_TO_RAD);
+        double x = Math.cos(vAngle);
+
+        Vector newDir = new Vector();
+        newDir.setX(x * Math.cos(totalAngle * DEGREE_TO_RAD));
+        newDir.setY(Math.sin(vAngle));
+        newDir.setZ(x * Math.sin(totalAngle * DEGREE_TO_RAD));
+
+        return newDir;
+    }
 
     /**
      * Calculates the directions for projectiles spread from

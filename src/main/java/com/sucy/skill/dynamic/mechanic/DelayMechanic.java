@@ -68,7 +68,7 @@ public class DelayMechanic extends MechanicComponent {
         Bukkit.getScheduler().runTaskLater(
                 Bukkit.getPluginManager().getPlugin("SkillAPI"),
                 () -> {
-                    HashSet<String> list2 = ReturnMechanic.markMap.get(caster.getEntityId());
+                    HashSet<String> list2 = ReturnMechanic.getMarks(caster.getEntityId());
                     if (mark.isEmpty()) {
                         if (list2 != null && list2.remove("盾牌打断")) {
                           //  System.out.println("已被盾牌阻断 delay 执行 1");

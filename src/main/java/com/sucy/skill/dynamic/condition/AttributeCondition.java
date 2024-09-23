@@ -45,7 +45,7 @@ public class AttributeCondition extends ConditionComponent
         final int min = (int) parseValues(caster, MIN, level, 0);
         final int max = (int) parseValues(caster, MAX, level, Integer.MAX_VALUE);
 
-        final int value = AttributeAPI.getAttribute(target,attr);
+        final double value = AttributeAPI.getAttribute(target,attr);
         return value >= min && value <= max;
     }
     /*

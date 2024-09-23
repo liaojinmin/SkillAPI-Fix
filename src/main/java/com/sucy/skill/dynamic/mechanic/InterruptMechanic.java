@@ -56,6 +56,7 @@ public class InterruptMechanic extends MechanicComponent {
         boolean worked = false;
         for (LivingEntity target : targets) {
             if (FlagManager.hasFlag(target, StatusFlag.CHANNEL)) {
+                System.out.println("删除目标: "+ target.getName() +" StatusFlag.CHANNEL");
                 FlagManager.removeFlag(target, StatusFlag.CHANNEL);
                 FlagManager.removeFlag(target, StatusFlag.CHANNELING);
                 worked = true;

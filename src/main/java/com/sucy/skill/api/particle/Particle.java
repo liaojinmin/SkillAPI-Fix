@@ -243,6 +243,7 @@ public class Particle {
             Material material,
             int data) throws Exception {
 
+        /*
         // 1.13+ servers
         if (VersionManager.isVersionAtLeast(11300)) {
             Object obj = data;
@@ -267,8 +268,11 @@ public class Particle {
             return packet.newInstance(particle, true, (float) x, (float) y, (float) z, dx, dy, dz, speed, amount);
         }
 
+         */
+
         // 1.8+ servers use an enum value to validate the particle type
-        else if (VersionManager.isVersionAtLeast(VersionManager.V1_8_0)) {
+        //else
+            if (VersionManager.isVersionAtLeast(VersionManager.V1_8_0)) {
             Object enumType = particleTypes.get(name);
             return packet.newInstance(
                     enumType,

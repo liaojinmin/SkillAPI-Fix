@@ -32,6 +32,7 @@ import org.bukkit.entity.LivingEntity;
 
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 public class ValueHealthMechanic extends MechanicComponent {
     private static final String KEY  = "key";
@@ -55,7 +56,7 @@ public class ValueHealthMechanic extends MechanicComponent {
     public boolean execute(LivingEntity caster, SkillContext context, int level, List<LivingEntity> targets) {
         final String key = settings.getString(KEY);
         final String type = settings.getString(TYPE, "current").toLowerCase();
-        final HashMap<String, Object> data = DynamicSkill.getCastData(caster);
+        final Map<String, Object> data = DynamicSkill.getCastData(caster);
 
         final LivingEntity target = targets.get(0);
         switch (type) {

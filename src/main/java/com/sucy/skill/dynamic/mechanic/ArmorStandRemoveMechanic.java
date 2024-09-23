@@ -46,7 +46,7 @@ public class ArmorStandRemoveMechanic extends MechanicComponent {
 
     private void remove(LivingEntity entity, List<Integer> list) {
         for (int a : list) {
-            ArmorStandInstance armorStandInstance = ArmorStandManager.getArmorStand(entity, a);
+            ArmorStandInstance armorStandInstance = ArmorStandManager.unregister(entity, a);
             if (armorStandInstance != null) {
                 armorStandInstance.remove();
             }

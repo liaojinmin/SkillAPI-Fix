@@ -53,8 +53,8 @@ import org.bukkit.entity.Player;
  * rather what the player has within the class. For more general information
  * about the class, you should use the RPGClass class.</p>
  */
-public class PlayerClass
-{
+public class PlayerClass {
+
     private PlayerData player;
     private RPGClass   classData;
     private int        level;
@@ -432,11 +432,9 @@ public class PlayerClass
      *
      * @throws java.lang.IllegalArgumentException when the level amount is less than 1
      */
-    public void giveLevels(int amount)
-    {
+    public void giveLevels(int amount) {
         // Cannot give non-positive amount of levels
-        if (amount < 1)
-        {
+        if (amount < 1) {
             throw new IllegalArgumentException("Invalid level amount - cannot be less than 1");
         }
 

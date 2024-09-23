@@ -46,6 +46,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * A skill implementation for the Dynamic system
@@ -55,7 +56,7 @@ public class DynamicSkill extends Skill implements SkillShot, PassiveSkill, List
     private final Map<String, EffectComponent> attribKeys = new HashMap<>();
     private final Map<Integer, Integer>        active     = new HashMap<>();
 
-    private static final HashMap<Integer, HashMap<String, Object>> castData   = new HashMap<>();
+    private static final HashMap<Integer, ConcurrentHashMap<String, Object>> castData   = new HashMap<>();
 
     private TriggerComponent castTrigger;
     private TriggerComponent initializeTrigger;
@@ -157,11 +158,11 @@ public class DynamicSkill extends Skill implements SkillShot, PassiveSkill, List
      *
      * @return cast data for the caster
      */
-    public static HashMap<String, Object> getCastData(final LivingEntity caster) {
+    public static Map<String, Object> getCastData(final LivingEntity caster) {
         if (caster == null) { return null; }
-        HashMap<String, Object> map = castData.get(caster.getEntityId());
+        ConcurrentHashMap<String, Object> map = castData.get(caster.getEntityId());
         if (map == null) {
-            map = new HashMap<>();
+            map = new ConcurrentHashMap<>();
             map.put("caster", caster);
             castData.put(caster.getEntityId(), map);
         }
@@ -184,7 +185,7 @@ public class DynamicSkill extends Skill implements SkillShot, PassiveSkill, List
      */
     public void registerEvents(final SkillAPI plugin) {
         for (final TriggerHandler triggerHandler : triggers) {
-            triggerHandler.register(plugin);
+            triggerHandler.register();
         }
     }
 

@@ -7,6 +7,7 @@ import org.bukkit.entity.Player;
 
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 /**
  * SkillAPI © 2017
@@ -39,7 +40,7 @@ public class ValueDistanceMechanic extends MechanicComponent
         }
 
         final String key = settings.getString(KEY);
-        final HashMap<String, Object> data = DynamicSkill.getCastData(caster);
+        final Map<String, Object> data = DynamicSkill.getCastData(caster);
         data.put(key, targets.get(0).getLocation().distance(caster.getLocation()));
         return true;
     }

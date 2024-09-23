@@ -121,8 +121,11 @@ public class ItemListener extends SkillAPIListener
 
     @EventHandler
     public void onClose(InventoryCloseEvent event) {
-        if (SkillAPI.getSettings().isWorldEnabled(event.getPlayer().getWorld()))
-            SkillAPI.schedule(new UpdateTask((Player) event.getPlayer(), false), 1);
+        if (SkillAPI.getSettings().isWorldEnabled(event.getPlayer().getWorld())) {
+            Player player = (Player) event.getPlayer();
+            SkillAPI.schedule(new UpdateTask(player, false), 1);
+            //if (player.getInventory().getItemInOffHand().getType() != )
+        }
     }
 
     @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)

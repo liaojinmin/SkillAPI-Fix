@@ -35,7 +35,11 @@ public class GermAnimationStopMechanic extends MechanicComponent {
         Collection<? extends Player> players = Bukkit.getOnlinePlayers();
         for (LivingEntity target : targets) {
             for (Player player : players) {
-                GermPacketAPI.sendModelAnimation(player, target.getEntityId(), new AnimDataDTO(key, time, true));
+                if (target instanceof Player) {
+                    GermPacketAPI.sendBendAction(player, target.getEntityId(), new AnimDataDTO(key, time, true));
+                } else {
+                    GermPacketAPI.sendModelAnimation(player, target.getEntityId(), new AnimDataDTO(key, time, true));
+                }
             }
         }
         executeChildren(caster, context, level, targets);

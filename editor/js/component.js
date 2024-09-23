@@ -92,6 +92,7 @@ var Condition = {
     PERMISSION:  { name: 'Permission',  container: true, construct: ConditionPermission,premium: true },
     POTION:      { name: 'Potion',      container: true, construct: ConditionPotion     },
     SKILL_LEVEL: { name: 'Skill Level', container: true, construct: ConditionSkillLevel },
+    SHIELD:      { name: 'Shield',      container: true, construct: ConditionShield     },
     SLOT:        { name: 'Slot',        container: true, construct: ConditionSlot,      premium: true },
     STATUS:      { name: 'Status',      container: true, construct: ConditionStatus     },
     TIME:        { name: 'Time',        container: true, construct: ConditionTime       },
@@ -99,7 +100,7 @@ var Condition = {
     VALUE:       { name: 'Value',       container: true, construct: ConditionValue      },
     WATER:       { name: 'Water',       container: true, construct: ConditionWater      },
     WEATHER:     { name: 'Weather',     container: true, construct: ConditionWeather,   premium: true },
-    META:        { name: 'Meta',        container: true, construct: ConditionMeta,      premium: true }
+    DATA:        { name: 'Data',        container: true, construct: ConditionData,      premium: true }
 };
 
 /**
@@ -107,6 +108,7 @@ var Condition = {
  */
 var Mechanic = {
     ATTRIBUTE:           { name: 'Attribute',           container: false, construct: MechanicAttribute          },
+    BLOCK_WALL:          { name: 'Block Wall',          container: false, construct: MechanicBlockWall          },
     BLOCK:               { name: 'Block',               container: false, construct: MechanicBlock              },
     BUFF:                { name: 'Buff',                container: false, construct: MechanicBuff,              premium: true },
     CANCEL:              { name: 'Cancel',              container: false, construct: MechanicCancel             },
@@ -145,6 +147,7 @@ var Mechanic = {
     PARTICLE_EFFECT:     { name: 'Particle Effect',     container: false, construct: MechanicParticleEffect,    premium: true },
     CANCEL_EFFECT:       { name: 'Cancel Effect',       container: false, construct: MechanicCancelEffect,      premium: true },
     PARTICLE_PROJECTILE: { name: 'Particle Projectile', container: true,  construct: MechanicParticleProjectile },
+    ENTITY_SPREAD:       { name: 'Entity Spread',       container: true,  construct: MechanicEntitySpread },
     PASSIVE:             { name: 'Passive',             container: true,  construct: MechanicPassive            },
     PERMISSION:          { name: 'Permission',          container: false, construct: MechanicPermission         },
     POTION:              { name: 'Potion',              container: false, construct: MechanicPotion             },
@@ -159,6 +162,7 @@ var Mechanic = {
     STATUS:              { name: 'Status',              container: false, construct: MechanicStatus             },
     TAUNT:               { name: 'Taunt',               container: false, construct: MechanicTaunt              },
     TRIGGER:             { name: 'Trigger',             container: true,  construct: MechanicTrigger,           premium: true },
+    DATA_EDIT:           { name: 'Data Edit',           container: false, construct: MechanicDataEdit           },
     VALUE_ADD:           { name: 'Value Add',           container: false, construct: MechanicValueAdd           },
     VALUE_ATTRIBUTE:     { name: 'Value Attribute',     container: false, construct: MechanicValueAttribute     },
     VALUE_COPY:          { name: 'Value Copy',          container: false, construct: MechanicValueCopy,         premium: true },
@@ -171,6 +175,7 @@ var Mechanic = {
     VALUE_MULTIPLY:      { name: 'Value Multiply',      container: false, construct: MechanicValueMultiply      },
     VALUE_PLACEHOLDER:   { name: 'Value Placeholder',   container: false, construct: MechanicValuePlaceholder,  premium: true },
     VALUE_MMOITEMS_ATTR:   { name: 'Value MMoItem Attr',   container: false, construct: MechanicValueMMoItemAttr,  premium: true },
+    VALUE_NEONFLASH_ATTR:   { name: 'Value NeonFlash Attr',   container: false, construct: MechanicValueNeonFlashAttr,  premium: true },
     VALUE_RANDOM:        { name: 'Value Random',        container: false, construct: MechanicValueRandom        },
     VALUE_SET:           { name: 'Value Set',           container: false, construct: MechanicValueSet           },
     WARP:                { name: 'Warp',                container: false, construct: MechanicWarp               },
@@ -616,6 +621,7 @@ function TriggerDeath()
     this.super('Death', Type.TRIGGER, true);
 
     this.description = 'Applies skill effects when a player dies.';
+
 }
 
 extend('TriggerEnvironmentDamage', 'Component');
@@ -645,6 +651,10 @@ function TriggerKill()
     this.super('Kill', Type.TRIGGER, true);
 
     this.description = 'Applies skill effects upon killing something';
+
+    this.data.push(new ListValue('Type', 'type', ['player', 'monster', 'all'], 'all')
+        .setTooltip('触发生物种类')
+    );
 }
 
 extend('TriggerLand', 'Component');
@@ -1349,6 +1359,18 @@ function ConditionSkillLevel(skill)
     );
 }
 
+extend('ConditionShield', 'Component');
+function ConditionShield()
+{
+    this.super('Shield', Type.CONDITION, true);
+
+    this.description = '判断目标或者施法者是否是举盾状态';
+
+    this.data.push(new ListValue('Target', 'target', [ 'True', 'False' ], 'True')
+        .setTooltip('是否取目标举盾状态')
+    );
+}
+
 extend('ConditionSlot', 'Component');
 function ConditionSlot()
 {
@@ -1445,13 +1467,16 @@ function ConditionWeather() {
     );
 }
 
-extend('ConditionMeta', 'Component');
-function ConditionMeta() {
-    this.super('Meta', Type.CONDITION, true);
+extend('ConditionData', 'Component');
+function ConditionData() {
+    this.super('Data', Type.CONDITION, true);
 
     this.description = '自定义临时数据条件';
-    this.data.push(new StringValue('Key', 'key', 'KEY')
-        .setTooltip('数据键')
+    this.data.push(new StringValue('Key', 'key', 'key')
+    );
+    this.data.push(new AttributeValue('Min Value', 'min-value', 1, 0)
+    );
+    this.data.push(new AttributeValue('Max Value', 'max-value', 999, 0)
     );
 }
 
@@ -1479,8 +1504,7 @@ function MechanicAttribute()
 }
 
 extend('MechanicBlock', 'Component');
-function MechanicBlock()
-{
+function MechanicBlock() {
     this.super('Block', Type.MECHANIC, false);
 
     this.description = 'Changes blocks to the given type of block for a limited duration.';
@@ -1524,6 +1548,27 @@ function MechanicBlock()
     );
     this.data.push(new AttributeValue('Depth (Z)', 'depth', 5, 0).requireValue('shape', [ 'Cuboid' ])
         .setTooltip('The depth of the cuboid in blocks')
+    );
+}
+
+extend('MechanicBlockWall', 'Component');
+function MechanicBlockWall() {
+    this.super('Block Wall', Type.MECHANIC, false);
+    this.description = '方块墙，并且召唤盔甲架';
+    this.data.push(new ListValue('Block', 'block', materialList, 'Stone')
+        .setTooltip('组成墙的方块')
+    );
+    this.data.push(new AttributeValue('Seconds', 'seconds', 5, 0)
+        .setTooltip('恢复时间')
+    );
+    this.data.push(new IntValue('Length', 'length', 1)
+        .setTooltip('墙半径长度')
+    );
+    this.data.push(new IntValue('Height', 'height', 0)
+        .setTooltip('墙高度')
+    );
+    this.data.push(new StringValue('Name', 'name', 'Armor Stand Packet')
+        .setTooltip('盔甲架名称')
     );
 }
 
@@ -2200,7 +2245,45 @@ function MechanicParticleProjectile()
     this.data.push(new ListValue('是否可见', 'visible', ['True', 'False'], 'True'));
     this.data.push(new ListValue('标记', 'marker', ['True', 'False'], 'True'));
 
+    this.data.push(new StringValue('盔甲架名称', 'name', 'Armor Stand'));
+
+    this.data.push(new StringValue('物品名称', 'item_name', 'Armor Stand'));
+    this.data.push(new ListValue('物品种类', 'item_type', materialList, 'Arrow')
+
+    );
+
     addEffectOptions(this, true);
+}
+
+extend('MechanicEntitySpread', 'Component');
+function MechanicEntitySpread()
+{
+    this.super('Entity Spread', Type.MECHANIC, false);
+
+    this.description = '将施法者扔向目标';
+
+    this.data.push(new AttributeValue('Step', 'step', 0.5, 0.0)
+        .setTooltip("每次 tick 的插值"));
+    this.data.push(new AttributeValue('Gravity', 'gravity', 0, 0.0)
+        .setTooltip("重力值"));
+    this.data.push(new AttributeValue('Angle', 'angle', 0, 0.0)
+        .setTooltip("头部选择"));
+    this.data.push(new AttributeValue('Speed', 'speed', 0.05, 0.0)
+        .setTooltip("移动速度"));
+
+    this.data.push(new ListValue('跟踪', 'trace', ['True', 'False'], 'False'));
+    this.data.push(new ListValue('锁定', 'lock', ['True', 'False'], 'True')
+        .setTooltip("锁定后，释放技能是，改玩家不可动，如果命中对方也不可动"));
+
+    this.data.push(new AttributeValue('Forward Offset', 'forward', 0,0.0));
+
+    this.data.push(new AttributeValue('Upward Offset', 'upward', 0,0.0));
+
+    this.data.push(new AttributeValue('Right Offset', 'right', 0,0.0));
+
+    this.data.push(new AttributeValue('Left Offset', 'left', 0,0.0));
+
+
 }
 
 extend('MechanicPassive', 'Component');
@@ -2361,16 +2444,15 @@ function MechanicSound()
 {
     this.super('Sound', Type.MECHANIC, false);
 
-    this.description = "Plays a sound at the target's location.";
+    this.description = "播放音效，支持萌芽";
 
-    this.data.push(new ListValue('Server Version', 'version', [ '1.9+', 'Pre 1.9' ], '1.9+')
-        .setTooltip('The version of the server this will be playing for. Servers 1.9 and later have much different sounds available')
+    this.data.push(new ListValue('GermSound', 'GermSound', [ 'true', 'false' ], 'true')
     );
 
-    this.data.push(new ListValue('Sound', 'newsound', SOUNDS_POST, 'Ambience Cave').requireValue('version', [ '1.9+' ])
+    this.data.push(new StringValue('Sound', 'sound', 'Ambience Cave').requireValue('GermSound', [ 'true' ])
         .setTooltip('The sound clip to play')
     );
-    this.data.push(new ListValue('Sound', 'sound', SOUNDS_PRE, 'Ambience Cave').requireValue('version', [ 'Pre 1.9' ])
+    this.data.push(new ListValue('Sound', 'sound', SOUNDS_PRE, 'Ambience Cave').requireValue('GermSound', [ 'false' ])
         .setTooltip('The sound clip to play')
     );
 
@@ -2493,6 +2575,19 @@ function MechanicTrigger()
     this.data.push(new DoubleValue("Max Damage", "dmg-max", 999)
         .requireValue('trigger', damageTriggers)
         .setTooltip('The maximum damage that needs to be dealt')
+    );
+}
+
+extend('MechanicDataEdit', 'Component');
+function MechanicDataEdit()
+{
+    this.super('Data Edit', Type.MECHANIC, false);
+
+    this.data.push(new StringValue('Key', 'key', 'key')
+    );
+    this.data.push(new StringValue('Value', 'value', 'value')
+    );
+    this.data.push(new ListValue('Action', 'action', [ '+', '-', '*', '/'], '+')
     );
 }
 
@@ -2690,6 +2785,27 @@ function MechanicValueMMoItemAttr()
         new ListValue(
             'Slot', 'slot',
         [ 'HAND', 'OFF_HAND' , 'HELMET', 'CHEST_PLATE', 'LEGGINGS', 'BOOTS'], "HAND"
+        ).setTooltip('要取的装备槽位')
+    );
+}
+
+extend('MechanicValueNeonFlashAttr', 'Component');
+function MechanicValueNeonFlashAttr()
+{
+    this.super('Value NeonFlash Attr', Type.MECHANIC, false);
+
+    this.description = '取指定槽位装备的NeonFlash物品属性';
+
+    this.data.push(new StringValue('Key', 'key', 'value')
+        .setTooltip('储存的KEY，取得数据后储存')
+    );
+    this.data.push(new StringValue('Nbt', 'nbt', "ATTACK_DAMAGE")
+        .setTooltip('要取的data键')
+    );
+    this.data.push(
+        new ListValue(
+            'Slot', 'slot',
+            [ 'HAND', 'OFF_HAND' , 'HELMET', 'CHEST_PLATE', 'LEGGINGS', 'BOOTS'], "HAND"
         ).setTooltip('要取的装备槽位')
     );
 }
@@ -2893,9 +3009,9 @@ function MechanicArmorStand() {
     );
     this.data.push(new AttributeValue('右偏移', 'right', 0, 0)
     );
-    this.data.push(new StringListValue('盔甲架技能', 'skills', [])
-        .setTooltip('这会视为盔甲架释放的技能 造成伤害/治疗会以召唤者为伤害/治疗源(伤害/治疗属性来自于召唤者)')
-    );
+    this.data.push(new StringValue('物品名称', 'item_name', 'Armor Stand'));
+    this.data.push(new ListValue('物品种类', 'item_type', materialList, 'Arrow'));
+
 }
 
 extend('MechanicArmorStandRemove', 'Component');

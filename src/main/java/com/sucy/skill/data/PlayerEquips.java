@@ -34,11 +34,12 @@ import com.sucy.skill.api.player.PlayerClass;
 import com.sucy.skill.api.player.PlayerData;
 import com.sucy.skill.api.skills.Skill;
 import com.sucy.skill.listener.ItemListener;
-import com.sucy.skill.utils.AttributeParseUtils;
+import me.neon.flash.api.NeonFlashAPI;
+import me.neon.flash.api.item.ReadItemFactory;
+import me.neon.flash.attribute.AttributeManager;
 import org.bukkit.ChatColor;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
-import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.PlayerInventory;
 import org.jetbrains.annotations.Nullable;
@@ -100,9 +101,9 @@ public class PlayerEquips {
     public void update(Player player) {
         PlayerInventory inv = player.getInventory();
         weapon = swap(inv, inv.getHeldItemSlot(), weapon, true);
-        for (int i = 0; i < other.length; i++)
+        for (int i = 0; i < other.length; i++) {
             other[i] = swap(inv, SkillAPI.getSettings().getSlots()[i], other[i], i == offhand);
-
+        }
         // 直接更新扩展槽位
         expand.values().forEach(it -> {
             it.revert();
@@ -147,6 +148,7 @@ public class PlayerEquips {
      * @return the used equip data
      */
     private EquipData swap(PlayerInventory inv, int index, EquipData from, boolean weapon) {
+
         EquipData to = make(inv.getItem(index));
         if (Objects.equal(from.item, to.item)) {
             return to;
@@ -167,7 +169,13 @@ public class PlayerEquips {
             }
             return to;
         } else {
-            to.apply();
+            if (inv.getItemInMainHand().equals(to.item)) {
+                if (to.isWeapon) {
+                    to.apply();
+                }
+            } else {
+                to.apply();
+            }
             return to;
         }
     }
@@ -216,7 +224,7 @@ public class PlayerEquips {
 
         private HashMap<String, Integer> skillReq;
         private HashMap<String, Integer> attrReq;
-        private HashMap<String, Integer> attribs;
+        private HashMap<String, Double> attribs;
 
         private HashSet<String> classReq;
         private HashSet<String> classExc;
@@ -224,6 +232,8 @@ public class PlayerEquips {
         private ItemStack item;
         private int       levelReq;
         private boolean   isArmor;
+
+        private boolean isWeapon;
 
         /**
          * Sets up for an empty item slot
@@ -238,6 +248,7 @@ public class PlayerEquips {
         EquipData(ItemStack item) {
             this.item = item;
             this.isArmor = PlayerEquips.this.isArmor(item);
+            this.isWeapon = me.neon.flash.utils.ExtensionsKt.isWeapon(item.getType());
 
             if (!item.hasItemMeta())
                 return;
@@ -302,20 +313,26 @@ public class PlayerEquips {
                                 attrReq.put(normalized, NumberParser.parseInt(lower.substring(text.length())));
                                 break;
                             }
-
-                            if (lower.startsWith(attr) || lower.startsWith(settings.getAttrGiveText(attr))) {
-                                if (attribs == null)
-                                    attribs = new HashMap<>();
-                                String normalized = SkillAPI.getAttributeManager().normalize(attr);
-                                int current = attribs.getOrDefault(attr, 0);
-                                int extra = AttributeParseUtils.toInt(lower);
-                                //System.out.println("key: " +lower +" extra "+extra);
-                                attribs.put(normalized, current + extra);
-                                break;
-                            }
                         }
                     }
                 }
+            }
+            applyNfData();
+        }
+
+        private void applyNfData() {
+
+            if (attribs == null)
+                attribs = new HashMap<>();
+            ReadItemFactory factory = NeonFlashAPI.INSTANCE.getItemHandler().readSimple(item);
+            if (factory != null) {
+                final Set<String> attr = SkillAPI.getAttributeManager().getLookupKeys();
+                AttributeManager.INSTANCE.readAttribute(factory, (k, v) -> {
+                    if (attr.contains(k)) {
+                        attribs.put(k, v);
+                    }
+                    return null;
+                });
             }
         }
 
@@ -324,7 +341,7 @@ public class PlayerEquips {
          */
         public void apply() {
             if (attribs != null) {
-                for (Map.Entry<String, Integer> entry : attribs.entrySet()) {
+                for (Map.Entry<String, Double> entry : attribs.entrySet()) {
                   //  System.out.println("为玩家 "+player.getPlayer().getName() + " 条件属性: "+entry.getKey() + " 值: "+entry.getValue());
                     player.addBonusAttributes(entry.getKey(), entry.getValue());
                 }
@@ -336,12 +353,16 @@ public class PlayerEquips {
          */
         void revert() {
             if (attribs != null)
-                for (Map.Entry<String, Integer> entry : attribs.entrySet())
+                for (Map.Entry<String, Double> entry : attribs.entrySet())
                     player.addBonusAttributes(entry.getKey(), -entry.getValue());
         }
 
         public boolean isArmor() {
             return isArmor;
+        }
+
+        public boolean isWeapon() {
+            return isWeapon;
         }
 
         /**

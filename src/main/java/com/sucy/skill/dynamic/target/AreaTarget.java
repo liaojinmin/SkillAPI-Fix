@@ -1,40 +1,19 @@
-/**
- * SkillAPI
- * com.sucy.target.dynamic.skill.AreaTarget
- *
- * The MIT License (MIT)
- *
- * Copyright (c) 2014 Steven Sucy
- *
- * Permission is hereby granted, free of charge, to any person obtaining a copy
- * of this software and associated documentation files (the "Software") to deal
- * in the Software without restriction, including without limitation the rights
- * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
- * copies of the Software, and to permit persons to whom the Software is
- * furnished to do so, subject to the following conditions:
- *
- * The above copyright notice and this permission notice shall be included in
- * all copies or substantial portions of the Software.
- *
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
- * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
- * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
- * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
- * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
- * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
- * THE SOFTWARE.
- */
+
 package com.sucy.skill.dynamic.target;
 
-import com.sucy.skill.api.skills.SkillContext;
+import com.sucy.skill.SkillAPI;
 import com.sucy.skill.api.util.Nearby;
 import com.sucy.skill.cast.IIndicator;
+import com.sucy.skill.dynamic.TempEntity;
+import com.sucy.skill.listener.MechanicListener;
+import com.sucy.skill.utils.target.TargetHelper;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
+import java.util.function.Function;
 
 /**
  * Applies child components to the closest all nearby entities around
@@ -59,6 +38,49 @@ public class AreaTarget extends TargetComponent {
     @Override
     void makeIndicators(final List<IIndicator> list, final Player caster, final LivingEntity target, final int level) {
         makeCircleIndicator(list, target, parseValues(caster, RADIUS, level, 3.0));
+    }
+
+    private boolean isValidTargets(final LivingEntity caster, final LivingEntity from, final LivingEntity target) {
+        if (SkillAPI.getMeta(target, MechanicListener.ARMOR_STAND) != null) {
+            return false;
+        }
+        if (target instanceof TempEntity) {
+            return true;
+        }
+        if (self && target == caster) {
+            return true;
+        }
+        return target != caster && SkillAPI.getSettings().isValidTarget(target)
+                && (throughWall || ! TargetHelper.isObstructed(from.getEyeLocation(), target.getEyeLocation()))
+                && (everyone || allies == TargetHelper.isAlly(caster, target));
+    }
+
+    @Override
+    List<LivingEntity> determineTargets(
+            final LivingEntity caster,
+            final int level,
+            final List<LivingEntity> from,
+            final Function<LivingEntity, List<LivingEntity>> conversion
+    ) {
+
+        final double max = parseValues(caster, MAX, level, 99);
+
+        final List<LivingEntity> list = new ArrayList<>();
+        from.forEach(target -> {
+            final int count = list.size();
+            for (LivingEntity entity : conversion.apply(target)) {
+               // System.out.println("检查目标: "+entity.getName());
+                if (this.isValidTargets(caster, target, entity)) {
+                 //   Logger.log("  添加目标 "+entity.getName());
+                    list.add(entity);
+                    if (list.size() - count >= max) {
+                        break;
+                    }
+                }
+            }
+        });
+        //System.out.println("list: "+list.stream().map(it -> it.getName() != null ? it.getName() : it.getUniqueId().toString()).collect(Collectors.joining()));
+        return list;
     }
 
     @Override

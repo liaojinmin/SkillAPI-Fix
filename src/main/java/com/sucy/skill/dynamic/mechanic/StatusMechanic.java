@@ -63,14 +63,15 @@ public class StatusMechanic extends MechanicComponent {
 
         String key = settings.getString(KEY, "stun").toLowerCase();
         boolean delete = settings.getBool(DELETE, false);
-        //   System.out.println("是否删除: "+delete);
+       //    System.out.println("是否删除: "+delete);
         double seconds = parseValues(caster, DURATION, level, 3.0);
         int ticks = (int) (seconds * 20);
         for (LivingEntity target : targets) {
             if (delete) {
-              //  System.out.println("移除目标: "+ target.getName()+ " 属性: " + key);
+              //  System.out.println("移除目标: "+ target.getName()+ " Flag: " + key);
                 FlagManager.removeFlag(target, key);
             } else {
+               // System.out.println("添加目标: "+ target.getName()+ " Flag: " + key);
                 FlagManager.addFlag(target, key, ticks);
             }
         }

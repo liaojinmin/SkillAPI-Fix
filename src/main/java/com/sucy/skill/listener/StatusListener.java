@@ -34,7 +34,7 @@ import com.sucy.skill.api.event.TrueDamageEvent;
 import com.sucy.skill.api.util.FlagManager;
 import com.sucy.skill.api.util.StatusFlag;
 import com.sucy.skill.data.TitleType;
-import com.sucy.skill.dynamic.data.MetaSkills;
+import com.sucy.skill.dynamic.data.DataSkills;
 import com.sucy.skill.language.RPGFilter;
 import com.sucy.skill.manager.TitleManager;
 import org.bukkit.entity.LivingEntity;
@@ -97,7 +97,7 @@ public class StatusListener extends SkillAPIListener {
     @EventHandler(priority = EventPriority.MONITOR)
     public void onQuit(PlayerQuitEvent event) {
         FlagManager.clearFlags(event.getPlayer());
-        MetaSkills.delMetaStack(event.getPlayer().getUniqueId());
+        DataSkills.delMetaStack(event.getPlayer().getUniqueId());
     }
 
     /**

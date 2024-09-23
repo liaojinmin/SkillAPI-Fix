@@ -25,7 +25,8 @@ public class PlaceholderAPIHook extends PlaceholderExpansion {
     public static void init() {
         PLACEHOLDERS.put("attrib_points", (p, u) -> Integer.toString(p.getAttributePoints()));
         PLACEHOLDERS.put("attrib_spent:", (p, attribute) -> Integer.toString(p.getInvestedAttribute(attribute)));
-        PLACEHOLDERS.put("attrib_total:", (p, attribute) -> Integer.toString(p.getAttribute(attribute)));
+        PLACEHOLDERS.put("attrib_total:", (p, attribute) -> Double.toString(p.getAttribute(attribute)));
+        PLACEHOLDERS.put("attrib_total_int:", (p, attribute) -> Integer.toString((int)p.getAttribute(attribute)));
         PLACEHOLDERS.put("exp", (p, u) -> getExp(p.getMainClass()));
         PLACEHOLDERS.put("exp:", (p, group) -> getExp(p.getClass(group)));
         PLACEHOLDERS.put("exp_total", (p, u) -> getTotalExp(p.getMainClass()));

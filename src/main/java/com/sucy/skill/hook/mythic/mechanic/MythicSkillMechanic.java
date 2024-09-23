@@ -1,4 +1,4 @@
-package com.sucy.skill.hook.mechanic;
+package com.sucy.skill.hook.mythic.mechanic;
 
 import com.sucy.skill.SkillAPI;
 import com.sucy.skill.api.skills.Skill;

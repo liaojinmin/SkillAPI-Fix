@@ -3,6 +3,7 @@ package com.sucy.skill.hook;
 import com.google.common.collect.ImmutableList;
 import com.sk89q.worldedit.Vector;
 import com.sk89q.worldedit.bukkit.BukkitAdapter;
+import com.sk89q.worldedit.bukkit.BukkitWorld;
 import com.sk89q.worldguard.WorldGuard;
 import com.sk89q.worldguard.bukkit.WorldGuardPlugin;
 import com.sk89q.worldguard.protection.managers.RegionManager;
@@ -11,6 +12,9 @@ import org.bukkit.Location;
 import org.bukkit.World;
 
 import java.lang.reflect.Method;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
 
 /**
@@ -29,11 +33,15 @@ public class WorldGuardHook {
      */
     public static List<String> getRegionIds(final Location loc) {
         try {
-            return WorldGuard.getInstance()
+            RegionManager regionManager = WorldGuard.getInstance()
                     .getPlatform()
                     .getRegionContainer()
-                    .get(BukkitAdapter.adapt(loc.getWorld()))
-                    .getApplicableRegionsIDs(asVector(loc));
+                    .get(new BukkitWorld(loc.getWorld()));
+            if (regionManager != null) {
+                return regionManager.getApplicableRegionsIDs(asVector(loc));
+            } else {
+                return new ArrayList<>();
+            }
         } catch (NoClassDefFoundError ex) {
             try {
                 final WorldGuardPlugin plugin = SkillAPI.getPlugin(WorldGuardPlugin.class);

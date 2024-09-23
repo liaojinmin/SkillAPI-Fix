@@ -30,33 +30,22 @@ public class AttributeAPI {
      * @param key    属性名
      * @return 属性值
      */
-    public static Integer getAttribute(LivingEntity entity, String key) {
-       // PlayerMoveEvent
-        //触发Event 让其他插件可篡改
+    public static double getAttribute(LivingEntity entity, String key) {
         if (entity == null || entity.isDead()) {
-            return 0;
+            return 0.0;
         }
-        int total = 0;
         // 去色
         key = ChatColor.stripColor(key).toLowerCase();
         if (entity instanceof Player) {
             PlayerData data = SkillAPI.getPlayerData(entity.getUniqueId());
             if (data != null) {
-                if (data.attributes.containsKey(key)) {
-                    total += data.attributes.get(key);
-                }
-                if (data.bonusAttrib.containsKey(key)) {
-                    total += data.bonusAttrib.get(key);
-                }
-                total += data.getAddAttribute(key);
-                for (PlayerClass playerClass : data.getClasses()) {
-                    total += playerClass.getData().getAttribute(key, playerClass.getLevel());
-                }
-                return Math.max(0, total);
+                return Math.max(0, data.getAttribute(key));
+            } else {
+                return 0;
             }
         }
         MobAttributeData mobAttributeData = MobAttribute.getData(entity.getUniqueId(), true);
-        return (int) (total + mobAttributeData.getAttribute(key));
+        return mobAttributeData.getAttribute(key);
     }
 
     /**
@@ -119,7 +108,8 @@ public class AttributeAPI {
         }
 
         for (final AttributeManager.Attribute attribute : matches) {
-            int amount = getAttribute(entity, key);
+            // value
+            double amount = getAttribute(entity, attribute.getKey());
             if (amount > 0) {
                 value = attribute.modify(component, key, value, amount);
             }
@@ -147,7 +137,7 @@ public class AttributeAPI {
 
         double modified = value;
         for (final AttributeManager.Attribute attribute : matches) {
-            int amount = getAttribute(entity, attribute.getKey());
+            double amount = getAttribute(entity, attribute.getKey());
             if (amount > 0) {
                 modified = attribute.modifyStat(stat, modified, amount);
             }

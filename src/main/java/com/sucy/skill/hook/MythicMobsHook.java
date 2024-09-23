@@ -21,7 +21,7 @@ import java.util.List;
  */
 public class MythicMobsHook {
 
-    private static MythicMobs mythicMobs = null;
+    public static MythicMobs mythicMobs = null;
 
     private static MythicMobs getMythicMobs() {
         if (mythicMobs == null) mythicMobs = MythicMobs.inst();
@@ -29,6 +29,7 @@ public class MythicMobsHook {
     }
 
     public static void taunt(final LivingEntity target, final LivingEntity source, final double amount) {
+
         if (amount > 0) {
             getMythicMobs().getAPIHelper().addThreat(target, source, amount);
         }

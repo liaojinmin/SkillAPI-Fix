@@ -1,9 +1,13 @@
 package com.sucy.skill.dynamic;
 
 import me.neon.libs.carrier.CarrierBase;
+import me.neon.libs.carrier.PacketAPI;
+import me.neon.libs.carrier.PacketHandler;
 import me.neon.libs.carrier.minecraft.meta.ArmorStandMeta;
 import me.neon.libs.util.BoundingBox;
 import org.bukkit.Location;
+import org.bukkit.inventory.EquipmentSlot;
+import org.bukkit.inventory.ItemStack;
 import org.jetbrains.annotations.NotNull;
 
 /**
@@ -21,12 +25,13 @@ public class ArmorStandCarrier extends CarrierBase {
 
     private String name = "ArmorStandCarrier";
 
+    private ItemStack itemStack = null;
+
     public ArmorStandCarrier(Location loc, ArmorStandMeta meta) {
         this.loc = loc;
         this.box = BoundingBox.Companion.of(loc, loc);
         setCarrierMeta(meta);
     }
-
 
     @NotNull
     @Override
@@ -43,6 +48,14 @@ public class ArmorStandCarrier extends CarrierBase {
     @Override
     public void setDisplayName(@NotNull String s) {
         name = s;
+    }
+
+    public void addItemsStack(ItemStack itemStack) {
+        this.itemStack = itemStack;
+        registerSpawn(it -> {
+            PacketAPI.INSTANCE.getEntityOperatorHandler().sendEquipment(it, getEntityId(), EquipmentSlot.HEAD, itemStack);
+        });
+
     }
 
     @NotNull

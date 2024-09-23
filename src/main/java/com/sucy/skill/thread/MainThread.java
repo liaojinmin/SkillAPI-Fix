@@ -39,8 +39,6 @@ public class MainThread extends Thread {
 
     private boolean enabled;
 
-    private boolean print = true;
-
     /**
      * Sets up the com thread
      */
@@ -73,10 +71,7 @@ public class MainThread extends Thread {
                 // but shouldn't be a concern. We'll just continue
                 // functionality next tick.
             } catch (Exception ex) {
-                if (print) {
-                    ex.printStackTrace();
-                    print = false;
-                }
+                ex.printStackTrace();
             }
         }
     }

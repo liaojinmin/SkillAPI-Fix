@@ -2,6 +2,7 @@ package com.sucy.skill.dynamic.trigger;
 
 import com.sucy.skill.api.Settings;
 import org.bukkit.entity.LivingEntity;
+import org.bukkit.entity.Player;
 import org.bukkit.event.entity.EntityDeathEvent;
 
 import java.util.Map;
@@ -27,7 +28,18 @@ public class KillTrigger implements Trigger<EntityDeathEvent> {
     /** {@inheritDoc} */
     @Override
     public boolean shouldTrigger(final EntityDeathEvent event, final int level, final Settings settings) {
-        return true;
+        final String type = settings.getString("type", "all");
+        switch (type) {
+            case "player": {
+                return event.getEntity() instanceof Player;
+            }
+            case "monster": {
+                return !(event.getEntity() instanceof Player);
+            }
+            default: {
+                return true;
+            }
+        }
     }
 
     /** {@inheritDoc} */
@@ -43,6 +55,6 @@ public class KillTrigger implements Trigger<EntityDeathEvent> {
     /** {@inheritDoc} */
     @Override
     public LivingEntity getTarget(final EntityDeathEvent event, final Settings settings) {
-        return event.getEntity().getKiller();
+        return event.getEntity();
     }
 }

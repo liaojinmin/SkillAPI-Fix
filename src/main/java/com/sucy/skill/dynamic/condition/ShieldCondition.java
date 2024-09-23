@@ -51,8 +51,8 @@ public class ShieldCondition  extends ConditionComponent {
             if (itemStack == null || itemStack.getType() != Material.SHIELD) {
                 itemStack = player.getInventory().getItemInMainHand();
             }
-            return itemStack != null && itemStack.getType() == Material.SHIELD;
+            return itemStack == null || itemStack.getType() != Material.SHIELD;
         }
-        return false;
+        return true;
     }
 }

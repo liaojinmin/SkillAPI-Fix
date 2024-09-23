@@ -96,14 +96,14 @@ public class AttributeMechanic extends MechanicComponent {
                     if (casterTasks.containsKey(data.getPlayerName()) && !stackable) {
                         final AttribTask old = casterTasks.remove(data.getPlayerName());
                         if (event.getValue() != old.amount) {
-                            data.addBonusAttributes(event.getAttribute(), (int) (event.getValue() - old.amount));
+                            data.addBonusAttributes(event.getAttribute(), (event.getValue() - old.amount));
                         }
                         old.cancel();
                     } else {
-                        data.addBonusAttributes(event.getAttribute(), (int) event.getValue());
+                        data.addBonusAttributes(event.getAttribute(), event.getValue());
                     }
 
-                    final AttribTask task = new AttribTask(caster.getEntityId(), data, event.getAttribute(), (int) event.getValue());
+                    final AttribTask task = new AttribTask(caster.getEntityId(), data, event.getAttribute(), event.getValue());
                     casterTasks.put(data.getPlayerName(), task);
                     if (event.getTick() >= 0) {
                         SkillAPI.schedule(task, (int) event.getTick());
@@ -123,7 +123,7 @@ public class AttributeMechanic extends MechanicComponent {
                         data.tempAddAttribute(taskID.toString(), event.getAttribute(), event.getValue());
                     }
 
-                    final AttribTask task = new AttribTask(caster.getEntityId(), data, taskID, event.getAttribute(), (int) event.getValue());
+                    final AttribTask task = new AttribTask(caster.getEntityId(), data, taskID, event.getAttribute(), event.getValue());
                     casterTasks.put(data.getUuid().toString(), task);
                     if (event.getTick() >= 0) {
                         SkillAPI.schedule(task, (int) event.getTick());
@@ -151,12 +151,12 @@ public class AttributeMechanic extends MechanicComponent {
         private final MobAttributeData mob;
         private final UUID taskID;
         private final String     attrib;
-        private final int        amount;
+        private final double        amount;
         private final int        id;
         private boolean running = false;
         private boolean stopped = false;
 
-        AttribTask(int id, MobAttributeData mob, UUID taskID, String attrib, int amount) {
+        AttribTask(int id, MobAttributeData mob, UUID taskID, String attrib, double amount) {
             this.id = id;
             this.data = null;
             this.mob = mob;
@@ -165,7 +165,7 @@ public class AttributeMechanic extends MechanicComponent {
             this.taskID = taskID;
         }
 
-        AttribTask(int id, PlayerData data, String attrib, int amount) {
+        AttribTask(int id, PlayerData data, String attrib, double amount) {
             this.id = id;
             this.data = data;
             this.mob = null;

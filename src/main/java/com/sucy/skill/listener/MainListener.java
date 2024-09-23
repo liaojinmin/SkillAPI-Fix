@@ -247,7 +247,9 @@ public class MainListener extends SkillAPIListener {
         PlayerData data = SkillAPI.getPlayerData(event.getPlayer().getUniqueId());
         if (data == null) return;
         if (data.hasClass() && SkillAPI.getSettings().isWorldEnabled(event.getPlayer().getWorld())) {
-            data.startPassives(event.getPlayer());
+            //data.startPassives(event.getPlayer());
+            Bukkit.getScheduler().runTaskLater(SkillAPI.singleton(),
+                    () -> data.startPassives(event.getPlayer()), 21);
         }
     }
 

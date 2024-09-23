@@ -30,12 +30,8 @@ import com.google.common.collect.ImmutableSet;
 import com.rit.sucy.reflect.Particle;
 import com.rit.sucy.version.VersionManager;
 import com.sucy.skill.api.Settings;
-import com.sucy.skill.api.armorstand.ArmorStandData;
-import com.sucy.skill.api.armorstand.ArmorStandInstance;
-import com.sucy.skill.api.armorstand.ArmorStandManager;
 import com.sucy.skill.api.enums.Direction;
 import com.sucy.skill.api.particle.SpigotParticles;
-import com.sucy.skill.dynamic.data.MetaSkills;
 import com.sucy.skill.log.Logger;
 import org.bukkit.Effect;
 import org.bukkit.EntityEffect;
@@ -130,7 +126,6 @@ public class ParticleHelper {
      */
     public static final String SPEED_KEY = "speed";
 
-    public static final String ARMOR_STAND = "armor_stand";
 
     private static final Random random = new Random();
 

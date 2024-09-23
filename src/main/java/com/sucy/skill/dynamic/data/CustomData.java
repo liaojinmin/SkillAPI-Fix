@@ -1,6 +1,6 @@
 package com.sucy.skill.dynamic.data;
 
-public class CustomMeta {
+public class CustomData {
 
     public String key;
 
@@ -11,7 +11,7 @@ public class CustomMeta {
     public Integer time;
 
     //这里传入的是tick 自动转换为时间戳 20Tick = 1s
-    public CustomMeta(String key, Double value, Integer time) {
+    public CustomData(String key, Double value, Integer time) {
         this.key = key;
         this.value = value;
         this.overTime = System.currentTimeMillis() + (time * 50);

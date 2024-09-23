@@ -33,6 +33,7 @@ import org.bukkit.entity.LivingEntity;
 
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 /**
  * Applies a flag to each target
@@ -64,7 +65,7 @@ public class WarpValueMechanic extends MechanicComponent
         }
 
         String key = settings.getString(KEY);
-        HashMap<String, Object> data = DynamicSkill.getCastData(caster);
+        Map<String, Object> data = DynamicSkill.getCastData(caster);
         if (!data.containsKey(key) || !(data.get(key) instanceof Location))
         {
             return false;

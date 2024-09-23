@@ -19,7 +19,7 @@ import com.sucy.skill.data.io.SQLImpl;
 import com.sucy.skill.dynamic.DynamicClass;
 import com.sucy.skill.dynamic.DynamicSkill;
 import com.sucy.skill.hook.PlaceholderAPIHook;
-import com.sucy.skill.hook.mechanic.MythicListener;
+import com.sucy.skill.hook.mythic.MythicListener;
 import com.sucy.skill.listener.*;
 import com.sucy.skill.screen.ConfigManager;
 import com.sucy.skill.task.ManaTask;

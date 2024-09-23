@@ -1,29 +1,3 @@
-/**
- * SkillAPI
- * com.sucy.dynamic.skill.EffectComponent
- *
- * The MIT License (MIT)
- *
- * Copyright (c) 2014 Steven Sucy
- *
- * Permission is hereby granted, free of charge, to any person obtaining a copy
- * of this software and associated documentation files (the "Software") to deal
- * in the Software without restriction, including without limitation the rights
- * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
- * copies of the Software, and to permit persons to whom the Software is
- * furnished to do so, subject to the following conditions:
- *
- * The above copyright notice and this permission notice shall be included in
- * all copies or substantial portions of the Software.
- *
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
- * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
- * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
- * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
- * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
- * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
- * THE SOFTWARE.
- */
 package com.sucy.skill.dynamic;
 
 import com.rit.sucy.config.parse.DataSection;
@@ -36,9 +10,9 @@ import com.sucy.skill.api.player.PlayerSkill;
 import com.sucy.skill.api.skills.SkillContext;
 import com.sucy.skill.cast.IIndicator;
 import com.sucy.skill.cast.IndicatorType;
-import com.sucy.skill.dynamic.data.CustomMeta;
-import com.sucy.skill.dynamic.data.CustomMetaStack;
-import com.sucy.skill.dynamic.data.MetaSkills;
+import com.sucy.skill.dynamic.data.CustomData;
+import com.sucy.skill.dynamic.data.CustomDataStack;
+import com.sucy.skill.dynamic.data.DataSkills;
 import com.sucy.skill.log.Logger;
 import com.sucy.skill.manager.AttributeManager;
 import org.bukkit.entity.LivingEntity;
@@ -127,9 +101,9 @@ public abstract class EffectComponent {
     }
 
     protected double parseMetas(LivingEntity caster, String key, double fallback) {
-        CustomMetaStack stack = MetaSkills.getMetaStack(caster.getUniqueId(), false);
+        CustomDataStack stack = DataSkills.getMetaStack(caster.getUniqueId(), false);
         if (stack != null) {
-            CustomMeta meta = stack.getMeta(key);
+            CustomData meta = stack.getMeta(key);
             if (meta != null) {
                 return meta.getValue();
             } else {
@@ -139,9 +113,9 @@ public abstract class EffectComponent {
     }
 
     protected String parseMetas(LivingEntity caster, String key, String fallback) {
-        CustomMetaStack stack = MetaSkills.getMetaStack(caster.getUniqueId(), false);
+        CustomDataStack stack = DataSkills.getMetaStack(caster.getUniqueId(), false);
         if (stack != null) {
-            CustomMeta meta = stack.getMeta(key);
+            CustomData meta = stack.getMeta(key);
             if (meta != null) {
                 return String.valueOf(meta.getValue());
             } else {
@@ -169,18 +143,6 @@ public abstract class EffectComponent {
         // Apply global modifiers
         value = AttributeAPI.scaleDynamic(caster, this, key, value);
         return value;
-    }
-    protected void parseEngine(LivingEntity caster, int level, ScriptEngine engine) {
-
-        final AttributeManager manager = SkillAPI.getAttributeManager();
-        if (manager != null) {
-            manager.getAttributes().forEach((s, attribute) -> {
-                int amount = AttributeAPI.getAttribute(caster, attribute.getKey());
-                engine.put("attribute_" + attribute.getKey(), attribute.modify(this, attribute.getKey(), 0, amount));
-            });
-        }
-        engine.put("skill_level", level);
-
     }
 
     protected String getString(LivingEntity caster, String key, String fallback) {
@@ -288,7 +250,7 @@ public abstract class EffectComponent {
         if (j < 0) { return text; }
 
         StringBuilder builder = new StringBuilder();
-        HashMap<String, Object> data = DynamicSkill.getCastData(caster);
+        Map<String, Object> data = DynamicSkill.getCastData(caster);
 
         int k = 0;
         while (i >= 0 && j > i) {

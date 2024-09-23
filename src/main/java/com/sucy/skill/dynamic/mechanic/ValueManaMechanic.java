@@ -35,6 +35,7 @@ import org.bukkit.entity.Player;
 
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 public class ValueManaMechanic extends MechanicComponent
 {
@@ -63,7 +64,7 @@ public class ValueManaMechanic extends MechanicComponent
         if (player == null) return false;
         final String key = settings.getString(KEY);
         final String type = settings.getString(TYPE, "current").toLowerCase();
-        final HashMap<String, Object> data = DynamicSkill.getCastData(caster);
+        final Map<String, Object> data = DynamicSkill.getCastData(caster);
         switch (type) {
             case "max":
                 data.put(key, player.getMaxMana());

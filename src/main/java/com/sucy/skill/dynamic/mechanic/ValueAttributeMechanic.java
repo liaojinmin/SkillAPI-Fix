@@ -35,6 +35,7 @@ import org.bukkit.entity.Player;
 
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 /**
  * Adds to a cast data value
@@ -67,13 +68,13 @@ public class ValueAttributeMechanic extends MechanicComponent
 
         String key = settings.getString(KEY);
         String attr = settings.getString(ATTR);
-        HashMap<String, Object> data = DynamicSkill.getCastData(caster);
+        Map<String, Object> data = DynamicSkill.getCastData(caster);
         if (targets.isEmpty()) {
             data.put(key, 0.0);
             return true;
         }
-        int attribute = AttributeAPI.getAttribute(targets.get(0), attr);
-        data.put(key, (double) attribute);
+        double attribute = AttributeAPI.getAttribute(targets.get(0), attr);
+        data.put(key, attribute);
        // data.put(key, (double) SkillAPI.getPlayerData((Player) targets.get(0)).getAttribute(attr));
         return true;
     }

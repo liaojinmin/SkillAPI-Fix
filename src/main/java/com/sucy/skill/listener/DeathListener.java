@@ -30,13 +30,12 @@ import com.sucy.skill.SkillAPI;
 import com.sucy.skill.api.event.SkillDamageEvent;
 import com.sucy.skill.api.event.TrueDamageEvent;
 import com.sucy.skill.api.particle.EffectManager;
-import com.sucy.skill.dynamic.data.MetaSkills;
+import com.sucy.skill.dynamic.data.DataSkills;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.entity.EntityDeathEvent;
-import org.bukkit.event.player.PlayerQuitEvent;
 
 public class DeathListener extends SkillAPIListener
 {
@@ -70,7 +69,7 @@ public class DeathListener extends SkillAPIListener
     public void onDeath(EntityDeathEvent event) {
         EffectManager.clear(event.getEntity());
         if (!(event.getEntity() instanceof Player)) {
-            MetaSkills.delMetaStack(event.getEntity().getUniqueId());
+            DataSkills.delMetaStack(event.getEntity().getUniqueId());
         }
         Object killer = SkillAPI.getMeta(event.getEntity(), KILLER);
         if (killer != null && event.getEntity().getKiller() == null) {

@@ -7,17 +7,15 @@ import com.sucy.skill.thread.MainThread;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.ArmorStand;
 import org.bukkit.entity.LivingEntity;
+import org.jetbrains.annotations.Nullable;
 
 import java.util.Iterator;
-import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 public class ArmorStandManager {
-    private static final Map<LivingEntity, ArmorStandData> instances = new ConcurrentHashMap<>();
 
-    /**
-     * Registers the armor stand repeated task, and searches for rogue armor to remove them
-     */
+    private static final ConcurrentHashMap<LivingEntity, ArmorStandData> instances = new ConcurrentHashMap<>();
+
     public static void init() {
         MainThread.register(new ArmorStandTask());
         Bukkit.getWorlds().forEach(world -> world.getEntitiesByClass(ArmorStand.class).forEach(as -> {
@@ -25,10 +23,6 @@ public class ArmorStandManager {
         }));
     }
 
-    /**
-     * Removes all armor stand instances
-     *
-     */
     public static void cleanUp() {
         try {
             instances.values().forEach(ArmorStandData::remove);
@@ -38,33 +32,6 @@ public class ArmorStandManager {
         }
     }
 
-    /**
-     * Clears armor stands for a given entity
-     *
-     * @param target target to clear for
-     */
-    public static void clear(LivingEntity target) {
-        instances.remove(target);
-    }
-
-    /**
-     * Gets the armor stand data for the given target
-     *
-     * @param target target to get the data for
-     * @return armor stand data for the target or null if doesn't exist
-     */
-    public static ArmorStandData getArmorStandData(LivingEntity target) {
-        return instances.get(target);
-    }
-
-    /**
-     * Fetches an active armor stand for a given target
-     *
-     * @param target target to get the armor stand for
-     * @param key    armor stand key
-     *
-     * @return active armor stand or null if not found
-     */
     public static ArmorStandInstance getArmorStand(LivingEntity target, int key) {
         if (!instances.containsKey(target)) {
             return null;
@@ -72,21 +39,22 @@ public class ArmorStandManager {
         return instances.get(target).getArmorStands(key);
     }
 
-    /**
-     * Registers an active armor stand for the given target
-     *
-     * @param armorStand armor stand to register
-     * @param target target to register the armor stand for
-     * @param key    armor stand key
-     */
-    public static void register(ArmorStandInstance armorStand, LivingEntity target, int key) {
-        ArmorStandData data = instances.computeIfAbsent(target, (a) -> new ArmorStandData(target) );
-        data.register(armorStand, key);
+    @Nullable
+    public static ArmorStandData getArmorStandData(LivingEntity entity) {
+        return instances.get(entity);
     }
 
-    /**
-     * Ticks all active armor stands
-     */
+    @Nullable
+    public static ArmorStandInstance unregister(LivingEntity target, int key) {
+        ArmorStandData data = instances.computeIfAbsent(target, (a) -> new ArmorStandData(target) );
+        return data.del(key);
+    }
+
+    public static void register(ArmorStandInstance armorStand, LivingEntity target, int key) {
+        ArmorStandData data = instances.computeIfAbsent(target, (a) -> new ArmorStandData(target) );
+        data.add(armorStand, key);
+    }
+
     public static void tick() {
         Iterator<ArmorStandData> iterator = instances.values().iterator();
         while (iterator.hasNext()) {

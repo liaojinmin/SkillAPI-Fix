@@ -4,8 +4,10 @@ import com.sucy.skill.SkillAPI;
 import com.sucy.skill.api.enums.ManaCost;
 import com.sucy.skill.api.player.PlayerData;
 import com.sucy.skill.api.player.PlayerSkill;
+import com.sucy.skill.dynamic.mechanic.ReturnMechanic;
 import com.sucy.skill.dynamic.trigger.Trigger;
 import com.sucy.skill.dynamic.trigger.TriggerComponent;
+import org.bukkit.Bukkit;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
 import org.bukkit.event.Cancellable;
@@ -14,6 +16,7 @@ import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Objects;
 
 /**
@@ -77,15 +80,12 @@ public class TriggerHandler implements Listener {
         active.remove(entity.getEntityId());
         component.cleanUp(entity);
     }
-
-    /**
-     * Registers needed events for the skill, ignoring any unused events for efficiency
-     *
-     * @param plugin plugin reference
-     */
-    public void register(final SkillAPI plugin) {
-        plugin.getServer().getPluginManager().registerEvent(
-                trigger.getEvent(), this, EventPriority.HIGHEST, ComponentRegistry.getExecutor(trigger), plugin, true);
+    public void register() {
+        Bukkit.getPluginManager().registerEvent(
+                trigger.getEvent(),
+                this,
+                EventPriority.HIGHEST,
+                ComponentRegistry.getExecutor(trigger), SkillAPI.singleton(), true);
     }
 
     <T extends Event> void apply(final T event, final Trigger<T> trigger) {
@@ -93,9 +93,24 @@ public class TriggerHandler implements Listener {
         if (caster == null || !active.containsKey(caster.getEntityId())) {
             return;
         }
-
         final int level = active.get(caster.getEntityId());
         final Runnable c = cleanup.remove(caster.getEntityId());
+        final String mark = component.settings.getString(ReturnMechanic.MARK, "");
+        if (!mark.isEmpty()) {
+           // System.out.println("apply >>> mark: "+mark + " class: "+trigger.getClass());
+            final HashSet<String> marks = ReturnMechanic.getMarks(caster.getEntityId());
+            if (marks != null) {
+                if (marks.isEmpty() || !marks.contains(mark)) {
+                   // System.out.println("不包含 mark: "+marks + " 已中断");
+                    if (c != null) {
+                        c.run();
+                    }
+                    //cleanup(caster);
+                    return;
+                }
+            }
+        }
+
         if (!trigger.shouldTrigger(event, level, component.settings)) {
             // 被动删除，如果有的话
             if (c != null) {

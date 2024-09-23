@@ -82,8 +82,7 @@ public class TrueDamageEvent extends Event implements Cancellable
      *
      * @return entity that received the damage
      */
-    public LivingEntity getTarget()
-    {
+    public LivingEntity getTarget() {
         return target;
     }
 

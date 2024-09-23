@@ -101,7 +101,8 @@ public class AttributeListener extends SkillAPIListener {
     public void onRespawn(PlayerRespawnEvent event) {
         if (event.getPlayer().hasMetadata("NPC"))
             return;
-        Bukkit.getScheduler().runTaskLater(SkillAPI.singleton(), () -> updatePlayer(SkillAPI.getPlayerData(event.getPlayer())), 5);
+        Bukkit.getScheduler().runTaskLater(SkillAPI.singleton(),
+                () -> updatePlayer(SkillAPI.getPlayerData(event.getPlayer())), 20);
     }
 
     /**

@@ -10,10 +10,16 @@ import com.sucy.skill.api.skills.SkillContext;
 import com.sucy.skill.dynamic.DynamicSkill;
 import com.sucy.skill.listener.MechanicListener;
 import com.sucy.skill.task.RemoveTask;
+import net.Indyuce.mmoitems.api.event.ItemEquipEvent;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
+import org.bukkit.Material;
 import org.bukkit.entity.ArmorStand;
+import org.bukkit.entity.Husk;
 import org.bukkit.entity.LivingEntity;
+import org.bukkit.inventory.ItemStack;
+import org.bukkit.inventory.meta.ItemMeta;
+import org.bukkit.util.EulerAngle;
 import org.bukkit.util.Vector;
 
 import java.util.ArrayList;
@@ -39,7 +45,10 @@ public class ArmorStandMechanic extends MechanicComponent {
     private static final String FORWARD = "forward"; // 向前 0.1、0.5
     private static final String UPWARD = "upward"; // 向上 0.1、0.5
     private static final String RIGHT = "right"; // 向右 0.1、0.5
-    private static final String SKILLS = "skills"; // 盔甲架为施法者使用的技能
+
+    private static final String ITEM_TYPE = "item_type";
+
+    private static final String ITEM_NAME = "item_name";
 
     @Override
     public String getKey() {
@@ -62,23 +71,40 @@ public class ArmorStandMechanic extends MechanicComponent {
         double upward = parseValues(caster, UPWARD, level, 0);
         double right = parseValues(caster, RIGHT, level, 0);
 
-        List<String> skills = settings.getStringList(SKILLS);
-
         List<LivingEntity> armorStands = new ArrayList<>();
         List<Integer> keys = context.getIntegerList(getKey());
+        ItemStack itemStack;
+        String type = settings.getString(ITEM_TYPE, "AIR");
+        if (type != null && !type.equalsIgnoreCase("AIR")) {
+            itemStack = new ItemStack(Material.valueOf(type));
+            ItemMeta meta = itemStack.getItemMeta();
+            meta.setDisplayName(settings.getString(ITEM_NAME, "null"));
+            itemStack.setItemMeta(meta);
+        } else itemStack =  new ItemStack(Material.AIR);
         for (LivingEntity target : targets) {
-            Location loc = target.getLocation().clone();
+            Location loc = target.getLocation();
             Vector dir = loc.getDirection().setY(0).normalize();
             Vector side = dir.clone().crossProduct(UP);
             loc.add(dir.multiply(forward)).add(0, upward, 0).add(side.multiply(right));
 
-            ArmorStand armorStand = target.getWorld().spawn(loc, ArmorStand.class, as -> {
+            /*
+            LivingEntity livingEntity = target.getWorld().spawn(loc, Husk.class, as -> {
+                as.setCustomName(name.replace("{player}", caster.getName()));
+                as.setCustomNameVisible(nameVisible);
+                as.setAI(false);
+                as.setInvulnerable(true);
+            });
+
+             */
+
+            ArmorStand livingEntity = target.getWorld().spawn(loc, ArmorStand.class, as -> {
                 try {
                     as.setMarker(marker);
                     as.setInvulnerable(true);
                     as.setSilent(true);
                 } catch (NoSuchMethodError ignored) {
                 }
+
                 as.setGravity(gravity);
                 as.setCustomName(name.replace("{player}", caster.getName()));
                 as.setCustomNameVisible(nameVisible);
@@ -86,23 +112,22 @@ public class ArmorStandMechanic extends MechanicComponent {
                 as.setArms(arms);
                 as.setBasePlate(base);
                 as.setVisible(visible);
+                as.setHelmet(itemStack);
             });
-            SkillAPI.setMeta(armorStand, MechanicListener.ARMOR_STAND, true);
+            livingEntity.teleport(loc);
+            livingEntity.setHeadPose(
+                    new EulerAngle(Math.toDegrees(loc.getPitch()), 0, 0)
+            );
+            SkillAPI.setMeta(livingEntity, MechanicListener.ARMOR_STAND, true);
             //设置一下主人
-            SkillAPI.setMeta(armorStand, AttributeAPI.FX_SKILL_API_MASTER, caster.getUniqueId());
+            SkillAPI.setMeta(livingEntity, AttributeAPI.FX_SKILL_API_MASTER, caster.getUniqueId());
 
-            for (String skillName : skills) {
-                Skill skill = SkillAPI.getSkill(skillName);
-                if (skill != null) {
-                    SkillCastAPI.cast(armorStand, skill, level);
-                }
-            }
-            armorStands.add(armorStand);
+            armorStands.add(livingEntity);
             ArmorStandInstance instance;
             if (follow) {
-                instance = new ArmorStandInstance(armorStand, target, forward, upward, right);
+                instance = new ArmorStandInstance(livingEntity, caster, forward, upward, right);
             } else {
-                instance = new ArmorStandInstance(armorStand, target);
+                instance = new ArmorStandInstance(livingEntity, caster);
             }
             instance.setRunnable(it ->
                     Bukkit.getScheduler().runTask(SkillAPI.singleton(), () -> {
@@ -111,8 +136,8 @@ public class ArmorStandMechanic extends MechanicComponent {
                         }
                     })
             );
-            keys.add(instance.hashCode());
-            ArmorStandManager.register(instance, target, instance.hashCode());
+            keys.add(instance.indexID);
+            ArmorStandManager.register(instance, caster, instance.indexID);
         }
         new RemoveTask(armorStands, duration);
         return targets.size() > 0;

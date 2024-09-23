@@ -712,6 +712,7 @@ public abstract class Skill implements IconHolder
         }
         SkillDamageEvent event = new SkillDamageEvent(this, source, target, damage, classification);
         Bukkit.getPluginManager().callEvent(event);
+        //System.out.println("call SkillDamageEvent "+event.isCancelled() + " 值: "+event.getDamage());
         if (!event.isCancelled()) {
             if (source != null) {
                 MetaKt.setMeta(target, "SkillAPI-skill", this);
@@ -750,7 +751,6 @@ public abstract class Skill implements IconHolder
                             target.damage(damage);
                         }
                     }
-
                     // Reset damage timer to before the damage was applied
                     target.setNoDamageTicks(ticks);
                 }
@@ -758,34 +758,6 @@ public abstract class Skill implements IconHolder
             }
         }
     }
-    /*
-    public void damage(LivingEntity target, double damage, LivingEntity source, String classification) {
-        if (target instanceof TempEntity) return;
-
-        SkillDamageEvent event = new SkillDamageEvent(this, source, target, damage, classification);
-        Bukkit.getPluginManager().callEvent(event);
-        if (!event.isCancelled())
-        {
-            if (source instanceof Player)
-            {
-                Player player = (Player) source;
-                if (PluginChecker.isNoCheatActive()) NoCheatHook.exempt(player);
-                skillDamage = true;
-                target.setNoDamageTicks(0);
-                target.damage(event.getDamage(), source);
-                skillDamage = false;
-                if (PluginChecker.isNoCheatActive()) NoCheatHook.unexempt(player);
-            }
-            else
-            {
-                skillDamage = true;
-                VersionManager.damage(target, source, event.getDamage());
-                skillDamage = false;
-            }
-        }
-    }
-
-     */
 
     /**
      * Applies skill damage to the target, launching the skill damage event
@@ -800,6 +772,7 @@ public abstract class Skill implements IconHolder
         if (target instanceof TempEntity) return;
 
         TrueDamageEvent event = new TrueDamageEvent(this, source, target, damage);
+
         Bukkit.getPluginManager().callEvent(event);
         if (!event.isCancelled() && event.getDamage() != 0)
             target.setHealth(Math.max(Math.min(target.getHealth() - event.getDamage(), target.getMaxHealth()), 0));

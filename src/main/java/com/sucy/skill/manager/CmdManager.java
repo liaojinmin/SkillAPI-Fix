@@ -2,10 +2,13 @@ package com.sucy.skill.manager;
 
 import com.rit.sucy.commands.CommandManager;
 import com.rit.sucy.commands.ConfigurableCommand;
+import com.rit.sucy.commands.IFunction;
 import com.rit.sucy.commands.SenderType;
 import com.sucy.skill.SkillAPI;
 import com.sucy.skill.cmd.*;
 import com.sucy.skill.data.Permissions;
+import org.bukkit.command.CommandSender;
+import org.bukkit.plugin.Plugin;
 
 /**
  * Sets up commands for the plugin
@@ -32,6 +35,22 @@ public class CmdManager {
     public void initialize()
     {
         ConfigurableCommand root = new ConfigurableCommand(api, "class", SenderType.ANYONE);
+        root.addSubCommand(
+                new ConfigurableCommand(
+                        api,
+                        "ver",
+                        SenderType.ANYONE,
+                        new IFunction() {
+                            @Override
+                            public void execute(ConfigurableCommand configurableCommand, Plugin plugin, CommandSender commandSender, String[] strings) {
+                                commandSender.sendMessage("ver: 1.97-Neon");
+                            }
+                        },
+                        "v",
+                        "",
+                        Permissions.AttributeAction
+                )
+        );
         root.addSubCommands(
                 new ConfigurableCommand(api, "attAction", SenderType.ANYONE, new CmdAttributeAction(), "临时属性", "", Permissions.AttributeAction),
                 new ConfigurableCommand(api, "cast", SenderType.PLAYER_ONLY, new CmdCast(), "Casts a skill", "<skill>", Permissions.BASIC),

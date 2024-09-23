@@ -1,4 +1,4 @@
-package com.sucy.skill.hook.mechanic;
+package com.sucy.skill.hook.mythic.drop;
 
 
 import com.sucy.skill.SkillAPI;

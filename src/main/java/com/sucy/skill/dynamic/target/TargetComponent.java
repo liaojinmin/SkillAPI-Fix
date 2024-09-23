@@ -1,7 +1,6 @@
 package com.sucy.skill.dynamic.target;
 
 import com.rit.sucy.config.parse.DataSection;
-import com.rit.sucy.player.TargetHelper;
 import com.sucy.skill.SkillAPI;
 import com.sucy.skill.api.skills.SkillContext;
 import com.sucy.skill.cast.CircleIndicator;
@@ -14,12 +13,12 @@ import com.sucy.skill.dynamic.DynamicSkill;
 import com.sucy.skill.dynamic.EffectComponent;
 import com.sucy.skill.dynamic.TempEntity;
 import com.sucy.skill.listener.MechanicListener;
+import com.sucy.skill.utils.target.TargetHelper;
 import org.bukkit.Location;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
 
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.function.Function;
@@ -33,7 +32,7 @@ public abstract class TargetComponent extends EffectComponent {
     private static final String ALLY   = "group";
     private static final String WALL   = "wall";
     private static final String CASTER = "caster";
-    private static final String MAX    = "max";
+    protected static final String MAX    = "max";
 
     boolean everyone;
     boolean allies;
@@ -68,8 +67,8 @@ public abstract class TargetComponent extends EffectComponent {
         super.load(skill, config);
 
         final String group = settings.getString(ALLY, "enemy").toLowerCase();
-        everyone = group.equals("both");
-        allies = group.equals("ally");
+        everyone = group.equalsIgnoreCase("both");
+        allies = group.equalsIgnoreCase("ally");
         throughWall = settings.getString(WALL, "false").equalsIgnoreCase("true");
         self = settings.getString(CASTER, "false").equalsIgnoreCase("true");
     }
@@ -101,7 +100,6 @@ public abstract class TargetComponent extends EffectComponent {
     @Override
     public void makeIndicators(List<IIndicator> list, Player caster, List<LivingEntity> targets, int level) {
         targets.forEach(target -> makeIndicators(list, caster, target, level));
-
         List<LivingEntity> childTargets = null;
         for (final EffectComponent component : children) {
             if (component.hasEffect) {
@@ -166,11 +164,13 @@ public abstract class TargetComponent extends EffectComponent {
 
     boolean isValidTarget(final LivingEntity caster, final LivingEntity from, final LivingEntity target) {
         if (SkillAPI.getMeta(target, MechanicListener.ARMOR_STAND) != null) return false;
+
         if (target instanceof TempEntity) {
             return true;
         }
+
         return target != caster && SkillAPI.getSettings().isValidTarget(target)
                 && (throughWall || !TargetHelper.isObstructed(from.getEyeLocation(), target.getEyeLocation()))
-                && (everyone || allies == SkillAPI.getSettings().isAlly(caster, target));
+                && (everyone || allies == TargetHelper.isAlly(caster, target));
     }
 }

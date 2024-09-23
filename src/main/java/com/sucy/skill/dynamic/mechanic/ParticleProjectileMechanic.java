@@ -44,10 +44,14 @@ import com.sucy.skill.cast.ProjectileIndicator;
 import com.sucy.skill.dynamic.ArmorStandCarrier;
 import com.sucy.skill.dynamic.TempEntity;
 import me.neon.libs.carrier.minecraft.meta.ArmorStandMeta;
+import me.neon.libs.util.item.ItemUtilsKt;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
+import org.bukkit.Material;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
+import org.bukkit.inventory.ItemStack;
+import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.util.Vector;
 
 import java.util.ArrayList;
@@ -59,7 +63,6 @@ import java.util.List;
 public class ParticleProjectileMechanic extends MechanicComponent implements ProjectileCallback {
     private static final Vector UP = new Vector(0, 1, 0);
 
-    private static final String POSITION = "position";
     private static final String ANGLE    = "angle";
     private static final String AMOUNT   = "amount";
     private static final String LEVEL    = "skill_level";
@@ -70,8 +73,6 @@ public class ParticleProjectileMechanic extends MechanicComponent implements Pro
     private static final String RIGHT    = "right";
     private static final String UPWARD   = "upward";
     private static final String FORWARD  = "forward";
-    private static final String USE_EFFECT = "use-effect";
-    private static final String EFFECT_KEY = "effect-key";
 
     private static final String ARMOR_STAND = "armor-stand";
     private static final String NAME = "name"; // 盔甲架名称
@@ -80,9 +81,9 @@ public class ParticleProjectileMechanic extends MechanicComponent implements Pro
     private static final String VISIBLE = "visible"; // 是否隐身 true、false
     private static final String MARKER = "marker"; // 是否标记 true、false
 
-    private static final ArmorStandMeta ARMOR_STAND_META = new ArmorStandMeta(true, false, true, false, true, false);
+    private static final String ITEM_TYPE = "item_type";
 
-
+    private static final String ITEM_NAME = "item_name";
 
     @Override
     public String getKey() {
@@ -108,7 +109,6 @@ public class ParticleProjectileMechanic extends MechanicComponent implements Pro
         for (LivingEntity target : targets) {
             Location loc = target.getLocation();
             ArmorStandCarrier carrier = null;
-            ArmorStandMeta meta = null;
             if (settings.getBool(ARMOR_STAND, false)) {
                 // 修正数量
                 amount = 1;
@@ -116,9 +116,26 @@ public class ParticleProjectileMechanic extends MechanicComponent implements Pro
                 boolean small = settings.getBool(SMALL, false);
                 boolean visible = settings.getBool(VISIBLE, true);
                 boolean marker = settings.getBool(MARKER, false);
-                carrier = new ArmorStandCarrier(loc, ARMOR_STAND_META);
+                carrier = new ArmorStandCarrier(
+                        loc,
+                        new ArmorStandMeta(
+                                visible,
+                                false,
+                                small,
+                                false,
+                                true,
+                                marker
+                        )
+                );
+                String type = settings.getString(ITEM_TYPE, "AIR");
+                if (type != null && !type.equalsIgnoreCase("AIR")) {
+                    ItemStack itemStack = new ItemStack(Material.valueOf(type));
+                    ItemMeta meta = itemStack.getItemMeta();
+                    meta.setDisplayName(settings.getString(ITEM_NAME, "null"));
+                    itemStack.setItemMeta(meta);
+                    carrier.addItemsStack(itemStack);
+                }
                 carrier.setDisplayName(name);
-                meta = new ArmorStandMeta(visible, false, small, false, true, marker);
                 carrier.setDead(false);
             }
             // Apply the spread type
@@ -141,6 +158,7 @@ public class ParticleProjectileMechanic extends MechanicComponent implements Pro
                     dir.normalize();
                 }
                 double angle = parseValues(caster, ANGLE, level, 30.0);
+                // 此处需要修改 a 坐标变量的视角方向，也就是pitch与yaw
                 Location a = loc.add(looking).add(0, upward + 0.5, 0);
                 if (carrier != null) {
                     carrier.setLocation(a);
@@ -153,21 +171,6 @@ public class ParticleProjectileMechanic extends MechanicComponent implements Pro
                 SkillAPI.setMeta(p, LEVEL, level);
                 p.setAllyEnemy(ally, !ally);
             }
-
-            if (settings.getBool(USE_EFFECT, false)) {
-                EffectPlayer player = new EffectPlayer(settings);
-                for (CustomProjectile p : list) {
-                    player.start(new FollowTarget(p), settings.getString(EFFECT_KEY, skill.getName()), 9999, level, true);
-                }
-            }
-            final ArmorStandCarrier carrier1 = carrier;
-            if (carrier1 != null) {
-                final ArmorStandMeta meta1 = meta;
-                Bukkit.getScheduler().runTaskLater(SkillAPI.singleton(), () -> {
-                    carrier1.setCarrierMeta(meta1);
-                },5);
-            }
-
         }
         return targets.size() > 0;
     }

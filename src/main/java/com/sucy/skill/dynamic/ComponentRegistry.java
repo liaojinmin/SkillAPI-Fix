@@ -206,11 +206,12 @@ public class ComponentRegistry {
         register(new WaterCondition());
         register(new WeatherCondition());
         register(new ShieldCondition());
-        register(new MetaCondition());
+        register(new DataCondition());
 
         // Mechanics
         register(new AttributeMechanic());
         register(new BlockMechanic());
+        register(new BlockWallMechanic());
         register(new BuffMechanic());
         register(new CancelEffectMechanic());
         register(new CancelMechanic());
@@ -277,6 +278,7 @@ public class ComponentRegistry {
         register(new ValueRandomMechanic());
         register(new ValueSetMechanic());
         register(new ValueMMoItemAttrMechanic());
+        register(new ValueNFAttrMechanic());
         register(new WarpMechanic());
         register(new WarpLocMechanic());
         register(new WarpRandomMechanic());
@@ -295,7 +297,10 @@ public class ComponentRegistry {
         register(new GermAnimationStopMechanic());
 
         // meta
-        register(new MetaEditMechanic());
+        register(new DataEditMechanic());
         register(new MetaSetMechanic());
+
+        // pa
+        register(new EntitySpreadMechanic());
     }
 }
