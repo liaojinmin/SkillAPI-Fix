@@ -87,6 +87,8 @@ public class DamageMechanic extends MechanicComponent {
         if (damage < 0) {
             return false;
         }
+        boolean range = targets.size() > 1;
+        int index = 0;
         for (LivingEntity target : targets) {
             if (target.isDead()) {
                 continue;
@@ -103,7 +105,12 @@ public class DamageMechanic extends MechanicComponent {
             if (trueDmg) {
                 skill.trueDamage(target, amount, other);
             } else {
-                skill.damage(target, amount, other, classification, knockback);
+                if (index > 0) {
+                    skill.damage(target, amount, other, classification, knockback, range);
+                } else {
+                    skill.damage(target, amount, other, classification, knockback, false);
+                }
+                index++;
             }
         }
         return targets.size() > 0;

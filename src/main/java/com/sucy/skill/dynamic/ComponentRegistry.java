@@ -291,6 +291,7 @@ public class ComponentRegistry {
 
         // armorStand
         register(new ArmorStandMechanic());
+        register(new AdyeshachMechanic());
         register(new ArmorStandRemoveMechanic());
 
         register(new GermAnimationStartMechanic());
@@ -302,5 +303,8 @@ public class ComponentRegistry {
 
         // pa
         register(new EntitySpreadMechanic());
+
+        // NeonArena
+        register(new ArenaShowMechanic());
     }
 }

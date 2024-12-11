@@ -186,12 +186,14 @@ var Mechanic = {
     WARP_VALUE:          { name: 'Warp Value',          container: false, construct: MechanicWarpValue          },
     WOLF:                { name: 'Wolf',                container: true,  construct: MechanicWolf               },
     ARMOR_STAND:         { name: 'Armor Stand',         container: true,  construct: MechanicArmorStand         },
+    Adyeshach:           { name: 'Adyeshach',           container: true,  construct: MechanicAdyeshach          },
     ARMOR_STAND_REMOVE:  { name: 'Armor Stand Remove',  container: true,  construct: MechanicArmorStandRemove   },
     GERM_ANIMATION_START:{ name: 'Germ Animation Start',container: true,  construct: MechanicGermAnimationStart },
     GERM_ANIMATION_STOP: { name: 'Germ Animation Stop', container: true,  construct: MechanicGermAnimationStop  },
     RETURN:              { name: 'Return',              container: true,  construct: MechanicReturn             },
     MYTHIC_CAST:         { name: 'Mythic cast',         container: false, construct: MechanicMythicCast         },
     MYTHIC_CAST_TARGET:  { name: 'Mythic cast target',  container: false, construct: MechanicMythicCastTarget   },
+    ARENA_SHOW:          { name: 'Arena Show',          container: false, construct: MechanicArenaShow          },
 };
 
 var saveIndex;
@@ -3014,6 +3016,36 @@ function MechanicArmorStand() {
 
 }
 
+extend('MechanicAdyeshach', 'Component');
+function MechanicAdyeshach() {
+    this.super('Adyeshach', Type.MECHANIC, true);
+
+    this.description = '召唤Adyeshach虚拟实体';
+
+    this.data.push(new AttributeValue('删除时间', 'duration', 5, 0)
+    );
+    this.data.push(new StringValue('名称', 'name', 'Adyeshach')
+    );
+    this.data.push(new ListValue('名称显示', 'name-visible', ['True', 'False'], 'False')
+    );
+    this.data.push(new StringValue('生物种类', 'type', 'PLAYER'));
+    this.data.push(new StringValue('皮肤', 'texture', ''));
+    this.data.push(new ListValue('重力', 'gravity', ['True', 'False'], 'True')
+    );
+    this.data.push(new ListValue('是否可见', 'visible', ['True', 'False'], 'True')
+    );
+    this.data.push(new AttributeValue('前偏移', 'forward', 0, 0)
+    );
+    this.data.push(new AttributeValue('上偏移', 'upward', 0, 0)
+    );
+    this.data.push(new AttributeValue('右偏移', 'right', 0, 0)
+    );
+    this.data.push(new ListValue('是否头戴物品', 'use_item',  ['True', 'False'], 'False'));
+    this.data.push(new StringValue('物品名称', 'item_name', 'Armor Stand'));
+    this.data.push(new ListValue('物品种类', 'item_type', materialList, 'Arrow'));
+
+}
+
 extend('MechanicArmorStandRemove', 'Component');
 function MechanicArmorStandRemove() {
     this.super('Armor Stand Remove', Type.MECHANIC, true);
@@ -3085,6 +3117,22 @@ function MechanicMythicCastTarget() {
     );
     this.data.push(new AttributeValue('Power', 'power', 0, 0)
         .setTooltip('技能等级')
+    );
+}
+
+extend('MechanicArenaShow', 'Component');
+
+function MechanicArenaShow() {
+    this.super('Arena Showt', Type.MECHANIC, false);
+
+    this.description = '让指定坐标位置附近的草丛玩家现形';
+
+    this.data.push(new AttributeValue('Timer', 'timer', 2, 0)
+        .setTooltip('现形时间')
+    );
+
+    this.data.push(new AttributeValue('Range', 'range', 10, 0)
+        .setTooltip('现形范围')
     );
 }
 

@@ -8,6 +8,7 @@ import me.neon.flash.api.item.ReadItemFactory;
 import me.neon.flash.feature.data.DataParser;
 import me.neon.flash.feature.data.JsonDataParser;
 import me.neon.flash.feature.data.StringDataParse;
+import org.bukkit.Material;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
@@ -38,7 +39,7 @@ public class ValueNFAttrMechanic extends MechanicComponent {
         if (targets.isEmpty()) return false;
         if (targets.get(0) instanceof Player) {
             final ItemStack itemStack = ArmorType.matchItemStack(((Player) targets.get(0)).getInventory(), ArmorType.valueOf(settings.getString(SLOT).toUpperCase()));
-            if (itemStack == null) return false;
+            if (itemStack == null || itemStack.getType() == Material.AIR) return false;
             final String key = settings.getString(KEY);
             final String nbtKey = settings.getString(NBT_KEY);
             final ReadItemFactory factory = NeonFlashAPI.INSTANCE.getItemHandler().readSimple(itemStack);

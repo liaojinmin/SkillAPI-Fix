@@ -56,6 +56,7 @@ import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
+import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 
@@ -703,20 +704,21 @@ public abstract class Skill implements IconHolder
      * @param classification type of damage to deal
      */
     public void damage(LivingEntity target, double damage, LivingEntity source, String classification) {
-        damage(target, damage, source, classification,true);
+        damage(target, damage, source, classification, true, false);
     }
 
-    public void damage(LivingEntity target, double damage, LivingEntity source, String classification, boolean knockback) {
+    public void damage(LivingEntity target, double damage, LivingEntity source, String classification, boolean knockback, boolean range) {
         if (target instanceof TempEntity) {
             return;
         }
-        SkillDamageEvent event = new SkillDamageEvent(this, source, target, damage, classification);
+        MetaKt.setMeta(target, "SkillAPI-skill", this);
+        MetaKt.setMeta(target, "SkillAPI-classification", classification);
+        SkillDamageEvent event = new SkillDamageEvent(this, source, target, damage, classification, range);
         Bukkit.getPluginManager().callEvent(event);
         //System.out.println("call SkillDamageEvent "+event.isCancelled() + " 值: "+event.getDamage());
         if (!event.isCancelled()) {
+
             if (source != null) {
-                MetaKt.setMeta(target, "SkillAPI-skill", this);
-                MetaKt.setMeta(target, "SkillAPI-classification", classification);
                 skillDamage = true;
                 target.setNoDamageTicks(0);
                 if (knockback) {
@@ -724,7 +726,6 @@ public abstract class Skill implements IconHolder
                 } else {
                     target.damage(event.getDamage());
                 }
-
                 skillDamage = false;
                 MetaKt.removeMeta(target, "SkillAPI-skill");
                 MetaKt.removeMeta(target, "SkillAPI-classification");
@@ -754,6 +755,8 @@ public abstract class Skill implements IconHolder
                     // Reset damage timer to before the damage was applied
                     target.setNoDamageTicks(ticks);
                 }
+                MetaKt.removeMeta(target, "SkillAPI-skill");
+                MetaKt.removeMeta(target, "SkillAPI-classification");
                 skillDamage = false;
             }
         }
@@ -768,6 +771,17 @@ public abstract class Skill implements IconHolder
      * @param source source of the damage (skill caster)
      */
     public void trueDamage(LivingEntity target, double damage, LivingEntity source)
+    {
+        if (target instanceof TempEntity) return;
+
+        TrueDamageEvent event = new TrueDamageEvent(this, source, target, damage);
+
+        Bukkit.getPluginManager().callEvent(event);
+        if (!event.isCancelled() && event.getDamage() != 0)
+            target.setHealth(Math.max(Math.min(target.getHealth() - event.getDamage(), target.getMaxHealth()), 0));
+    }
+
+    public void trueDamage(LivingEntity target, double damage, LivingEntity source, String classification)
     {
         if (target instanceof TempEntity) return;
 

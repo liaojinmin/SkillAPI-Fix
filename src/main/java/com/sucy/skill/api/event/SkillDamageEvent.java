@@ -44,6 +44,7 @@ public class SkillDamageEvent extends Event implements Cancellable
     private String classification;
     private Skill skill;
     private double       damage;
+    private boolean range;
     private boolean      cancelled;
 
     /**
@@ -53,8 +54,7 @@ public class SkillDamageEvent extends Event implements Cancellable
      * @param target  entity receiving the damage
      * @param damage  the amount of damage dealt
      */
-    public SkillDamageEvent(Skill skill, LivingEntity damager, LivingEntity target, double damage, String classification)
-    {
+    public SkillDamageEvent(Skill skill, LivingEntity damager, LivingEntity target, double damage, String classification, boolean range) {
         this.skill = skill;
         this.damager = damager;
         this.target = target;
@@ -68,6 +68,11 @@ public class SkillDamageEvent extends Event implements Cancellable
      */
     public Skill getSkill() {
         return skill;
+    }
+
+
+    public boolean isRange() {
+        return range;
     }
 
     /**

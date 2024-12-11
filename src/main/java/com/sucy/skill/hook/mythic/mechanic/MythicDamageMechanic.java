@@ -106,7 +106,7 @@ public class MythicDamageMechanic extends SkillMechanic implements ITargetedEnti
             if (trueDamage) {
                 skill.trueDamage(entity, amount, damager);
             } else {
-                skill.damage(entity, amount, damager, classifier.get(data), true);
+                skill.damage(entity, amount, damager, classifier.get(data), true, false);
             }
         } catch (Exception e) {
             e.printStackTrace();
