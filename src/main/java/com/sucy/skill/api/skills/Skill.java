@@ -1,29 +1,4 @@
-/**
- * SkillAPI
- * com.sucy.skills.api.skill.Skill
- *
- * The MIT License (MIT)
- *
- * Copyright (c) 2014 Steven Sucy
- *
- * Permission is hereby granted, free of charge, to any person obtaining a copy
- * of this software and associated documentation files (the "Software") to deal
- * in the Software without restriction, including without limitation the rights
- * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
- * copies of the Software, and to permit persons to whom the Software is
- * furnished to do so, subject to the following conditions:
- *
- * The above copyright notice and this permission notice shall be included in
- * all copies or substantial portions of the Software.
- *
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
- * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
- * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
- * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
- * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
- * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
- * THE SOFTWARE.
- */
+
 package com.sucy.skill.api.skills;
 
 import com.rit.sucy.config.Filter;
@@ -31,7 +6,6 @@ import com.rit.sucy.config.FilterType;
 import com.rit.sucy.config.parse.DataSection;
 import com.rit.sucy.config.parse.NumberParser;
 import com.rit.sucy.text.TextFormatter;
-import com.rit.sucy.version.VersionManager;
 import com.sucy.skill.SkillAPI;
 import com.sucy.skill.api.ReadOnlySettings;
 import com.sucy.skill.api.Settings;
@@ -56,13 +30,14 @@ import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
-import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 
 import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.function.Consumer;
+import java.util.function.Function;
 
 /**
  * Represents a template for a skill used in the RPG system. This is
@@ -695,70 +670,53 @@ public abstract class Skill implements IconHolder
         damage(target, damage, source, "default");
     }
 
-    /**
-     * Applies skill damage to the target, launching the skill damage event
-     *
-     * @param target         target to receive the damage
-     * @param damage         amount of damage to deal
-     * @param source         source of the damage (skill caster)
-     * @param classification type of damage to deal
-     */
+
     public void damage(LivingEntity target, double damage, LivingEntity source, String classification) {
-        damage(target, damage, source, classification, true, false);
+        damageAndBack(target, damage, source, classification, true, false, null);
     }
 
     public void damage(LivingEntity target, double damage, LivingEntity source, String classification, boolean knockback, boolean range) {
+        damageAndBack(target, damage, source, classification, knockback, range, null);
+    }
+
+    public void damageAndBack(LivingEntity target, double damage, LivingEntity source, String classification, boolean knockback, boolean range, Consumer<Double> callback) {
         if (target instanceof TempEntity) {
             return;
         }
         MetaKt.setMeta(target, "SkillAPI-skill", this);
         MetaKt.setMeta(target, "SkillAPI-classification", classification);
+    //    System.out.println("  --START");
         SkillDamageEvent event = new SkillDamageEvent(this, source, target, damage, classification, range);
         Bukkit.getPluginManager().callEvent(event);
-        //System.out.println("call SkillDamageEvent "+event.isCancelled() + " 值: "+event.getDamage());
         if (!event.isCancelled()) {
-
-            if (source != null) {
-                skillDamage = true;
-                target.setNoDamageTicks(0);
-                if (knockback) {
-                    target.damage(event.getDamage(), source);
-                } else {
-                    target.damage(event.getDamage());
-                }
-                skillDamage = false;
-                MetaKt.removeMeta(target, "SkillAPI-skill");
-                MetaKt.removeMeta(target, "SkillAPI-classification");
-            } else {
-                skillDamage = true;
-                //Modified code from com.rit.sucy.version.VersionManager.damage() (MCCore)
-                {
-                    // Allow damage to occur
-                    int ticks = target.getNoDamageTicks();
-                    target.setNoDamageTicks(0);
-
-                    if (VersionManager.isVersionAtMost(VersionManager.V1_5_2)) {
-                        // 1.5.2 and earlier used integer values
-                        if (knockback) {
-                            target.damage((int) damage, source);
-                        } else {
-                            target.damage((int) damage);
-                        }
-                    } else {
-                        // 1.6.2 and beyond use double values
-                        if (knockback) {
-                            target.damage(damage, source);
-                        } else {
-                            target.damage(damage);
-                        }
-                    }
-                    // Reset damage timer to before the damage was applied
-                    target.setNoDamageTicks(ticks);
-                }
-                MetaKt.removeMeta(target, "SkillAPI-skill");
-                MetaKt.removeMeta(target, "SkillAPI-classification");
-                skillDamage = false;
+            skillDamage = true;
+            int ticks = target.getNoDamageTicks();
+            target.setNoDamageTicks(0);
+            if (callback != null) {
+                callback.accept(event.getDamage());
             }
+            /*
+            EntityDamageByEntityEvent bukkitEvent = new EntityDamageByEntityEvent(
+                    event.getDamager(),
+                    event.getTarget(),
+                    EntityDamageEvent.DamageCause.CUSTOM,
+                    damage
+            );
+            Bukkit.getPluginManager().callEvent(bukkitEvent);
+            event.getTarget().setLastDamageCause(bukkitEvent);
+            if (bukkitEvent.isCancelled()) {
+                return;
+            }
+             */
+            if (knockback) {
+                target.damage(event.getDamage(), source);
+            } else {
+                target.damage(event.getDamage());
+            }
+            target.setNoDamageTicks(ticks);
+            MetaKt.removeMeta(target, "SkillAPI-skill");
+            MetaKt.removeMeta(target, "SkillAPI-classification");
+            skillDamage = false;
         }
     }
 
@@ -770,26 +728,26 @@ public abstract class Skill implements IconHolder
      * @param damage amount of damage to deal
      * @param source source of the damage (skill caster)
      */
-    public void trueDamage(LivingEntity target, double damage, LivingEntity source)
-    {
-        if (target instanceof TempEntity) return;
-
-        TrueDamageEvent event = new TrueDamageEvent(this, source, target, damage);
-
-        Bukkit.getPluginManager().callEvent(event);
-        if (!event.isCancelled() && event.getDamage() != 0)
-            target.setHealth(Math.max(Math.min(target.getHealth() - event.getDamage(), target.getMaxHealth()), 0));
+    public void trueDamage(LivingEntity target, double damage, LivingEntity source) {
+        trueDamageAndBack(target, damage, source, "", null);
     }
 
-    public void trueDamage(LivingEntity target, double damage, LivingEntity source, String classification)
-    {
+    public void trueDamage(LivingEntity target, double damage, LivingEntity source, String classification) {
+        trueDamageAndBack(target, damage, source, classification, null);
+    }
+
+    public void trueDamageAndBack(LivingEntity target, double damage, LivingEntity source, String classification, Consumer<Double> callback) {
         if (target instanceof TempEntity) return;
 
         TrueDamageEvent event = new TrueDamageEvent(this, source, target, damage);
 
         Bukkit.getPluginManager().callEvent(event);
-        if (!event.isCancelled() && event.getDamage() != 0)
+        if (!event.isCancelled() && event.getDamage() != 0) {
+            if (callback != null) {
+                callback.accept(event.getDamage());
+            }
             target.setHealth(Math.max(Math.min(target.getHealth() - event.getDamage(), target.getMaxHealth()), 0));
+        }
     }
 
     /**

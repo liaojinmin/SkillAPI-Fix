@@ -12,9 +12,13 @@ public class AttributeParseUtils {
     private static final Pattern intParse = Pattern.compile("(?<![&§])\\d+");
 
     public static Pair<String, Integer> getAttribute(String lore) {
+        String oLore = ChatColor.stripColor(lore).toLowerCase();
+        String oLore2 = oLore.replace(":", "")
+                .replace(" ", "")
+                .replaceAll("\\d+", "");
+
         for (String attr : SkillAPI.getAttributeManager().getLookupKeys()) {
-            String oLore = ChatColor.stripColor(lore).toLowerCase();
-            if (oLore.contains(attr)) {
+            if (oLore2.equalsIgnoreCase(attr)) {
                 String normalized = SkillAPI.getAttributeManager().normalize(attr);
                 int extra = toInt(oLore);
                 if (extra <= 0) {

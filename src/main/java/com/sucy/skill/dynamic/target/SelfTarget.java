@@ -42,6 +42,7 @@ public class SelfTarget extends TargetComponent {
     @Override
     public void makeIndicators(List<IIndicator> list, Player caster, LivingEntity target, int level) {
         makeCircleIndicator(list, caster, 0.5);
+
     }
 
     /** {@inheritDoc} */
@@ -55,4 +56,5 @@ public class SelfTarget extends TargetComponent {
     public String getKey() {
         return "self";
     }
+
 }

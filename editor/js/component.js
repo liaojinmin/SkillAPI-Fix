@@ -79,6 +79,7 @@ var Condition = {
     ELEVATION:   { name: 'Elevation',   container: true, construct: ConditionElevation  },
     ELSE:        { name: 'Else',        container: true, construct: ConditionElse,      premium: true },
     ENTITY_TYPE: { name: 'Entity Type', container: true, construct: ConditionEntityType,premium: true },
+    ENTITY_EXCLUDE: { name: 'Entity Exclude', container: true, construct: ConditionEntityExclude,premium: true },
     FIRE:        { name: 'Fire',        container: true, construct: ConditionFire       },
     FLAG:        { name: 'Flag',        container: true, construct: ConditionFlag       },
     GROUND:      { name: 'Ground',      container: true, construct: ConditionGround,    premium: true },
@@ -100,7 +101,8 @@ var Condition = {
     VALUE:       { name: 'Value',       container: true, construct: ConditionValue      },
     WATER:       { name: 'Water',       container: true, construct: ConditionWater      },
     WEATHER:     { name: 'Weather',     container: true, construct: ConditionWeather,   premium: true },
-    DATA:        { name: 'Data',        container: true, construct: ConditionData,      premium: true }
+    DATA:        { name: 'Data',        container: true, construct: ConditionData,      premium: true },
+    WORLD:       { name: 'World',       container: true, construct: ConditionWorld,     premium: true}
 };
 
 /**
@@ -136,6 +138,7 @@ var Mechanic = {
     IMMUNITY:            { name: 'Immunity',            container: false, construct: MechanicImmunity           },
     INTERRUPT:           { name: 'Interrupt',           container: false, construct: MechanicInterrupt          },
     ITEM:                { name: 'Item',                container: false, construct: MechanicItem               },
+    ITEM_PACKET:         { name: 'Item Packet',         container: false, construct: MechanicItemPacket         },
     ITEM_PROJECTILE:     { name: 'Item Projectile',     container: true,  construct: MechanicItemProjectile     },
     ITEM_REMOVE:         { name: 'Item Remove',         container: false, construct: MechanicItemRemove         },
     LAUNCH:              { name: 'Launch',              container: false, construct: MechanicLaunch             },
@@ -215,7 +218,10 @@ function Component(name, type, container, parent) {
     this.parent = parent;
     this.html = undefined;
     this.components = [];
-    this.data = [new StringValue('Icon Key', 'icon-key', '').setTooltip('The key used by the component in the Icon Lore. If this is set to "example" and has a value name of "value", it can be referenced using the string "{attr:example.value}".')];
+    this.data = [
+        new StringValue('Icon Key', 'icon-key', '')
+            .setTooltip('The key used by the component in the Icon Lore. If this is set to "example" and has a value name of "value", it can be referenced using the string "{attr:example.value}".')
+    ];
     if (this.type === Type.MECHANIC) {
         this.data.push(new ListValue('Counts as Cast', 'counts', [ 'True', 'False' ], 'True')
             .setTooltip('Whether or not this mechanic running treats the skill as "casted" and will consume mana and start the cooldown. Set to false if it is a mechanic appled when the skill fails such as cleanup or an error message.')
@@ -764,6 +770,12 @@ function TriggerTookSkillDamage()
     this.data.push(new ListValue('Target Caster', 'target', [ 'True', 'False' ], 'True')
         .setTooltip('True makes children target the caster. False makes children target the attacking entity')
     );
+    this.data.push(new ListValue('DamageType', 'damageType', [ 'PLAYER', 'ENTITY', 'ALL' ], 'ALL')
+        .setTooltip('筛选攻击者生物种类')
+    );
+    this.data.push(new ListValue('TargetType', 'targetType', [ 'PLAYER', 'ENTITY', 'ALL' ], 'ALL')
+        .setTooltip('筛选目标者生物种类')
+    );
     this.data.push(new DoubleValue("Min Damage", "dmg-min", 0)
         .setTooltip('The minimum damage that needs to be dealt')
     );
@@ -1168,6 +1180,34 @@ function ConditionEntityType()
     );
 }
 
+
+extend('ConditionEntityExclude', 'Component');
+function ConditionEntityExclude()
+{
+    this.super('Entity Exclude', Type.CONDITION, true);
+
+    this.description = '排除某些种类、名称的生物'
+
+    this.data.push(new MultiListValue('Types', 'types', [
+        'BAT', 'BLAZE', 'CAVE_SPIDER', 'CHICKEN', 'COW',
+        'CREEPER', 'DONKEY', 'ELDER_GUARDIAN',
+        'ENDER_DRAGON', 'ENDERMAN', 'ENDERMITE', 'EVOKER',
+        'GHAST', 'GIANT', 'GUARDIAN', 'HORSE', 'HUSK',
+        'IRON_GOLEM', 'LLAMA', 'MAGMA_CUBE', 'MULE',
+        'MUSHROOM_COW', 'OCELOT', 'PIG', 'PIG_ZOMBIE',
+        'PLAYER', 'POLAR_BEAR', 'RABBIT', 'SHEEP',
+        'SHULKER', 'SILVERFISH', 'SKELETON', 'SKELETON_HORSE',
+        'SLIME', 'SNOWMAN', 'SPIDER', 'SQUID', 'VEX', 'VILLAGER',
+        'VINDICATOR', 'WITCH', 'WITHER', 'WITHER_SKELETON', 'WOLF',
+        'ZOMBIE', 'ZOMBIE_HORSE', 'ZOMBIE_VILLAGER' ]
+        ).setTooltip('种类， 可选')
+    );
+    this.data.push(new StringValue('Name', 'names', '')
+        .setTooltip('生物名字， 可选')
+    );
+
+}
+
 extend('ConditionFire', 'Component');
 function ConditionFire()
 {
@@ -1482,6 +1522,33 @@ function ConditionData() {
     );
 }
 
+extend('ConditionWorld', 'Component');
+function ConditionWorld() {
+    this.super('World', Type.CONDITION, true);
+
+    this.description = '世界、目标排除器';
+
+    // 指定世界
+    this.data.push(new StringValue('World', 'world', 'world')
+        .setTooltip('指定的世界名，如果为空则跳过判定，可以输入世界名，例如 "world" 或 "world_nether"')
+    );
+
+    // 是否以目标为基准
+    this.data.push(new ListValue('UseTarget', 'use-target', [ 'True', 'False' ], 'True')
+        .setTooltip('是否以目标所在世界为准，否则以施法者所在世界为准')
+    );
+
+    // 是否要求必须匹配世界
+    this.data.push(new ListValue('RequireMatch', 'require-match', [ 'True', 'False' ], 'True')
+        .setTooltip('True=必须在该世界，False=必须不在该世界')
+    );
+
+    // 是否排除玩家
+    this.data.push(new ListValue('ExcludePlayer', 'exclude-player', [ 'True', 'False' ], 'False')
+        .setTooltip('世界条件达成后，如果为 True，则技能不会对玩家生效')
+    );
+}
+
 // -- Mechanic constructors ---------------------------------------------------- //
 
 extend('MechanicAttribute', 'Component');
@@ -1787,8 +1854,17 @@ function MechanicDelay()
     this.data.push(new AttributeValue('Delay', 'delay', 2, 0)
         .setTooltip('The amount of time to wait before applying child components in seconds')
     );
+
     this.data.push(new StringValue('Mark', 'mark', '标记名称')
         .setTooltip('为 delay 延时程序设置唯一标签')
+    );
+
+    this.data.push(new StringValue('Deny-Germ-Action', 'deny-germ-action', '')
+        .setTooltip('当 delay 被打断时为目标执行的动作')
+    );
+
+    this.data.push(new StringValue('Deny-Commands', 'deny-commands', '')
+        .setTooltip('当 delay 被打断时为目标执行的指令')
     );
 }
 
@@ -2006,6 +2082,7 @@ function MechanicInterrupt()
     this.description = 'Interrupts any channeling being done by each target if applicable.';
 }
 
+
 extend('MechanicItem', 'Component');
 function MechanicItem()
 {
@@ -2035,6 +2112,44 @@ function MechanicItem()
     this.data.push(new StringListValue('Lore', 'lore', []).requireValue('custom', [ 'True' ])
         .setTooltip('The lore text for the item (the text below the name)')
     );
+}
+// MechanicItemPacket
+extend('MechanicItemPacket', 'Component');
+function MechanicItemPacket()
+{
+    this.super('Item Packet', Type.MECHANIC, false);
+
+    this.description = '设置玩家某个槽位的虚拟物品，并在一定时间移除';
+
+    this.data.push(new StringValue('neonFlash', 'neonFlash', '').requireValue('custom', [ 'True' ])
+        .setTooltip('NF ID')
+    );
+    this.data.push(
+        new ListValue(
+            'Slot', 'slot',
+            [ 'HAND', 'OFF_HAND' , 'HELMET', 'CHEST_PLATE', 'LEGGINGS', 'BOOTS'], "HAND"
+        ).setTooltip('目标槽位')
+    );
+    this.data.push(new AttributeValue('Seconds', 'delay', 1, 0)
+        .setTooltip('移除时间')
+    );
+
+    this.data.push(new ListValue('Material', 'material', materialList, '')
+        .setTooltip('The type of item to give to the player')
+    );
+    this.data.push(new IntValue('Amount', 'amount', 1)
+        .setTooltip('The quantity of the item to give to the player')
+    );
+    this.data.push(new IntValue('Durability', 'data', 0)
+        .setTooltip('The durability value of the item to give to the player')
+    );
+    this.data.push(new IntValue('Data', 'byte', 0)
+        .setTooltip('The data value of the item to give to the player for things such as egg type or wool color')
+    );
+    this.data.push(new StringValue('Name', 'name', 'Name').requireValue('custom', [ 'True' ])
+        .setTooltip('The name of the item')
+    );
+
 }
 
 extend('MechanicItemProjectile', 'Component');
@@ -2246,13 +2361,9 @@ function MechanicParticleProjectile()
     this.data.push(new ListValue('小型盔甲架', 'small', ['True', 'False'], 'True'));
     this.data.push(new ListValue('是否可见', 'visible', ['True', 'False'], 'True'));
     this.data.push(new ListValue('标记', 'marker', ['True', 'False'], 'True'));
-
-    this.data.push(new StringValue('盔甲架名称', 'name', 'Armor Stand'));
-
+    this.data.push(new StringValue('萌芽特效', 'germ_effect', ''));
     this.data.push(new StringValue('物品名称', 'item_name', 'Armor Stand'));
-    this.data.push(new ListValue('物品种类', 'item_type', materialList, 'Arrow')
-
-    );
+    this.data.push(new ListValue('物品种类', 'item_type', materialList, 'AIR'));
 
     addEffectOptions(this, true);
 }
@@ -3084,8 +3195,16 @@ function MechanicReturn() {
     this.super('Return', Type.MECHANIC, true);
 
     this.description = '中断 Delay';
-    this.data.push(new StringValue('mark', 'mark', '标记名称')
+    this.data.push(new StringValue('mark', 'mark', '')
         .setTooltip('要中断的标记名称，该delay必须设置了标记, 可使用 ; 分割多个标记')
+    );
+
+    this.data.push(new StringValue('Deny-Germ-Action', 'deny-germ-action', '')
+        .setTooltip('当 delay 被打断时为目标执行的动作')
+    );
+
+    this.data.push(new StringValue('Deny-Commands', 'deny-commands', '')
+        .setTooltip('当 delay 被打断时为目标执行的指令')
     );
 }
 

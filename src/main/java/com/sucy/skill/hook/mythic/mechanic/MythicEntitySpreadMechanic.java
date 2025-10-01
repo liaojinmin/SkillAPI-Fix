@@ -1,6 +1,6 @@
 package com.sucy.skill.hook.mythic.mechanic;
 
-import com.sucy.skill.api.projectile.EntityProjectile2;
+import com.sucy.skill.api.projectile.EntityProjectile;
 import io.lumine.xikage.mythicmobs.adapters.AbstractEntity;
 import io.lumine.xikage.mythicmobs.adapters.AbstractLocation;
 import io.lumine.xikage.mythicmobs.adapters.bukkit.BukkitAdapter;
@@ -12,9 +12,6 @@ import org.bukkit.entity.Entity;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.util.Vector;
 import org.jetbrains.annotations.Nullable;
-
-import java.util.HashMap;
-import java.util.UUID;
 
 @MythicMechanic(
         author = "廖爷爷",
@@ -60,7 +57,7 @@ public class MythicEntitySpreadMechanic extends SkillMechanic implements ITarget
         try {
             LivingEntity cast = (LivingEntity) meta.getCaster().getEntity().getBukkitEntity();
             Location targetLocation = BukkitAdapter.adapt(location);
-            EntityProjectile2 ne = new EntityProjectile2(
+            EntityProjectile ne = new EntityProjectile(
                     cast,
                     targetLocation,
                     entity,
@@ -72,7 +69,7 @@ public class MythicEntitySpreadMechanic extends SkillMechanic implements ITarget
             ne.setGravity(gravity);
             ne.setTrace(trace);
 
-            EntityProjectile2 old = EntityProjectile2.cache.put(cast.getUniqueId(), ne);
+            EntityProjectile old = EntityProjectile.cache.put(cast.getUniqueId(), ne);
             if (old != null) {
                 old.cancel();
             }

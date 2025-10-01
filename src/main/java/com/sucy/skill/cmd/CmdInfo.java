@@ -32,15 +32,19 @@ import com.rit.sucy.config.Filter;
 import com.rit.sucy.text.TextFormatter;
 import com.rit.sucy.version.VersionManager;
 import com.sucy.skill.SkillAPI;
+import com.sucy.skill.api.attribute.mob.MobAttribute;
 import com.sucy.skill.api.player.PlayerClass;
 import com.sucy.skill.api.player.PlayerData;
 import com.sucy.skill.language.RPGFilter;
+import me.neon.flash.attribute.AttributePlayer;
+import me.neon.flash.attribute.comp.SuitData;
 import org.bukkit.ChatColor;
 import org.bukkit.OfflinePlayer;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.Plugin;
 
+import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -81,7 +85,26 @@ public class CmdInfo implements IFunction
         else if (sender instanceof Player || args.length >= 1) {
             OfflinePlayer target = args.length == 0 ? (OfflinePlayer) sender : VersionManager.getOfflinePlayer(args[0], false);
             if (target == null) {
-                cmd.sendMessage(sender, NOT_PLAYER, ChatColor.RED + "That is not a valid player name");
+
+                MobAttribute.getData(args[0]).forEach(it -> {
+                    sender.sendMessage("怪物 "+it.getDisplay() + " UUID: "+it.getUuid());
+                    sender.sendMessage(ChatColor.GOLD + "基本属性:");
+                    for (Map.Entry<String, Double> a : it.map.entrySet()) {
+                        sender.sendMessage("    key: " + a.getKey() + " value: " + a.getValue());
+                    }
+                    sender.sendMessage(ChatColor.GOLD + "限时属性:");
+                    for (Map.Entry<String, Double> a : it.timerMap.entrySet()) {
+                        sender.sendMessage("    key: " + a.getKey() + " value: " + a.getValue());
+                    }
+                    sender.sendMessage(ChatColor.GOLD + "源属性:");
+                    for (Map.Entry<String, HashMap<String, Double>> a : it.temp.entrySet()) {
+                        sender.sendMessage("  属性源: "+a.getKey());
+                        for (Map.Entry<String, Double> it2 : a.getValue().entrySet()) {
+                            sender.sendMessage("    key: " + it2.getKey() + " value: " + it2.getValue());
+                        }
+                    }
+                });
+                //cmd.sendMessage(sender, NOT_PLAYER, ChatColor.RED + "That is not a valid player name");
                 return;
             }
 
@@ -94,7 +117,7 @@ public class CmdInfo implements IFunction
             String separator = cmd.getMessage(SEPARATOR, ChatColor.DARK_GRAY + "----------------------------");
             boolean first = true;
             sender.sendMessage(ChatColor.GOLD + "基本属性:");
-            for (Map.Entry<String, Integer> it : data.points.entrySet()) {
+            for (Map.Entry<String, Integer> it : data.getAttributeData().entrySet()) {
                 sender.sendMessage("    key: " + it.getKey() + " value: " + it.getValue());
             }
             sender.sendMessage(ChatColor.GOLD + "额外属性:");
@@ -108,6 +131,23 @@ public class CmdInfo implements IFunction
                     sender.sendMessage("    key: " + it2.getKey() + " value: " + it2.getValue());
                 }
             }
+            // nf start
+            sender.sendMessage(ChatColor.GOLD + "NeonFlash:");
+            AttributePlayer attributePlayer = me.neon.flash.attribute.AttributeManager.INSTANCE.getAttributePlayer().get(target.getUniqueId());
+            if (attributePlayer != null) {
+                sender.sendMessage("  常规属性: ");
+                for (Map.Entry<String, Double> entry : attributePlayer.getAttributes().entrySet()) {
+                    sender.sendMessage("    key: " + entry.getKey() + " value: " + entry.getValue());
+                }
+                sender.sendMessage("  套装属性: ");
+                for (SuitData suitData : attributePlayer.getSuitDataMap().values()) {
+                    sender.sendMessage("  套装: "+suitData.getConfig().getDisplay());
+                    for (Map.Entry<String, Double> entry : suitData.getAttribute().entrySet()) {
+                        sender.sendMessage("    key: " + entry.getKey() + " value: " + entry.getValue());
+                    }
+                }
+            }
+            // nf end
             for (String group : SkillAPI.getGroups()) {
                 PlayerClass c = data.getClass(group);
 

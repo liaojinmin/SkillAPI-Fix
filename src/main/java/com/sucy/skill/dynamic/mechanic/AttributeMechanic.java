@@ -109,7 +109,7 @@ public class AttributeMechanic extends MechanicComponent {
                         SkillAPI.schedule(task, (int) event.getTick());
                     }
                 } else {
-                    final MobAttributeData data = MobAttribute.getData(event.getCaster().getUniqueId(), true);
+                    final MobAttributeData data = MobAttribute.getData(event.getCaster(), true);
                  //   System.out.println("属性触发者: "+event.getCaster().getName());
                     assert data != null;
                     UUID taskID = UUID.randomUUID();

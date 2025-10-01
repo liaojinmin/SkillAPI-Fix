@@ -12,6 +12,7 @@ import com.sucy.party.Party;
 import com.sucy.skill.SkillAPI;
 import com.sucy.skill.api.CombatProtection;
 import com.sucy.skill.api.DefaultCombatProtection;
+import com.sucy.skill.api.armorstand.ArmorStandEntity;
 import com.sucy.skill.api.attribute.AttributeAPI;
 import com.sucy.skill.api.player.PlayerClass;
 import com.sucy.skill.api.skills.Skill;
@@ -255,12 +256,8 @@ public class Settings {
      */
     public boolean canAttack(LivingEntity attacker, LivingEntity target) {
         //召唤物的判断依赖于召唤者
-        if (!attacker.getMetadata(AttributeAPI.FX_SKILL_API_MASTER).isEmpty()) {
-            UUID masterId = UUID.fromString(attacker.getMetadata(AttributeAPI.FX_SKILL_API_MASTER).get(0).asString());
-            Entity master = Bukkit.getEntity(masterId);
-            if (master != null && !master.isEmpty()) {
-                attacker = (LivingEntity) master;
-            }
+        if (attacker instanceof ArmorStandEntity) {
+            attacker = ((ArmorStandEntity) attacker).getOwner();
         }
 
         if (attacker instanceof Player) {
@@ -1048,6 +1045,11 @@ public class Settings {
     private boolean    showLossMessages;
     private Set<String> expLostBlacklist;
 
+    private boolean useNewCustomExp;
+    private int base;
+    private int step;
+    private int cycle;
+
     /**
      * Gets the required amount of experience at a given level
      *
@@ -1056,7 +1058,26 @@ public class Settings {
      * @return required experience to gain a level
      */
     public int getRequiredExp(int level) {
-        if (useCustomExp) { return (int) expCustom.compute(level, 0); } else { return expFormula.calculate(level); }
+        if (useNewCustomExp) {
+            return getCustomExpForLevel(level);
+        }
+        if (useCustomExp) {
+            return (int) expCustom.compute(level, 0);
+        } else {
+            return expFormula.calculate(level);
+        }
+    }
+
+    /**
+     * 计算升级所需经验
+     * @param level 当前等级
+     * @return 升级到下一级所需的经验
+     */
+    public int getCustomExpForLevel(int level) {
+        // 每10级一个轮回：10、20、30、40……均视为1级
+        int modLevel = (level % cycle == 0) ? 1 : level % cycle;
+
+        return base + (modLevel - 1) * step;
     }
 
     /**
@@ -1173,6 +1194,10 @@ public class Settings {
 
         expCustom = new Formula(config.getString(EXP_BASE + "custom-formula"), new CustomValue("lvl"));
         useCustomExp = config.getBoolean(EXP_BASE + "use-custom") && expCustom.isValid();
+        useNewCustomExp = config.getBoolean(EXP_BASE + "new-custom-exp.use");
+        base = config.getInt(EXP_BASE + "new-custom-exp.base");
+        step = config.getInt(EXP_BASE + "new-custom-exp.step");
+        cycle = config.getInt(EXP_BASE + "new-custom-exp.cycle");
 
         DataSection yields = config.getSection(EXP_BASE + "yields");
         this.yields.clear();

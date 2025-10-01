@@ -26,6 +26,7 @@
  */
 package com.sucy.skill.dynamic.mechanic;
 
+import com.sucy.skill.api.armorstand.ArmorStandEntity;
 import com.sucy.skill.api.attribute.AttributeAPI;
 import com.sucy.skill.api.skills.SkillContext;
 import org.bukkit.Bukkit;
@@ -70,17 +71,12 @@ public class DamageMechanic extends MechanicComponent {
         double damage = 0;
         LivingEntity other = caster;
 
-        if (caster.getMetadata(AttributeAPI.FX_SKILL_API_MASTER).isEmpty()) {
-            damage = parseValues(caster, DAMAGE, level, 1.0);
+        if (caster instanceof ArmorStandEntity) {
+            other = ((ArmorStandEntity) caster).getOwner();
+            damage = parseValues(other, DAMAGE, level, 1.0);
         } else {
-            UUID masterId = UUID.fromString(caster.getMetadata(AttributeAPI.FX_SKILL_API_MASTER).get(0).asString());
-            Entity master = Bukkit.getEntity(masterId);
-            if (master == null || master.isEmpty() || master.isDead()) {
-                damage = parseValues(caster, DAMAGE, level, 1.0);
-            } else if (master instanceof LivingEntity) {
-                other = (LivingEntity) master;
-                damage = parseValues((LivingEntity) master, DAMAGE, level, 1.0);
-            }
+            damage = parseValues(caster, DAMAGE, level, 1.0);
+
         }
         boolean knockback = settings.getBool(KNOCKBACK, true);
         String classification = settings.getString(CLASSIFIER, "default");

@@ -32,7 +32,9 @@ import org.bukkit.Bukkit;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
 
+import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 /**
  * Executes a command for each target
@@ -57,37 +59,44 @@ public class CommandMechanic extends MechanicComponent {
      */
     @Override
     public boolean execute(LivingEntity caster, SkillContext context, int level, List<LivingEntity> targets) {
-        if (targets.size() == 0 || !settings.has(COMMAND)) {
+        if (targets.isEmpty() || !settings.has(COMMAND)) {
             return false;
         }
-        String command = settings.getString(COMMAND);
+        Object object = settings.getObj(COMMAND, level);
+        List<String> commands = new ArrayList<>();
+        if (object instanceof String) {
+            commands.add((String) object);
+        } else if (object instanceof List<?>) {
+            commands.addAll((List<String>) object);
+        }
         String type = settings.getString(TYPE).toLowerCase();
         for (LivingEntity target : targets) {
-            command = filter(caster, target, command);
-            final String finalCommand = command;
-            if (target instanceof Player) {
-                Player p = (Player) target;
-                if (type.equals("op")) {
-                    boolean op = p.isOp();
-                    Bukkit.getScheduler().runTask(SkillAPI.singleton(), () -> {
-                        try {
-                            p.setOp(true);
-                            Bukkit.getServer().dispatchCommand(p, finalCommand);
-                        } catch (Exception ex) {
-                            ex.printStackTrace();
-                        } finally {
-                            p.setOp(op);
-                        }
-                    });
+            for (String cmd : commands) {
+                final String finalCommand = filter(caster, target, cmd);
+                if (target instanceof Player) {
+                    Player p = (Player) target;
+                    if (type.equals("op")) {
+                        boolean op = p.isOp();
+                        Bukkit.getScheduler().runTask(SkillAPI.singleton(), () -> {
+                            try {
+                                p.setOp(true);
+                                Bukkit.dispatchCommand(p, finalCommand);
+                            } catch (Exception ex) {
+                                ex.printStackTrace();
+                            } finally {
+                                p.setOp(op);
+                            }
+                        });
+                    } else {
+                        Bukkit.getScheduler().runTask(SkillAPI.singleton(), () ->
+                                Bukkit.dispatchCommand(Bukkit.getConsoleSender(), finalCommand)
+                        );
+                    }
                 } else {
                     Bukkit.getScheduler().runTask(SkillAPI.singleton(), () ->
-                            Bukkit.getServer().dispatchCommand(Bukkit.getConsoleSender(), finalCommand)
+                            Bukkit.dispatchCommand(Bukkit.getConsoleSender(), finalCommand)
                     );
                 }
-            } else {
-                Bukkit.getScheduler().runTask(SkillAPI.singleton(), () ->
-                        Bukkit.getServer().dispatchCommand(Bukkit.getConsoleSender(), finalCommand)
-                );
             }
         }
 

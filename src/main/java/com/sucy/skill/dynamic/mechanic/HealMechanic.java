@@ -27,6 +27,7 @@
 package com.sucy.skill.dynamic.mechanic;
 
 import com.rit.sucy.version.VersionManager;
+import com.sucy.skill.api.armorstand.ArmorStandEntity;
 import com.sucy.skill.api.attribute.AttributeAPI;
 import com.sucy.skill.api.event.SkillHealEvent;
 import com.sucy.skill.api.skills.SkillContext;
@@ -64,19 +65,13 @@ public class HealMechanic extends MechanicComponent {
 
         double value = 0;
         LivingEntity other = caster;
-
-        if (caster.getMetadata(AttributeAPI.FX_SKILL_API_MASTER).isEmpty()) {
+        if (caster instanceof ArmorStandEntity) {
+            other = ((ArmorStandEntity) caster).getOwner();
+            value = parseValues(other, VALUE, level, 1.0);
+        } else  {
             value = parseValues(caster, VALUE, level, 1.0);
-        } else {
-            UUID masterId = UUID.fromString(caster.getMetadata(AttributeAPI.FX_SKILL_API_MASTER).get(0).asString());
-            Entity master = Bukkit.getEntity(masterId);
-            if (master == null || master.isEmpty() || master.isDead()) {
-                value = parseValues(caster, VALUE, level, 1.0);
-            } else if (master instanceof LivingEntity) {
-                other = (LivingEntity) master;
-                value = parseValues((LivingEntity) master, VALUE, level, 1.0);
-            }
         }
+
 
         if (value < 0) { return false; }
         for (LivingEntity target : targets) {

@@ -242,6 +242,10 @@ public abstract class EffectComponent {
     }
 
     protected String filter(LivingEntity caster, LivingEntity target, String text) {
+        return parseVars(caster, target, text);
+    }
+
+    protected static String parseVars(LivingEntity caster, LivingEntity target, String text) {
         // Grab values
         int i = text.indexOf('{');
         if (i < 0) { return text; }

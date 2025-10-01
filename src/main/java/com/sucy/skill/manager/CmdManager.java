@@ -53,10 +53,11 @@ public class CmdManager {
         );
         root.addSubCommands(
                 new ConfigurableCommand(api, "attAction", SenderType.ANYONE, new CmdAttributeAction(), "临时属性", "", Permissions.AttributeAction),
-                new ConfigurableCommand(api, "cast", SenderType.PLAYER_ONLY, new CmdCast(), "Casts a skill", "<skill>", Permissions.BASIC),
+                new ConfigurableCommand(api, "cast", SenderType.PLAYER_ONLY, new CmdCast(), "Casts a skill", "<skill>", Permissions.FORCE),
             new ConfigurableCommand(api, "changeclass", SenderType.ANYONE, new CmdChangeClass(), "Swaps classes", "<player> <group> <class>", Permissions.FORCE),
             new ConfigurableCommand(api, "exp", SenderType.ANYONE, new CmdExp(), "Gives players exp", "[player] <amount> [group]", Permissions.LVL),
             new ConfigurableCommand(api, "info", SenderType.ANYONE, new CmdInfo(), "Shows class info", "[player]", Permissions.BASIC),
+            new ConfigurableCommand(api, "refreshSpeed", SenderType.ANYONE, new CmdRefreshSpeed(), "刷新移动速度", "[player]", Permissions.ATTRIB),
             new ConfigurableCommand(api, "level", SenderType.ANYONE, new CmdLevel(), "Gives players levels", "[player] <amount> [group]", Permissions.LVL),
             new ConfigurableCommand(api, "lore", SenderType.PLAYER_ONLY, new CmdLore(), "Adds lore to item", "<lore>", Permissions.LORE),
             new ConfigurableCommand(api, "mana", SenderType.ANYONE, new CmdMana(), "Gives player mana", "[player] <amount>", Permissions.MANA),
@@ -69,11 +70,12 @@ public class CmdManager {
             new ConfigurableCommand(api, "world", SenderType.PLAYER_ONLY, new CmdWorld(), "Moves to world", "<world>", Permissions.WORLD)
         );
         root.addSubCommands(
+                new ConfigurableCommand(api, "cooldown", SenderType.ANYONE, new CmdCooldown(), "缩短冷却", "<player> <value>", "admin"),
                 new ConfigurableCommand(api, "consolecast", SenderType.CONSOLE_ONLY, new CmdConsoleCast(), "Casts a skill", "<skill>", Permissions.FORCE),
-            new ConfigurableCommand(api, "forceattr", SenderType.CONSOLE_ONLY, new CmdForceAttr(), "Refunds/gives attributes", "<player> [attr] [amount]", Permissions.FORCE),
-            new ConfigurableCommand(api, "forcecast", SenderType.CONSOLE_ONLY, new CmdForceCast(), "Player casts the skill", "<player> <skill> [level]", Permissions.FORCE),
-            new ConfigurableCommand(api, "forceprofess", SenderType.CONSOLE_ONLY, new CmdForceProfess(), "Professes a player", "<player> <class>", Permissions.FORCE),
-            new ConfigurableCommand(api, "forceskill", SenderType.CONSOLE_ONLY, new CmdForceSkill(), "Modifies skill levels", "<player> <up|down|reset> <skill>", Permissions.FORCE)
+                new ConfigurableCommand(api, "forceattr", SenderType.CONSOLE_ONLY, new CmdForceAttr(), "Refunds/gives attributes", "<player> [attr] [amount]", Permissions.FORCE),
+                new ConfigurableCommand(api, "forcecast", SenderType.CONSOLE_ONLY, new CmdForceCast(), "Player casts the skill", "<player> <skill> [level]", Permissions.FORCE),
+                new ConfigurableCommand(api, "forceprofess", SenderType.CONSOLE_ONLY, new CmdForceProfess(), "Professes a player", "<player> <class>", Permissions.FORCE),
+                new ConfigurableCommand(api, "forceskill", SenderType.CONSOLE_ONLY, new CmdForceSkill(), "Modifies skill levels", "<player> <up|down|reset> <skill>", Permissions.FORCE)
         );
         if (SkillAPI.getSettings().isUseSql()) {
             root.addSubCommand(new ConfigurableCommand(api, "save", SenderType.ANYONE, new CmdSave(), "安全的保存数据", "", "save"));

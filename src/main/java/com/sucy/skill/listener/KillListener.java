@@ -168,8 +168,7 @@ public class KillListener extends SkillAPIListener
      * @param event event details
      */
     @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
-    public void onSpell(SkillDamageEvent event)
-    {
+    public void onSpell(SkillDamageEvent event) {
         if (event.getDamager() instanceof Player)
             setKiller(event.getTarget(), (Player) event.getDamager());
     }

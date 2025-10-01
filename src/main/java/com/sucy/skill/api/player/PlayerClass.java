@@ -40,6 +40,7 @@ import com.sucy.skill.data.TitleType;
 import com.sucy.skill.dynamic.DynamicSkill;
 import com.sucy.skill.language.NotificationNodes;
 import com.sucy.skill.language.RPGFilter;
+import com.sucy.skill.listener.AttributeListener;
 import com.sucy.skill.manager.TitleManager;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
@@ -449,17 +450,18 @@ public class PlayerClass {
         final Player player = getPlayerData().getPlayer();
         if (player != null) {
             getPlayerData().updateHealthAndMana(getPlayerData().getPlayer());
-            getPlayerData().getEquips().update(getPlayerData().getPlayer());
         }
         getPlayerData().autoLevel();
 
         // Call the event
-        PlayerLevelUpEvent event = new PlayerLevelUpEvent(this, amount);
-        Bukkit.getPluginManager().callEvent(event);
+        // 拒绝唤起事件，修复生命值呗某个插件锁定
+        AttributeListener.updatePlayer(this.getPlayerData());
+
+       // PlayerLevelUpEvent event = new PlayerLevelUpEvent(this, amount);
+       // Bukkit.getPluginManager().callEvent(event);
 
         // Apply the effect
-        if (SkillAPI.getSettings().hasLevelUpEffect())
-        {
+        if (SkillAPI.getSettings().hasLevelUpEffect()) {
             DynamicSkill skill = SkillAPI.getSettings().getLevelUpSkill();
             skill.cast(player, level);
         }

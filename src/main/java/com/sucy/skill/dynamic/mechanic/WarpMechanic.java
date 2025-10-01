@@ -82,6 +82,6 @@ public class WarpMechanic extends MechanicComponent {
             }
             target.teleport(loc.subtract(0, 1, 0));
         }
-        return targets.size() > 0;
+        return !targets.isEmpty();
     }
 }

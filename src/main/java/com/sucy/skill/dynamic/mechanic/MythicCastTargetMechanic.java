@@ -26,7 +26,6 @@ public class MythicCastTargetMechanic extends MechanicComponent {
         return "mythic cast target";
     }
 
-
     @Override
     public boolean execute(LivingEntity caster, SkillContext context, int level, List<LivingEntity> targets) {
         if (!settings.has(SKILLNAME)) {

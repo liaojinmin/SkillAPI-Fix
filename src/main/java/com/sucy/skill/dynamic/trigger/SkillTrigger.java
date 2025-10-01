@@ -3,6 +3,7 @@ package com.sucy.skill.dynamic.trigger;
 import com.sucy.skill.api.Settings;
 import com.sucy.skill.api.event.SkillDamageEvent;
 import com.sucy.skill.dynamic.DynamicSkill;
+import org.bukkit.entity.Player;
 
 import java.util.Arrays;
 import java.util.List;
@@ -13,6 +14,10 @@ import java.util.List;
  */
 public abstract class SkillTrigger implements Trigger<SkillDamageEvent> {
 
+    private static final String PLAYER = "PLAYER";
+    private static final String ENTITY = "ENTITY";
+    private static final String ALL = "ALL";
+
     /** {@inheritDoc} */
     @Override
     public Class<SkillDamageEvent> getEvent() {
@@ -22,14 +27,29 @@ public abstract class SkillTrigger implements Trigger<SkillDamageEvent> {
     /** {@inheritDoc} */
     @Override
     public boolean shouldTrigger(final SkillDamageEvent event, final int level, final Settings settings) {
+        if (event.isCancelled()) return false;
+        final double damage = event.getDamage();
         final double min = settings.getDouble("dmg-min");
         final double max = settings.getDouble("dmg-max");
-        final List<String> types = settings.getStringList("category");
+        // 提前检查伤害范围，避免不必要的判断
+        if (damage < min || damage > max) return false;
 
-        //System.out.println("min "+min+ " max "+ max + " 取得的触发类型 "+ Arrays.toString(types.toArray(new String[0])));
-        final boolean empty = types.isEmpty() || types.get(0).isEmpty();
-        return event.getDamage() >= min && event.getDamage() <= max &&
-                (empty || types.contains(event.getClassification()));
+        final String damageType = settings.getString("damageType", ALL);
+        if (PLAYER.equalsIgnoreCase(damageType) && !(event.getDamager() instanceof Player)) {
+            return false;
+        }
+        if (ENTITY.equalsIgnoreCase(damageType) && event.getDamager() instanceof Player) {
+            return false;
+        }
+        final String targetType = settings.getString("targetType", ALL);
+        if (PLAYER.equalsIgnoreCase(targetType) && !(event.getTarget() instanceof Player)) {
+            return false;
+        }
+        if (ENTITY.equalsIgnoreCase(targetType) && event.getTarget() instanceof Player) {
+            return false;
+        }
+        final List<String> types = settings.getStringList("category");
+        return (types.isEmpty() || types.get(0).isEmpty()) || types.contains(event.getClassification());
     }
 
     /**
@@ -47,4 +67,5 @@ public abstract class SkillTrigger implements Trigger<SkillDamageEvent> {
     boolean isUsingTarget(final Settings settings) {
         return settings.getString("target", "true").equalsIgnoreCase("false");
     }
+
 }

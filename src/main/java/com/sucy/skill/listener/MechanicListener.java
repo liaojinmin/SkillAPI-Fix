@@ -2,6 +2,7 @@ package com.sucy.skill.listener;
 
 import com.rit.sucy.version.VersionManager;
 import com.sucy.skill.SkillAPI;
+import com.sucy.skill.api.armorstand.ArmorStandEntity;
 import com.sucy.skill.api.event.FlagApplyEvent;
 import com.sucy.skill.api.event.FlagExpireEvent;
 import com.sucy.skill.api.event.PlayerLandEvent;
@@ -42,8 +43,6 @@ public class MechanicListener extends SkillAPIListener {
     public static final String SKILL_CASTER      = "caster";
     public static final String SPEED_KEY         = "sapiSpeedKey";
     public static final String DISGUISE_KEY      = "sapiDisguiseKey";
-
-    public static final String ARMOR_STAND = "asMechanic";
 
     private static final HashMap<UUID, Integer> flying = new HashMap<>();
     private static final DecimalFormat df = new DecimalFormat("#0.00");
@@ -237,7 +236,7 @@ public class MechanicListener extends SkillAPIListener {
     @EventHandler
     public void onArmorStandDamage(EntityDamageEvent event) {
         Entity entity = event.getEntity();
-        if (entity instanceof ArmorStand && SkillAPI.getMeta(entity, ARMOR_STAND) != null) {
+        if (entity instanceof ArmorStandEntity) {
             event.setCancelled(true);
         }
     }
@@ -250,7 +249,7 @@ public class MechanicListener extends SkillAPIListener {
     @EventHandler
     public void onArmorStandInteract(PlayerArmorStandManipulateEvent event) {
         Entity entity = event.getRightClicked();
-        if (SkillAPI.getMeta(entity, ARMOR_STAND) != null) {
+        if (entity instanceof ArmorStandEntity) {
             event.setCancelled(true);
         }
     }

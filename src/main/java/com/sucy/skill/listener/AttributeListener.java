@@ -10,6 +10,7 @@ import com.sucy.skill.api.player.PlayerData;
 import com.sucy.skill.log.LogType;
 import com.sucy.skill.log.Logger;
 import com.sucy.skill.manager.AttributeManager;
+import me.neon.flash.attribute.AttributePlayer;
 import org.bukkit.Bukkit;
 import org.bukkit.attribute.Attribute;
 import org.bukkit.attribute.AttributeInstance;
@@ -118,17 +119,6 @@ public class AttributeListener extends SkillAPIListener {
     }
 
     /**
-     * Applies health and mana bonus attributes
-     *
-     * @param event event details
-     */
-    @EventHandler
-    public void onLevelUp(PlayerLevelUpEvent event)
-    {
-        updatePlayer(event.getPlayerData());
-    }
-
-    /**
      * Applies health and mana attribute bonuses on upgrading the attribute
      *
      * @param event event details
@@ -162,6 +152,7 @@ public class AttributeListener extends SkillAPIListener {
      */
     @EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
     public void onPhysicalDamage(PhysicalDamageEvent event) {
+      //  System.out.println("PhysicalDamageEvent");
         // Physical Damage
         double newAmount = AttributeAPI.scaleStat(event.getDamager(), AttributeManager.PHYSICAL_DAMAGE, event.getDamage());
         if (event.isProjectile()) {
@@ -184,6 +175,7 @@ public class AttributeListener extends SkillAPIListener {
             event.setCancelled(true);
         }
         event.setDamage(newAmountD);
+    //    System.out.println("  PhysicalDamageEvent >>> "+newAmount);
     }
 
     /**
@@ -195,20 +187,27 @@ public class AttributeListener extends SkillAPIListener {
     public void onSkillDamage(final SkillDamageEvent event) {
         // Skill Damage
         if (event.getClassification().equalsIgnoreCase(PHYSICAL)) {
+         //   System.out.println("  onSkillDamage Skill Damage PHYSICAL "+event.getDamage());
             event.setDamage(AttributeAPI.scaleStat(event.getDamager(), AttributeManager.PHYSICAL_DAMAGE, event.getDamage()));
         } else {
             final String classified = AttributeManager.SKILL_DAMAGE + "-" + event.getClassification();
+           // System.out.println("  onSkillDamage Skill Damage "+event.getDamage() + " class: "+classified);
             final double firstPass = AttributeAPI.scaleStat(event.getDamager(), classified, event.getDamage());
             final double newAmount = AttributeAPI.scaleStat(event.getDamager(), AttributeManager.SKILL_DAMAGE, firstPass);
             event.setDamage(newAmount);
         }
         // Skill Defense
         if (event.getClassification().equalsIgnoreCase(PHYSICAL)) {
+        //    System.out.println(" SkillDamageEvent Skill Defense PHYSICAL "+event.getDamage());
             event.setDamage(AttributeAPI.scaleStat(event.getTarget(), AttributeManager.PHYSICAL_DEFENSE, event.getDamage()));
         } else {
             final String classified = AttributeManager.SKILL_DEFENSE + "-" + event.getClassification();
+         //   System.out.println("SkillDamageEvent Damager: " + event.getDamager().getName() + " Target: " + event.getTarget().getName());
+          //  System.out.println("  classified: " + classified);
             final double firstPass = AttributeAPI.scaleStat(event.getTarget(), classified, event.getDamage());
+         //   System.out.println("  firstPass: " + firstPass);
             final double newAmount = AttributeAPI.scaleStat(event.getTarget(), AttributeManager.SKILL_DEFENSE, firstPass);
+            //System.out.println("  newAmount: " + newAmount);
             event.setDamage(newAmount);
         }
     }
@@ -216,6 +215,7 @@ public class AttributeListener extends SkillAPIListener {
 
     @EventHandler(priority = EventPriority.HIGH)
     public void onDamage(final EntityDamageEvent event) {
+       // System.out.println("EntityDamageEvent");
         if (!(event.getEntity() instanceof Player))
             return;
         final Player player = (Player)event.getEntity();
@@ -224,6 +224,7 @@ public class AttributeListener extends SkillAPIListener {
             return;
         }
         event.setDamage(data.scaleStat("defense-" + event.getCause().name().toLowerCase(), event.getDamage()));
+    //    System.out.println("  EntityDamageEvent >>> "+event.getDamage());
     }
 
     @EventHandler(priority = EventPriority.HIGH)
@@ -278,6 +279,15 @@ public class AttributeListener extends SkillAPIListener {
      * @param data player to update
      */
     public static void updatePlayer(@Nullable PlayerData data) {
+        if (Bukkit.isPrimaryThread()) {
+            updatePlayer2(data);
+        } else  {
+            Bukkit.getScheduler().runTask(SkillAPI.singleton(), () -> updatePlayer2(data));
+        }
+
+    }
+
+    private static void updatePlayer2(@Nullable PlayerData data) {
         if (data == null) {
             return;
         }
@@ -285,13 +295,17 @@ public class AttributeListener extends SkillAPIListener {
         if (player != null && SkillAPI.getSettings().isWorldEnabled(player.getWorld())) {
 
             double change = updateStat(data, AttributeManager.HEALTH, player.getMaxHealth(), 0, Double.MAX_VALUE);
+
             data.addMaxHealth(change);
 
             change = updateStat(data, AttributeManager.MANA, data.getMaxMana(), 0, Double.MAX_VALUE);
             data.addMaxMana(change);
 
-            change = updateStat(data, AttributeManager.MOVE_SPEED, player.getWalkSpeed(), -2, 1);
-            player.setWalkSpeed(player.getWalkSpeed() + (float) change);
+            change = updateStat(data, AttributeManager.MOVE_SPEED, 0.2f, -2, 2);
+            // player.setWalkSpeed(player.getWalkSpeed() + (float) change);
+            player.setWalkSpeed(Math.max(0.0f, 0.2f + (float) change));
+        //    System.out.println("change change "+change + " now: "+player.getWalkSpeed());
+           // player.setWalkSpeed((float) change);
 
             if (VersionManager.isVersionAtLeast(VersionManager.V1_9_0)) {
                 update(data, player, Attribute.GENERIC_ATTACK_SPEED, AttributeManager.ATTACK_SPEED, 0, 1024);
@@ -302,6 +316,16 @@ public class AttributeListener extends SkillAPIListener {
             if (VersionManager.isVersionAtLeast(110200)) {
                 update(data, player, Attribute.GENERIC_ARMOR_TOUGHNESS, AttributeManager.ARMOR_TOUGHNESS, 0, 20);
             }
+
+            /* // 无效
+            // 2025/8/28 更新nf
+            AttributePlayer attributePlayer = me.neon.flash.attribute.AttributeManager
+                    .INSTANCE.getAttributePlayer().get(player.getUniqueId());
+            if (attributePlayer != null) {
+                attributePlayer.update();
+            }
+
+             */
         }
     }
 
@@ -329,8 +353,11 @@ public class AttributeListener extends SkillAPIListener {
         if (data == null) {
             return;
         }
-        double speed = updateStat(data, AttributeManager.MOVE_SPEED, 0.2, -2, 1);
-        player.setWalkSpeed((float) (0.2 + speed));
+        double speed = updateStat(data, AttributeManager.MOVE_SPEED, 0.2f, -2, 2);
+      //  System.out.println("speed "+speed + " now: "+player.getWalkSpeed());
+        player.setWalkSpeed(Math.max(0.0f, 0.2f + (float) speed));
+     //   player.setWalkSpeed((float) speed);
+
     }
 
     /**
@@ -344,11 +371,26 @@ public class AttributeListener extends SkillAPIListener {
      */
     private static double updateStat(PlayerData data, String key, double value, double min, double max) {
         Player player = data.getPlayer();
-        if (player != null)
-        {
+        if (player != null) {
             String mapKey = player.getName() + ":" + key;
-            double current = BONUSES.containsKey(mapKey) ? BONUSES.remove(mapKey) : 0;
+            double current;
+            if (key.equalsIgnoreCase(AttributeManager.MOVE_SPEED)) {
+               // System.out.println("  value: "+ value +" min: " + min + " max: "+max);
+                current = 0;
+            } else current = BONUSES.containsKey(mapKey) ? BONUSES.remove(mapKey) : 0;
+
+         //   double a = data.scaleStat(key, value - current);
+          //  if (key.equalsIgnoreCase(AttributeManager.MOVE_SPEED)) {
+          //      System.out.println("  a "+ a);
+        //    }
+      //      double b = Math.min(max, a - value + current);
+         //   if (key.equalsIgnoreCase(AttributeManager.MOVE_SPEED)) {
+            //    System.out.println("  b "+ b);
+         //   }
             double updated = Math.max(min, Math.min(max, data.scaleStat(key, value - current) - value + current));
+          //  if (key.equalsIgnoreCase(AttributeManager.MOVE_SPEED)) {
+                //System.out.println("  updated "+ updated);
+         //   }
             BONUSES.put(mapKey, updated);
             return updated - current;
         }

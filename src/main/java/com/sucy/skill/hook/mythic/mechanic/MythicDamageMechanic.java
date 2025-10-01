@@ -9,14 +9,13 @@ import io.lumine.xikage.mythicmobs.mobs.ActiveMob;
 import io.lumine.xikage.mythicmobs.skills.ITargetedEntitySkill;
 import io.lumine.xikage.mythicmobs.skills.SkillMechanic;
 import io.lumine.xikage.mythicmobs.skills.SkillMetadata;
+import io.lumine.xikage.mythicmobs.skills.damage.DamageMetadata;
 import io.lumine.xikage.mythicmobs.skills.placeholders.parsers.PlaceholderString;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.attribute.Attribute;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.LivingEntity;
-import org.bukkit.event.entity.EntityDamageByEntityEvent;
-import org.bukkit.event.entity.EntityDamageEvent;
 
 public class MythicDamageMechanic extends SkillMechanic implements ITargetedEntitySkill {
 
@@ -99,20 +98,27 @@ public class MythicDamageMechanic extends SkillMechanic implements ITargetedEnti
                     amount = value;
                     break;
             }
-            if (data.getCaster() instanceof ActiveMob) {
-                ((ActiveMob)data.getCaster()).setLastDamageSkillAmount(amount);
-            }
+
             //System.out.println("攻击伤害: " + amount + " trueDamage: " + trueDamage);
             if (trueDamage) {
-                skill.trueDamage(entity, amount, damager);
+                skill.trueDamageAndBack(entity, amount, damager,  "",(it) -> {
+                    if (data.getCaster() instanceof ActiveMob) {
+                        ((ActiveMob)data.getCaster()).setLastDamageSkillAmount(it);
+                    }
+                });
             } else {
-                skill.damage(entity, amount, damager, classifier.get(data), true, false);
+                skill.damageAndBack(entity, amount, damager, classifier.get(data), true, false, (it) -> {
+                    if (data.getCaster() instanceof ActiveMob) {
+                        ((ActiveMob)data.getCaster()).setLastDamageSkillAmount(it);
+                    }
+                });
             }
         } catch (Exception e) {
             e.printStackTrace();
         } finally {
-            data.getCaster().setUsingDamageSkill(false);
             data.getCaster().getEntity().removeMetadata("doing-skill-damage");
+            data.getCaster().setUsingDamageSkill(false);
+            target.removeMetadata("skill-damage");
         }
         return true;
     }

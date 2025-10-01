@@ -71,27 +71,24 @@ public class ParticleProjectile extends CustomProjectile {
 
     private static final String PIERCE = "pierce";
 
-    private Location loc;
-    private final Settings settings;
+    protected Location loc;
 
-    @Nullable
-    private Double radius;
+    protected final Settings settings;
 
-    private Vector   vel;
-    private int      steps;
-    private int      count;
-    private int      freq;
-    private int      life;
-    private Vector   gravity;
-    private boolean pierce;
+    protected Double radius;
 
-    private final boolean isCarrier;
+    protected Vector vel;
 
+    protected final int steps;
 
-    public ParticleProjectile(LivingEntity shooter, int level, Location loc, Settings settings,
-                              @Nullable ArmorStandCarrier carrier) {
-        super(shooter, carrier);
-        this.isCarrier = carrier != null;
+    protected int count;
+    protected final int freq;
+    protected int life;
+    protected final Vector gravity;
+    protected final boolean pierce;
+
+    public ParticleProjectile(LivingEntity shooter, int level, Location loc, Settings settings) {
+        super(shooter);
         this.loc = loc;
         this.settings = settings;
         this.vel = loc.getDirection().multiply(settings.getAttr(SPEED, level, 1.0));
@@ -99,10 +96,7 @@ public class ParticleProjectile extends CustomProjectile {
         this.life = (int) (settings.getDouble(LIFESPAN, 2) * 20);
         this.gravity = new Vector(0, settings.getDouble(GRAVITY, 0), 0);
         this.pierce = settings.getBool(PIERCE, false);
-        this.radius = settings.getDouble("radius");
-        if (this.radius <= 0) {
-            this.radius = null;
-        }
+        this.radius = settings.getDouble("radius", 1.5);
         steps = (int) Math.ceil(vel.length() * 2);
         vel.multiply(1.0 / steps);
         gravity.multiply(1.0 / steps);
@@ -147,7 +141,21 @@ public class ParticleProjectile extends CustomProjectile {
 
     @Override
     protected double getCollisionRadius() {
-        return radius != null ? radius : 1.5;
+        return radius;
+    }
+
+    protected void applySteps() {
+        // Go through multiple steps to avoid tunneling
+        for (int i = 0; i < steps; i++) {
+            loc.add(vel);
+            //  loc.setDirection(vel);
+            vel.add(gravity);
+
+            if (!isTraveling()) {
+                return;
+            }
+            if (!checkCollision(pierce)) break;
+        }
     }
 
     @Override
@@ -166,28 +174,13 @@ public class ParticleProjectile extends CustomProjectile {
 
     @Override
     public void run() {
-        // Go through multiple steps to avoid tunneling
-        for (int i = 0; i < steps; i++) {
-            loc.add(vel);
-            vel.add(gravity);
-
-            if (!isTraveling()) {
-                return;
-            }
-            if (!checkCollision(pierce)) break;
-        }
+        applySteps();
 
         // Particle along path
         count++;
         if (count >= freq) {
             count = 0;
-            if (isCarrier) {
-                if (carrier != null) {
-                    carrier.teleport(loc);
-                }
-            } else {
-                ParticleHelper.play(loc, settings, getShooter());
-            }
+            ParticleHelper.play(loc, settings, getShooter());
         }
 
         // Lifespan
@@ -201,16 +194,6 @@ public class ParticleProjectile extends CustomProjectile {
 
     /**
      * Fires a spread of projectiles from the location.
-     *
-     * @param shooter  entity shooting the projectiles
-     * @param level    level to use for scaling the speed
-     * @param center   the center direction of the spread
-     * @param loc      location to shoot from
-     * @param settings settings to use when firing
-     * @param angle    angle of the spread
-     * @param amount   number of projectiles to fire
-     * @param callback optional callback for when projectiles hit
-     *
      * @return list of fired projectiles
      */
     public static ArrayList<ParticleProjectile> spread(
@@ -221,17 +204,20 @@ public class ParticleProjectile extends CustomProjectile {
             Settings settings,
             double angle,
             int amount,
-            ProjectileCallback callback,
-            ArmorStandCarrier carrier
+            ProjectileCallback callback
     ) {
         ArrayList<Vector> dirs = calcSpread(center, angle, amount);
         ArrayList<ParticleProjectile> list = new ArrayList<>();
 
-
         for (Vector dir : dirs) {
             Location l = loc.clone();
             l.setDirection(dir);
-            ParticleProjectile p = new ParticleProjectile(shooter, level, l, settings, carrier);
+            ParticleProjectile p;
+            if (settings.getBool(CarrierProjectile.ARMOR_STAND, false)) {
+                p = new CarrierProjectile(shooter, level, l, settings);
+            } else {
+                p = new ParticleProjectile(shooter, level, l, settings);
+            }
             p.setCallback(callback);
             list.add(p);
         }
@@ -240,16 +226,6 @@ public class ParticleProjectile extends CustomProjectile {
 
     /**
      * Fires a spread of projectiles from the location.
-     *
-     * @param shooter  entity shooting the projectiles
-     * @param level    level to use for scaling the speed
-     * @param center   the center location to rain on
-     * @param settings settings to use when firing
-     * @param radius   radius of the circle
-     * @param height   height above the center location
-     * @param amount   number of projectiles to fire
-     * @param callback optional callback for when projectiles hit
-     *
      * @return list of fired projectiles
      */
     public static ArrayList<ParticleProjectile> rain(
@@ -260,15 +236,21 @@ public class ParticleProjectile extends CustomProjectile {
             double radius,
             double height,
             int amount,
-            ProjectileCallback callback,
-            ArmorStandCarrier carrier
+            ProjectileCallback callback
     ) {
         Vector vel = new Vector(0, 1, 0);
         ArrayList<Location> locs = calcRain(center, radius, height, amount);
-        ArrayList<ParticleProjectile> list = new ArrayList<ParticleProjectile>();
+        ArrayList<ParticleProjectile> list = new ArrayList<>();
         for (Location l : locs) {
             l.setDirection(vel);
-            ParticleProjectile p = new ParticleProjectile(shooter, level, l, settings, carrier);
+
+            ParticleProjectile p;
+            if (settings.getBool(CarrierProjectile.ARMOR_STAND, false)) {
+                p = new CarrierProjectile(shooter, level, l, settings);
+            } else {
+                p = new ParticleProjectile(shooter, level, l, settings);
+            }
+
             p.setCallback(callback);
             list.add(p);
         }

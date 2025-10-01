@@ -23,7 +23,12 @@ public class TriggerComponent extends EffectComponent {
     }
 
     public boolean trigger(final LivingEntity caster, final LivingEntity target, final int level) {
-        return execute(caster, new SkillContext(""), level, new ArrayList<>(Collections.singletonList(target)));
+        return execute(
+                caster,
+                new SkillContext(),
+                level,
+                new ArrayList<>(Collections.singletonList(target))
+        );
     }
 
     @Override

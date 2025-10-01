@@ -60,24 +60,26 @@ public class TriggerMechanic extends MechanicComponent {
        // 将主动延时删除改为被动式，防止重复触发时刚好移除上下文导致触发器失效。
        // final int ticks = (int)(20 * parseValues(caster, DURATION, level, 5));
         boolean worked = false;
-        final String mark = settings.getString(ReturnMechanic.MARK, "");
 
         for (final LivingEntity target : targets) {
             if (!stackable && CASTER_MAP.containsKey(target.getEntityId()))
                 return false;
-            if (!mark.isEmpty()) {
-              //  System.out.println("name: "+skill.getName() + " trigger: " + triggerHandler.getTrigger().getKey() +"  mark: "+mark);
-                ReturnMechanic.addMark(target, mark);
-               // Bukkit.getScheduler().runTaskLater(SkillAPI.singleton(),
-                  //      () -> ReturnMechanic.delMark(target, mark), 20);
+
+            /*
+            // 添加标记 2025/9/22
+            ReturnMechanic.Mark mark1 = ReturnMechanic.
+                    ofMark(settings.getString(ReturnMechanic.MARK, "标记名称"));
+            if (mark1 != null) {
+                ReturnMechanic.addMark(target, mark1);
             }
+
+             */
+
             if (!CASTER_MAP.containsKey(target.getEntityId())) {
                 CASTER_MAP.put(target.getEntityId(), new ArrayList<>());
             }
             final Context context2 = new Context(caster, level);
             triggerHandler.init(target, level, new StopTask(target, context2));
-
-
 
             CASTER_MAP.get(target.getEntityId()).add(context2);
 

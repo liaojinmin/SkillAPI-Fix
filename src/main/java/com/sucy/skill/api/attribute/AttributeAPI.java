@@ -19,9 +19,6 @@ import java.util.concurrent.ConcurrentHashMap;
 
 public class AttributeAPI {
 
-    public static final String FX_SKILL_API_MASTER = "FX_SKILL_API_MASTER";
-
-
     /**
      * 获取实体属性 所有实体获取属性环节都会走这个方法
      * 来实现给MM怪物等获取属性或者是兼容AP等插件
@@ -44,7 +41,7 @@ public class AttributeAPI {
                 return 0;
             }
         }
-        MobAttributeData mobAttributeData = MobAttribute.getData(entity.getUniqueId(), true);
+        MobAttributeData mobAttributeData = MobAttribute.getData(entity, true);
         return mobAttributeData.getAttribute(key);
     }
 
@@ -65,7 +62,7 @@ public class AttributeAPI {
             playerData.addAttrib.computeIfAbsent(source, key -> new ConcurrentHashMap<>()).put(attribute, value);
             return;
         }
-        MobAttributeData mobAttributeData = MobAttribute.getData(entity.getUniqueId(), true);
+        MobAttributeData mobAttributeData = MobAttribute.getData(entity, true);
         mobAttributeData.tempAddAttribute(source, attribute, value);
     }
 
@@ -84,7 +81,7 @@ public class AttributeAPI {
             playerData.addAttrib.remove(source);
             return;
         }
-        MobAttributeData mobAttributeData = MobAttribute.getData(entity.getUniqueId(), true);
+        MobAttributeData mobAttributeData = MobAttribute.getData(entity, true);
         mobAttributeData.tempRemove(source);
     }
 
@@ -140,8 +137,10 @@ public class AttributeAPI {
             double amount = getAttribute(entity, attribute.getKey());
             if (amount > 0) {
                 modified = attribute.modifyStat(stat, modified, amount);
+              //  System.out.println("  attribute: "+attribute.getKey() + " 属性值: "+amount + " 计算后: "+value + "<->"+modified);
             }
         }
+      //  System.out.println("    scaleStat返回: "+modified);
         return modified;
     }
 

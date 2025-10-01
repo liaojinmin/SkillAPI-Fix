@@ -3,7 +3,6 @@ package com.sucy.skill.api.armorstand;
 import com.sucy.skill.SkillAPI;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
-import org.bukkit.entity.ArmorStand;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.util.Vector;
 
@@ -21,7 +20,7 @@ public class ArmorStandInstance {
         next++;
         return next;
     }
-    private final LivingEntity armorStand;
+    private final ArmorStandEntity armorStand;
     private final LivingEntity owner;
     private final boolean follow;
     private double forward;
@@ -33,14 +32,13 @@ public class ArmorStandInstance {
 
     public final int indexID = getNext();
 
-
-    public ArmorStandInstance(LivingEntity armorStand, LivingEntity owner) {
+    public ArmorStandInstance(ArmorStandEntity armorStand, LivingEntity owner) {
         this.armorStand = armorStand;
         this.owner = owner;
         this.follow = false;
     }
 
-    public ArmorStandInstance(LivingEntity armorStand, LivingEntity owner,
+    public ArmorStandInstance(ArmorStandEntity armorStand, LivingEntity owner,
                               double forward, double upward, double right
     ) {
         this.armorStand = armorStand;
@@ -70,16 +68,7 @@ public class ArmorStandInstance {
 
     public void remove() {
         tickAtomic.set(false);
-        if (armorStand instanceof ArmorStand) {
-            armorStand.setHealth(0);
-            armorStand.remove();
-        } else {
-            Bukkit.getScheduler().runTask(SkillAPI.singleton(), () -> {
-                armorStand.setHealth(0);
-                armorStand.remove();
-            });
-        }
-
+        armorStand.remove();
     }
 
     public void move(Location location) {
@@ -92,7 +81,7 @@ public class ArmorStandInstance {
         }
     }
 
-    public LivingEntity getArmorStand() {
+    public ArmorStandEntity getArmorStand() {
         return armorStand;
     }
 

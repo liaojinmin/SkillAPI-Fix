@@ -1,11 +1,7 @@
 package com.sucy.skill.api.armorstand;
 
-import com.sucy.skill.SkillAPI;
-import com.sucy.skill.listener.MechanicListener;
 import com.sucy.skill.task.ArmorStandTask;
 import com.sucy.skill.thread.MainThread;
-import org.bukkit.Bukkit;
-import org.bukkit.entity.ArmorStand;
 import org.bukkit.entity.LivingEntity;
 import org.jetbrains.annotations.Nullable;
 
@@ -18,9 +14,6 @@ public class ArmorStandManager {
 
     public static void init() {
         MainThread.register(new ArmorStandTask());
-        Bukkit.getWorlds().forEach(world -> world.getEntitiesByClass(ArmorStand.class).forEach(as -> {
-            if (SkillAPI.getMeta(as, MechanicListener.ARMOR_STAND) != null) as.remove();
-        }));
     }
 
     public static void cleanUp() {

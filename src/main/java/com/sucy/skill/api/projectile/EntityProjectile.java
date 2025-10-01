@@ -26,10 +26,9 @@ import java.util.function.Consumer;
  * @author 老廖
  * @since 2024/8/1 1:28
  */
-public class EntityProjectile2 extends CustomProjectile {
+public class EntityProjectile extends CustomProjectile {
 
-
-    public final static HashMap<UUID, EntityProjectile2> cache = new HashMap<>();
+    public final static HashMap<UUID, EntityProjectile> cache = new HashMap<>();
 
     private final static Vector defaultVector = new Vector(0.0, 0.0, 0.0);
 
@@ -55,7 +54,7 @@ public class EntityProjectile2 extends CustomProjectile {
 
     private Consumer<Event> expireEventConsumer = null;
 
-    public EntityProjectile2(
+    public EntityProjectile(
             LivingEntity thrower,
             Location targetLocation,
             @Nullable Entity target,
@@ -69,7 +68,7 @@ public class EntityProjectile2 extends CustomProjectile {
         applyReset();
     }
 
-    public EntityProjectile2(
+    public EntityProjectile(
             LivingEntity thrower,
             Location targetLocation,
             @Nullable Entity target,
@@ -342,8 +341,10 @@ public class EntityProjectile2 extends CustomProjectile {
     @Override
     public void run() {
         if (useVelocity) {
+           // System.out.println("tick moveVelocity");
             moveVelocity();
         } else {
+           // System.out.println("tick moveLocation");
             moveLocation();
         }
     }

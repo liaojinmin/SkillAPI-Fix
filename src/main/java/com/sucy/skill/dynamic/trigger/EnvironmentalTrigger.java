@@ -28,6 +28,7 @@ public class EnvironmentalTrigger implements Trigger<EntityDamageEvent> {
     /** {@inheritDoc} */
     @Override
     public boolean shouldTrigger(final EntityDamageEvent event, final int level, final Settings settings) {
+        if (event.isCancelled()) return false;
         final String type = settings.getString("type", "any").replace(' ', '_').toUpperCase();
         return type.equalsIgnoreCase("ANY") || type.equalsIgnoreCase(event.getCause().name());
     }

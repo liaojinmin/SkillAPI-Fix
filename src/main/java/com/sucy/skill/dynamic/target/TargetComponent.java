@@ -2,6 +2,7 @@ package com.sucy.skill.dynamic.target;
 
 import com.rit.sucy.config.parse.DataSection;
 import com.sucy.skill.SkillAPI;
+import com.sucy.skill.api.armorstand.ArmorStandEntity;
 import com.sucy.skill.api.skills.SkillContext;
 import com.sucy.skill.cast.CircleIndicator;
 import com.sucy.skill.cast.ConeIndicator;
@@ -163,7 +164,7 @@ public abstract class TargetComponent extends EffectComponent {
     }
 
     boolean isValidTarget(final LivingEntity caster, final LivingEntity from, final LivingEntity target) {
-        if (SkillAPI.getMeta(target, MechanicListener.ARMOR_STAND) != null) return false;
+        if (target instanceof ArmorStandEntity) return false;
 
         if (target instanceof TempEntity) {
             return true;

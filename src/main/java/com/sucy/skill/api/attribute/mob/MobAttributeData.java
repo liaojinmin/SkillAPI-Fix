@@ -11,32 +11,27 @@ import java.util.HashMap;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 
-
-/**
- * 这是非玩家类型的属性中继器，负责怪物属性的实现
- */
 public class MobAttributeData {
 
-    private UUID uuid;
-    private HashMap<String, Double> map = new HashMap<>();
+    private final Entity entity;
 
-    private final ConcurrentHashMap<String,  Double> timerMap = new ConcurrentHashMap<>();
+    public final HashMap<String, Double> map = new HashMap<>();
 
-    private final HashMap<String, HashMap<String, Double>> temp = new HashMap<>();
+    public final ConcurrentHashMap<String,  Double> timerMap = new ConcurrentHashMap<>();
 
+    public final HashMap<String, HashMap<String, Double>> temp = new HashMap<>();
 
-
-    public MobAttributeData(UUID uuid) {
-        this.uuid = uuid;
+    public MobAttributeData(LivingEntity entity) {
+        this.entity = entity;
     }
 
     public LivingEntity getEntity() {
-        Entity entity = Bukkit.getEntity(uuid);
         if (entity == null || entity.isDead()) {
             return null;
         }
         return (LivingEntity) entity;
     }
+
     public void addAttribute(String attribute, double value, long timer) {
         LivingEntity livingEntity = getEntity();
         if (livingEntity == null) {
@@ -44,19 +39,12 @@ public class MobAttributeData {
         }
         AttributeEntityAddEvent event = AttributeAPI.attributeEntityAdd(livingEntity, attribute, value);
         if (timer <= 0) {
-            if (map.containsKey(event.getAttribute())) {
-                double old = map.get(event.getAttribute());
-                map.put(event.getAttribute(), event.getValue() + old);
-                return;
-            }
-            map.put(event.getAttribute(), Double.valueOf(event.getValue()));
+            Double v = map.computeIfAbsent(event.getAttribute(), (k) -> 0.0);
+            map.put(event.getAttribute(), v + event.getValue());
         } else {
-            if (timerMap.containsKey(event.getAttribute())) {
-                double old = timerMap.get(event.getAttribute());
-                timerMap.put(event.getAttribute(), event.getValue() + old);
-                return;
-            }
-            timerMap.put(event.getAttribute(), Double.valueOf(event.getValue()));
+            Double v = timerMap.computeIfAbsent(event.getAttribute(), (k) -> 0.0);
+            timerMap.put(event.getAttribute(), v + event.getValue());
+
             Bukkit.getScheduler().runTaskLater(SkillAPI.singleton(), () -> {
                 timerMap.remove(event.getAttribute());
             }, timer);
@@ -97,26 +85,18 @@ public class MobAttributeData {
         return map.getOrDefault(attribute, 0.0) + temps;
     }
 
-    public HashMap<String, Double> getMap() {
-        return map;
-    }
-
-    public void setMap(HashMap<String, Double> map) {
-        this.map = map;
-    }
-
     public UUID getUuid() {
-        return uuid;
+        return entity.getUniqueId();
     }
 
-    public void setUuid(UUID uuid) {
-        this.uuid = uuid;
+    public String getDisplay() {
+        return entity.getName();
     }
 
     @Override
     public String toString() {
         return "MobAttributeData{" +
-                "uuid=" + uuid + ","+
+                "uuid=" + entity.getUniqueId().toString() + ","+
                 "map=" + map + ","+
                 "temp=" + temp +
                 '}';

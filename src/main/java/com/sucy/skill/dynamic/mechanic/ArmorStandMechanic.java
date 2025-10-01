@@ -1,20 +1,17 @@
 package com.sucy.skill.dynamic.mechanic;
 
 import com.sucy.skill.SkillAPI;
+import com.sucy.skill.api.armorstand.ArmorStandEntity;
 import com.sucy.skill.api.armorstand.ArmorStandInstance;
 import com.sucy.skill.api.armorstand.ArmorStandManager;
-import com.sucy.skill.api.attribute.AttributeAPI;
-import com.sucy.skill.api.skills.Skill;
-import com.sucy.skill.api.skills.SkillCastAPI;
 import com.sucy.skill.api.skills.SkillContext;
-import com.sucy.skill.dynamic.DynamicSkill;
-import com.sucy.skill.listener.MechanicListener;
+import com.sucy.skill.dynamic.ArmorStandCarrier;
 import com.sucy.skill.task.RemoveTask;
-import net.Indyuce.mmoitems.api.event.ItemEquipEvent;
+import me.neon.libs.carrier.minecraft.meta.ArmorStandMeta;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.Material;
-import org.bukkit.entity.ArmorStand;
+import org.bukkit.entity.EntityType;
 import org.bukkit.entity.Husk;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.inventory.ItemStack;
@@ -75,7 +72,7 @@ public class ArmorStandMechanic extends MechanicComponent {
         List<Integer> keys = context.getIntegerList(getKey());
         ItemStack itemStack;
         String type = settings.getString(ITEM_TYPE, "AIR");
-        if (type != null && !type.equalsIgnoreCase("AIR")) {
+        if (type != null && !type.equalsIgnoreCase("AIR") && !type.equalsIgnoreCase("ARROW")) {
             itemStack = new ItemStack(Material.valueOf(type));
             ItemMeta meta = itemStack.getItemMeta();
             meta.setDisplayName(settings.getString(ITEM_NAME, "null"));
@@ -87,48 +84,35 @@ public class ArmorStandMechanic extends MechanicComponent {
             Vector side = dir.clone().crossProduct(UP);
             loc.add(dir.multiply(forward)).add(0, upward, 0).add(side.multiply(right));
 
-            /*
-            LivingEntity livingEntity = target.getWorld().spawn(loc, Husk.class, as -> {
-                as.setCustomName(name.replace("{player}", caster.getName()));
-                as.setCustomNameVisible(nameVisible);
-                as.setAI(false);
-                as.setInvulnerable(true);
-            });
-
-             */
-
-            ArmorStand livingEntity = target.getWorld().spawn(loc, ArmorStand.class, as -> {
-                try {
-                    as.setMarker(marker);
-                    as.setInvulnerable(true);
-                    as.setSilent(true);
-                } catch (NoSuchMethodError ignored) {
-                }
-
-                as.setGravity(gravity);
-                as.setCustomName(name.replace("{player}", caster.getName()));
-                as.setCustomNameVisible(nameVisible);
-                as.setSmall(small);
-                as.setArms(arms);
-                as.setBasePlate(base);
-                as.setVisible(visible);
-                as.setHelmet(itemStack);
-            });
-            livingEntity.teleport(loc);
-            livingEntity.setHeadPose(
-                    new EulerAngle(Math.toDegrees(loc.getPitch()), 0, 0)
+            ArmorStandCarrier armorStandCarrier = new ArmorStandCarrier(
+                    loc,
+                    EntityType.ARMOR_STAND,
+                    new ArmorStandMeta(false, false, small, arms, base, marker)
             );
-            SkillAPI.setMeta(livingEntity, MechanicListener.ARMOR_STAND, true);
-            //设置一下主人
-            SkillAPI.setMeta(livingEntity, AttributeAPI.FX_SKILL_API_MASTER, caster.getUniqueId());
+            armorStandCarrier.setDisplayName(
+                    name.replace("{player}", caster.getName())
+            );
+            if (itemStack.getType() != Material.AIR) {
+                armorStandCarrier.addItemsStack(itemStack);
+            }
+            armorStandCarrier.setLocation(loc);
 
-            armorStands.add(livingEntity);
+            //livingEntity.setHeadPose(
+                  //  new EulerAngle(Math.toDegrees(loc.getPitch()), 0, 0)
+           // );
+
+            ArmorStandEntity entity = new ArmorStandEntity(armorStandCarrier, caster);
+            armorStands.add(entity);
+
             ArmorStandInstance instance;
             if (follow) {
-                instance = new ArmorStandInstance(livingEntity, caster, forward, upward, right);
+                instance = new ArmorStandInstance(entity, caster, forward, upward, right);
             } else {
-                instance = new ArmorStandInstance(livingEntity, caster);
+                instance = new ArmorStandInstance(entity, caster);
             }
+            keys.add(instance.indexID);
+            armorStandCarrier.setDead(false);
+
             instance.setRunnable(it ->
                     Bukkit.getScheduler().runTask(SkillAPI.singleton(), () -> {
                         if (it.get()) {
@@ -136,10 +120,9 @@ public class ArmorStandMechanic extends MechanicComponent {
                         }
                     })
             );
-            keys.add(instance.indexID);
             ArmorStandManager.register(instance, caster, instance.indexID);
         }
         new RemoveTask(armorStands, duration);
-        return targets.size() > 0;
+        return !targets.isEmpty();
     }
 }

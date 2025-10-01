@@ -14,6 +14,7 @@ import org.bukkit.event.Cancellable;
 import org.bukkit.event.Event;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
+import org.jetbrains.annotations.Nullable;
 
 import java.util.HashMap;
 import java.util.HashSet;
@@ -33,7 +34,6 @@ public class TriggerHandler implements Listener {
     private final String key;
     private final Trigger<?> trigger;
     private final TriggerComponent component;
-
 
     public TriggerHandler(
             final DynamicSkill skill,
@@ -80,6 +80,7 @@ public class TriggerHandler implements Listener {
         active.remove(entity.getEntityId());
         component.cleanUp(entity);
     }
+
     public void register() {
         Bukkit.getPluginManager().registerEvent(
                 trigger.getEvent(),
@@ -95,22 +96,21 @@ public class TriggerHandler implements Listener {
         }
         final int level = active.get(caster.getEntityId());
         final Runnable c = cleanup.remove(caster.getEntityId());
-        final String mark = component.settings.getString(ReturnMechanic.MARK, "");
-        if (!mark.isEmpty()) {
-           // System.out.println("apply >>> mark: "+mark + " class: "+trigger.getClass());
-            final HashSet<String> marks = ReturnMechanic.getMarks(caster.getEntityId());
-            if (marks != null) {
-                if (marks.isEmpty() || !marks.contains(mark)) {
-                   // System.out.println("不包含 mark: "+marks + " 已中断");
-                    if (c != null) {
-                        c.run();
-                    }
-                    //cleanup(caster);
-                    return;
+
+        /*
+        // 如果标记被移除则中断 2025/9/22
+        if (markCallback != null) {
+            if (!ReturnMechanic.hasMark(caster, markCallback.nextIndex)) {
+                if (c != null) {
+                    c.run();
                 }
+                System.out.println("  已被阻断 TriggerHandler 执行 当前标记 >>> "+markCallback.mark);
+                return;
             }
         }
 
+
+         */
         if (!trigger.shouldTrigger(event, level, component.settings)) {
             // 被动删除，如果有的话
             if (c != null) {

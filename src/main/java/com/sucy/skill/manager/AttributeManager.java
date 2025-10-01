@@ -133,7 +133,6 @@ public class AttributeManager {
     public String normalize(String key) {
         final Attribute attribute = lookup.get(key.toLowerCase());
         if (attribute == null) { throw new IllegalArgumentException("Invalid attribute - " + key); }
-       // System.out.println("key: "+key);
         return attribute.getKey();
     }
 
@@ -358,7 +357,13 @@ public class AttributeManager {
         public double modifyStat(String key, double base, double amount) {
             if (statModifiers.containsKey(key)) {
                 double a = statModifiers.get(key).compute(base, amount);
-                //System.out.println("key "+key + " base " + base +" amount " + amount+ " 结果: " + a);
+              //  if (key.contains(AttributeManager.MOVE_SPEED) || key.equalsIgnoreCase("负重")) {
+                 //   System.out.println("  Formula: "+statModifiers.get(key));
+                 //   System.out.println("modifyStat base: "+base + " amount: "+amount + " 结果: "+a);
+
+             //   }
+             //   System.out.println("  Formula: "+statModifiers.get(key));
+              //  System.out.println("  key " + key + " base " + base +" amount " + amount+ " 结果: " + a);
                 return a;
                 //return statModifiers.get(key).compute(base, amount);
             }

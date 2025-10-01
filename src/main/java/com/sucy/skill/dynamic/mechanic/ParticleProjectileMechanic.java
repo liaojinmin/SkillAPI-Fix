@@ -26,11 +26,14 @@
  */
 package com.sucy.skill.dynamic.mechanic;
 
+import com.germ.germplugin.api.GermPacketAPI;
+import com.germ.germplugin.api.dynamic.effect.GermEffectEntity;
 import com.sucy.skill.SkillAPI;
 import com.sucy.skill.api.Settings;
 import com.sucy.skill.api.armorstand.ArmorStandManager;
 import com.sucy.skill.api.particle.EffectPlayer;
 import com.sucy.skill.api.particle.target.FollowTarget;
+import com.sucy.skill.api.projectile.CarrierProjectile;
 import com.sucy.skill.api.projectile.CustomProjectile;
 import com.sucy.skill.api.projectile.ParticleProjectile;
 import com.sucy.skill.api.projectile.ProjectileCallback;
@@ -48,6 +51,7 @@ import me.neon.libs.util.item.ItemUtilsKt;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.Material;
+import org.bukkit.entity.EntityType;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
@@ -63,6 +67,7 @@ import java.util.List;
 public class ParticleProjectileMechanic extends MechanicComponent implements ProjectileCallback {
     private static final Vector UP = new Vector(0, 1, 0);
 
+    private static final String POSITION = "position";
     private static final String ANGLE    = "angle";
     private static final String AMOUNT   = "amount";
     private static final String LEVEL    = "skill_level";
@@ -74,16 +79,8 @@ public class ParticleProjectileMechanic extends MechanicComponent implements Pro
     private static final String UPWARD   = "upward";
     private static final String FORWARD  = "forward";
 
-    private static final String ARMOR_STAND = "armor-stand";
-    private static final String NAME = "name"; // 盔甲架名称
-    private static final String NAME_VISIBLE = "name-visible"; // 盔甲架名称是否可见 true、false
-    private static final String SMALL = "small"; // // 是否是小型盔甲架 true、false
-    private static final String VISIBLE = "visible"; // 是否隐身 true、false
-    private static final String MARKER = "marker"; // 是否标记 true、false
-
-    private static final String ITEM_TYPE = "item_type";
-
-    private static final String ITEM_NAME = "item_name";
+    private static final String USE_EFFECT = "use-effect";
+    private static final String EFFECT_KEY = "effect-key";
 
     @Override
     public String getKey() {
@@ -108,44 +105,16 @@ public class ParticleProjectileMechanic extends MechanicComponent implements Pro
         // Fire from each target
         for (LivingEntity target : targets) {
             Location loc = target.getLocation();
-            ArmorStandCarrier carrier = null;
-            if (settings.getBool(ARMOR_STAND, false)) {
-                // 修正数量
-                amount = 1;
-                String name = settings.getString(NAME, "Armor Stand Packet");
-                boolean small = settings.getBool(SMALL, false);
-                boolean visible = settings.getBool(VISIBLE, true);
-                boolean marker = settings.getBool(MARKER, false);
-                carrier = new ArmorStandCarrier(
-                        loc,
-                        new ArmorStandMeta(
-                                visible,
-                                false,
-                                small,
-                                false,
-                                true,
-                                marker
-                        )
-                );
-                String type = settings.getString(ITEM_TYPE, "AIR");
-                if (type != null && !type.equalsIgnoreCase("AIR")) {
-                    ItemStack itemStack = new ItemStack(Material.valueOf(type));
-                    ItemMeta meta = itemStack.getItemMeta();
-                    meta.setDisplayName(settings.getString(ITEM_NAME, "null"));
-                    itemStack.setItemMeta(meta);
-                    carrier.addItemsStack(itemStack);
-                }
-                carrier.setDisplayName(name);
-                carrier.setDead(false);
-            }
+
             // Apply the spread type
             ArrayList<ParticleProjectile> list;
             if (spread.equals("rain")) {
                 double radius = parseValues(caster, RADIUS, level, 2.0);
                 double height = parseValues(caster, HEIGHT, level, 8.0);
-                list = ParticleProjectile.rain(caster, level, loc, copy, radius, height, amount, this, carrier);
+                list = ParticleProjectile.rain(caster, level, loc, copy, radius, height, amount, this);
             } else {
                 Vector dir = target.getLocation().getDirection();
+
                 double right = parseValues(caster, RIGHT, level, 0);
                 double upward = parseValues(caster, UPWARD, level, 0);
                 double forward = parseValues(caster, FORWARD, level, 0);
@@ -153,23 +122,37 @@ public class ParticleProjectileMechanic extends MechanicComponent implements Pro
                 Vector looking = dir.clone().setY(0).normalize();
                 Vector normal = looking.clone().crossProduct(UP);
                 looking.multiply(forward).add(normal.multiply(right));
+
                 if (spread.equals("horizontal cone")) {
                     dir.setY(0);
                     dir.normalize();
                 }
                 double angle = parseValues(caster, ANGLE, level, 30.0);
-                // 此处需要修改 a 坐标变量的视角方向，也就是pitch与yaw
-                Location a = loc.add(looking).add(0, upward + 0.5, 0);
-                if (carrier != null) {
-                    carrier.setLocation(a);
-                }
-                list = ParticleProjectile.spread(caster, level, dir, a, copy, angle, amount, this, carrier);
+
+                list = ParticleProjectile.spread(
+                        caster, level, dir,
+                        loc.add(looking).add(0, upward + 0.5, 0),
+                        copy, angle, amount, this
+                );
             }
 
             // 设置回调发生时的元数据
             for (ParticleProjectile p : list) {
                 SkillAPI.setMeta(p, LEVEL, level);
                 p.setAllyEnemy(ally, !ally);
+            }
+
+            // EFFECT
+            if (settings.getBool(USE_EFFECT, false)) {
+                EffectPlayer player = new EffectPlayer(settings);
+                for (CustomProjectile p : list) {
+                    player.start(
+                            new FollowTarget(p),
+                            settings.getString(EFFECT_KEY, skill.getName()),
+                            9999,
+                            level,
+                            true);
+                }
             }
         }
         return targets.size() > 0;

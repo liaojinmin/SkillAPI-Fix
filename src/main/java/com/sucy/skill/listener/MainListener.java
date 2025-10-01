@@ -12,6 +12,7 @@ import com.sucy.skill.api.util.FlagManager;
 import com.sucy.skill.data.Permissions;
 import com.sucy.skill.dynamic.DynamicSkill;
 import com.sucy.skill.dynamic.mechanic.ImmunityMechanic;
+import com.sucy.skill.dynamic.mechanic.ReturnMechanic;
 import org.bukkit.Bukkit;
 import org.bukkit.OfflinePlayer;
 import org.bukkit.entity.Entity;
@@ -20,12 +21,16 @@ import org.bukkit.entity.Player;
 import org.bukkit.entity.Projectile;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
+import org.bukkit.event.HandlerList;
+import org.bukkit.event.Listener;
 import org.bukkit.event.block.BlockBreakEvent;
 import org.bukkit.event.entity.*;
 import org.bukkit.event.inventory.FurnaceExtractEvent;
 import org.bukkit.event.player.*;
 import org.bukkit.event.server.ServerCommandEvent;
 import org.bukkit.event.world.ChunkUnloadEvent;
+import org.bukkit.plugin.Plugin;
+import org.bukkit.plugin.RegisteredListener;
 import org.bukkit.scheduler.BukkitTask;
 
 import java.util.*;
@@ -95,6 +100,7 @@ public class MainListener extends SkillAPIListener {
             playerData.init(player);
             playerData.autoLevel();
             JOIN_HANDLERS.forEach(handler -> handler.accept(player));
+            ReturnMechanic.joinPlayer(player);
         }
     }
 
@@ -116,6 +122,7 @@ public class MainListener extends SkillAPIListener {
     public void onQuit(PlayerQuitEvent event) {
         //System.out.println("PlayerQuitEvent -> 储存玩家 "+ event.getPlayer().getName() +"数据");
         SkillAPI.asyncUnloadPlayerData(event.getPlayer(), true);
+        ReturnMechanic.quitPlayer(event.getPlayer());
     }
 
 
@@ -127,6 +134,7 @@ public class MainListener extends SkillAPIListener {
      */
     @EventHandler(priority = EventPriority.MONITOR)
     public void onDeath(PlayerDeathEvent event) {
+        if (event.isCancelled()) return;
         FlagManager.clearFlags(event.getEntity());
         BuffManager.clearData(event.getEntity());
         DynamicSkill.clearCastData(event.getEntity());
@@ -253,19 +261,41 @@ public class MainListener extends SkillAPIListener {
         }
     }
 
+
+    public void printEventListeners() {
+        HandlerList handlers = EntityDamageEvent.getHandlerList();
+        RegisteredListener[] listeners = handlers.getRegisteredListeners();
+
+        for (RegisteredListener listener : listeners) {
+            Listener instance = listener.getListener();
+            Plugin plugin = listener.getPlugin();
+            EventPriority priority = listener.getPriority();
+
+            System.out.println("插件: " + plugin.getName() +
+                    " 监听器: " + instance.getClass().getName() +
+                    " 优先级: " + priority.name() +
+                    " 忽略已取消: " + listener.isIgnoringCancelled());
+        }
+    }
+
     /**
      * Damage type immunities
      *
      * @param event event details
      */
-    @EventHandler(ignoreCancelled = true)
+    @EventHandler(priority = EventPriority.MONITOR)
     public void onDamage(EntityDamageEvent event) {
+      //  System.out.println("EntityDamageEvent "+event.getCause());
         if (event.getEntity() instanceof LivingEntity && FlagManager.hasFlag((LivingEntity) event.getEntity(), "immune:" + event.getCause().name())) {
             double multiplier = SkillAPI.getMetaDouble(event.getEntity(), ImmunityMechanic.META_KEY);
-            if (multiplier <= 0)
+            if (multiplier <= 0.0) {
+           //     System.out.println("setCancelled");
                 event.setCancelled(true);
-            else
+                event.setDamage(0.0);
+            } else {
                 event.setDamage(event.getDamage() * multiplier);
+            }
+          //  printEventListeners();
         }
     }
 
@@ -277,6 +307,7 @@ public class MainListener extends SkillAPIListener {
      */
     @EventHandler
     public void onStarve(EntityDamageEvent event) {
+        if (event.isCancelled()) return;
         if (event.getCause() == EntityDamageEvent.DamageCause.STARVATION
             && !SkillAPI.getSettings().getFoodBar().equalsIgnoreCase("none")) {
             event.setCancelled(true);
@@ -305,6 +336,7 @@ public class MainListener extends SkillAPIListener {
      */
     @EventHandler(priority = EventPriority.MONITOR)
     public void onPhysicalDamage(EntityDamageByEntityEvent event) {
+        if (event.isCancelled()) return;
         if (Skill.isSkillDamage() || event.getCause() == EntityDamageEvent.DamageCause.CUSTOM
             || !(event.getEntity() instanceof LivingEntity)
             || event.getDamage() <= 0.0) {
@@ -318,7 +350,9 @@ public class MainListener extends SkillAPIListener {
         PhysicalDamageEvent e = new PhysicalDamageEvent(ListenerUtil.getDamager(event), (LivingEntity) event.getEntity(), event.getDamage(), event.getDamager() instanceof Projectile);
         Bukkit.getPluginManager().callEvent(e);
         event.setDamage(e.getDamage());
-        event.setCancelled(e.isCancelled());
+        if (e.isCancelled()) {
+            event.setCancelled(true);
+        }
     }
 
     /**
@@ -396,7 +430,6 @@ public class MainListener extends SkillAPIListener {
             SkillAPI.schedule(() -> {
                 final PlayerData data = SkillAPI.getPlayerData(player.getUniqueId());
                 if (data == null) return;
-                data.getEquips().update(player);
                 CLEAR_HANDLERS.forEach(handler -> handler.accept(player));
             }, 1);
         }

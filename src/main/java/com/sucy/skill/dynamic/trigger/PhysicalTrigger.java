@@ -19,6 +19,7 @@ public abstract class PhysicalTrigger implements Trigger<PhysicalDamageEvent> {
     /** {@inheritDoc} */
     @Override
     public boolean shouldTrigger(final PhysicalDamageEvent event, final int level, final Settings settings) {
+        if (event.isCancelled()) return false;
         final String type = settings.getString("type", "both");
         final double min = settings.getDouble("dmg-min");
         final double max = settings.getDouble("dmg-max");

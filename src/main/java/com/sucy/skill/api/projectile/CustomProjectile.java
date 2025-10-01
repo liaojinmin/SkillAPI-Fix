@@ -105,18 +105,9 @@ public abstract class CustomProjectile extends BukkitRunnable implements Metadat
     private boolean ally = false;
     private boolean valid = true;
 
-    @Nullable
-    protected ArmorStandCarrier carrier;
-
 
     public CustomProjectile(LivingEntity thrower) {
         this.thrower = thrower;
-        runTaskTimer(Bukkit.getPluginManager().getPlugin("SkillAPI"), 1, 1);
-    }
-
-    public CustomProjectile(LivingEntity thrower, @Nullable ArmorStandCarrier carrier) {
-        this.thrower = thrower;
-        this.carrier = carrier;
         runTaskTimer(Bukkit.getPluginManager().getPlugin("SkillAPI"), 1, 1);
     }
 
@@ -310,18 +301,7 @@ public abstract class CustomProjectile extends BukkitRunnable implements Metadat
     @Override
     public void cancel() {
         super.cancel();
-        if (carrier != null) {
-            carrier.setDead(true);
-            carrier = null;
-        }
         valid = false;
-    }
-
-    public void deleteCarrier() {
-        if (carrier != null) {
-            carrier.setDead(true);
-            carrier.lock();
-        }
     }
 
     /**
@@ -343,7 +323,7 @@ public abstract class CustomProjectile extends BukkitRunnable implements Metadat
     @Override
     public void setMetadata(String key, MetadataValue meta) {
         boolean hasMeta = hasMetadata(key);
-        List<MetadataValue> list = hasMeta ? getMetadata(key) : new ArrayList<MetadataValue>();
+        List<MetadataValue> list = hasMeta ? getMetadata(key) : new ArrayList<>();
         list.add(meta);
         if (!hasMeta) {
             metadata.put(key, list);

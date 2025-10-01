@@ -49,7 +49,12 @@ public class ValueNFAttrMechanic extends MechanicComponent {
                     if (data instanceof StringDataParse) {
                         DynamicSkill.getCastData(caster).put(key, ((StringDataParse) data).asDouble());
                     } else if (data instanceof JsonDataParser) {
-                        DynamicSkill.getCastData(caster).put(key, ((JsonDataParser) data).getDouble("base"));
+                        JsonDataParser jsonDataParser = ((JsonDataParser) data);
+                        double value = jsonDataParser.getDouble("base");
+                        if (value <= 0) {
+                            value = jsonDataParser.getDouble("v");
+                        }
+                        DynamicSkill.getCastData(caster).put(key, value);
                     }
                     return true;
                 }

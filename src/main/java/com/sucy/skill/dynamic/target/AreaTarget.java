@@ -2,6 +2,7 @@
 package com.sucy.skill.dynamic.target;
 
 import com.sucy.skill.SkillAPI;
+import com.sucy.skill.api.armorstand.ArmorStandEntity;
 import com.sucy.skill.api.util.Nearby;
 import com.sucy.skill.cast.IIndicator;
 import com.sucy.skill.dynamic.TempEntity;
@@ -41,9 +42,8 @@ public class AreaTarget extends TargetComponent {
     }
 
     private boolean isValidTargets(final LivingEntity caster, final LivingEntity from, final LivingEntity target) {
-        if (SkillAPI.getMeta(target, MechanicListener.ARMOR_STAND) != null) {
-            return false;
-        }
+        if (caster instanceof ArmorStandEntity) return false;
+
         if (target instanceof TempEntity) {
             return true;
         }

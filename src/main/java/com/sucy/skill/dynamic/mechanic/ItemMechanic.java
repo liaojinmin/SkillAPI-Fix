@@ -64,8 +64,7 @@ public class ItemMechanic extends MechanicComponent
      * @return true if applied to something, false otherwise
      */
     @Override
-    public boolean execute(LivingEntity caster, SkillContext context, int level, List<LivingEntity> targets)
-    {
+    public boolean execute(LivingEntity caster, SkillContext context, int level, List<LivingEntity> targets) {
         String mat = settings.getString(MATERIAL, "arrow").toUpperCase().replace(" ", "_");
         Material material;
         try
@@ -82,12 +81,10 @@ public class ItemMechanic extends MechanicComponent
         ItemStack item = new ItemStack(material, amount, (short) durability, (byte) data);
 
         boolean custom = settings.getString(CUSTOM, "false").toLowerCase().equals("true");
-        if (custom)
-        {
+        if (custom) {
             ItemMeta meta = item.getItemMeta();
             String name = TextFormatter.colorString(settings.getString(NAME, ""));
-            if (name.length() > 0)
-            {
+            if (name.length() > 0) {
                 meta.setDisplayName(name);
             }
             List<String> lore = TextFormatter.colorStringList(settings.getStringList(LORE));
@@ -96,10 +93,8 @@ public class ItemMechanic extends MechanicComponent
         }
 
         boolean worked = false;
-        for (LivingEntity target : targets)
-        {
-            if (target instanceof Player)
-            {
+        for (LivingEntity target : targets) {
+            if (target instanceof Player) {
                 worked = ((Player) target).getInventory().addItem(item).isEmpty() || worked;
             }
         }

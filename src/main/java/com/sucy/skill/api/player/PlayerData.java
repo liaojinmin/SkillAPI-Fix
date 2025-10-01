@@ -5,7 +5,6 @@ import com.rit.sucy.player.TargetHelper;
 import com.rit.sucy.version.VersionManager;
 import com.rit.sucy.version.VersionPlayer;
 import com.sucy.skill.SkillAPI;
-import com.sucy.skill.api.attribute.AttributeAPI;
 import com.sucy.skill.api.classes.RPGClass;
 import com.sucy.skill.api.event.*;
 import com.sucy.skill.api.enums.*;
@@ -14,8 +13,6 @@ import com.sucy.skill.api.skills.Skill;
 import com.sucy.skill.api.skills.SkillShot;
 import com.sucy.skill.api.skills.TargetSkill;
 import com.sucy.skill.data.GroupSettings;
-import com.sucy.skill.data.PlayerEquips;
-import com.sucy.skill.dynamic.EffectComponent;
 import com.sucy.skill.language.ErrorNodes;
 import com.sucy.skill.language.RPGFilter;
 import com.sucy.skill.listener.AttributeListener;
@@ -25,6 +22,8 @@ import com.sucy.skill.manager.AttributeManager;
 import com.sucy.skill.screen.AttributeGermScreen;
 import com.sucy.skill.screen.AttributeScreenKt;
 import com.sucy.skill.utils.AttributeParseUtils;
+import me.neon.flash.attribute.AttributePlayer;
+import me.neon.flash.attribute.comp.SuitData;
 import org.bukkit.Bukkit;
 import org.bukkit.OfflinePlayer;
 import org.bukkit.attribute.Attribute;
@@ -42,6 +41,8 @@ import static com.sucy.skill.api.event.PlayerSkillCastFailedEvent.Cause.*;
 
 public class PlayerData {
 
+    private final static String formatDouble = "%.2f";
+
     private final ReentrantLock lock = new ReentrantLock();
 
     private final HashMap<String, PlayerClass> classes = new HashMap<>();
@@ -53,7 +54,7 @@ public class PlayerData {
      * key=属性
      * value=加点等级
      **/
-    public final HashMap<String, Integer> points = new HashMap<>();
+    private final HashMap<String, Integer> points = new HashMap<>();
 
     /**
      * 无源临时数据
@@ -63,12 +64,15 @@ public class PlayerData {
     /**
      * 有源临时属性
      **/
-    public final ConcurrentHashMap<String, ConcurrentHashMap<String, Integer>> addAttrib
-            = new ConcurrentHashMap<>();
+    public final ConcurrentHashMap<String, ConcurrentHashMap<String, Integer>> addAttrib = new ConcurrentHashMap<>();
+
+    /**
+     * 有源临时后计算属性属性
+     **/
+    public final ConcurrentHashMap<String, ConcurrentHashMap<String, Double>> scaleAttrib = new ConcurrentHashMap<>();
 
     private final AtomicLong manaRestoreTick = new AtomicLong(0);
     private final OfflinePlayer  player;
-    private PlayerEquips   equips;
     private int            keyTimer;
     private double         mana;
     private double         maxMana;
@@ -88,7 +92,6 @@ public class PlayerData {
      */
     public PlayerData(OfflinePlayer player) {
         this.player = player;
-        this.equips = new PlayerEquips(this);
         this.hunger = 1;
         for (String group : SkillAPI.getGroups()) {
             GroupSettings settings = SkillAPI.getSettings().getGroupSettings(group);
@@ -140,12 +143,7 @@ public class PlayerData {
         }
     }
 
-    /**
-     * @return equipped item data
-     */
-    public PlayerEquips getEquips() {
-        return equips;
-    }
+
 
     /**
      * @return health during last logout
@@ -206,35 +204,166 @@ public class PlayerData {
     //                                                   //
     ///////////////////////////////////////////////////////
 
-    public int getAddAttribute(String key) {
-        int infos = 0;
-        for (ConcurrentHashMap<String, Integer> value : addAttrib.values()) {
-            if (value.containsKey(key)) {
-                infos += value.getOrDefault(key, 0);
+    public String getTotalFormatAttribute(String attr_, boolean hasInt, boolean hasScale) {
+        int dollarIndex = attr_.indexOf('$');
+        String symbol = "";
+        // 如果没有找到 '$'，直接返回空字符串
+        String attr = attr_;
+        if (dollarIndex != -1) {
+            symbol = attr_.substring(dollarIndex + 1);
+            attr = attr_.substring(0, dollarIndex);
+        }
+        double value = getAttribute(attr);
+        double add = 0;
+        AttributePlayer attributePlayer = me.neon.flash.attribute.AttributeManager.INSTANCE.getAttributePlayer().get(player.getUniqueId());
+        if (attributePlayer != null) {
+            if (attr.equals("最大生命值")) {
+                add += attributePlayer.getAddScaleHealth();
+            } else {
+                if (hasScale) {
+                    for (Map<String, Double> map : attributePlayer.getSourceOfScaleMap().values()) {
+                        add += (map.getOrDefault(attr, 0.0) * 100);
+                    }
+                } else {
+                    for (Map<String, Double> map : attributePlayer.getSourceMap().values()) {
+                        add += map.getOrDefault(attr, 0.0);
+                    }
+                }
             }
         }
-        return infos;
+
+        if (hasScale) {
+            for (Map<String, Double> map : scaleAttrib.values()) {
+                add += (map.getOrDefault(attr, 0.0) * 100);
+            }
+        } else {
+            for (Map<String, Integer> map : addAttrib.values()) {
+                add += map.getOrDefault(attr, 0);
+            }
+        }
+        StringBuilder stringBuilder = new StringBuilder(String.valueOf(value));
+        stringBuilder.append(symbol);
+        if (add > 0) {
+            stringBuilder.append(" §7(§a+");
+            if (hasInt) {
+                stringBuilder.append((int) value);
+            } else {
+                stringBuilder.append(value);
+            }
+            if (hasScale) {
+                stringBuilder.append("﹪");
+            }
+            stringBuilder.append("§7)");
+        }
+        return stringBuilder.toString();
     }
 
+    private final List<String> pluginAddAttribute = new ArrayList<String>() {{
+        add("GeekTeamPlus");
+        add("NeonArena");
+    }};
+
+    public String getAddAttributeText(String attr, boolean hasInt, boolean hasScale) {
+        return getAddAttributeText(attr, hasInt, hasScale, false);
+    }
+    // val = GeekTeamPlus$狂暴
+    public String getAddAttributeText(String attr, boolean hasInt, boolean hasScale, boolean useScale) {
 
 
-    public double getAttribute(String key) {
+        AttributePlayer attributePlayer = me.neon.flash.attribute.AttributeManager.INSTANCE.getAttributePlayer().get(player.getUniqueId());
+        double value = 0;
+        if (attributePlayer != null) {
+            if (attr.equals("最大生命值")) {
+                value += attributePlayer.getAddScaleHealth();
+            } else {
+                if (hasScale) {
+                    for (String key : pluginAddAttribute) {
+                        value += (attributePlayer.getSourceOrCreateOfScale(key).getOrDefault(attr, 0.0) * 100);
+                    }
+                } else {
+                    for (String key : pluginAddAttribute) {
+                        value += attributePlayer.getSourceOrCreate(key).getOrDefault(attr, 0.0);
+                    }
+                }
+            }
+        }
+
+        for (String key : pluginAddAttribute) {
+            if (hasScale) {
+                Map<String, Double> map = scaleAttrib.get(key);
+                if (map != null) {
+                    value += (map.getOrDefault(attr, 0.0) * 100);
+                }
+            } else {
+                Map<String, Integer> map = addAttrib.get(key);
+                if (map != null) {
+                    value += map.getOrDefault(attr, 0);
+                }
+            }
+        }
+        if (value <= 0) {
+            return "";
+        }
+        StringBuilder stringBuilder = new StringBuilder("§7(§a+");
+        if (hasInt) {
+            stringBuilder.append((int) value);
+        } else {
+            stringBuilder.append(value);
+        }
+        if (hasScale || useScale) {
+            stringBuilder.append("﹪");
+        }
+        stringBuilder.append("§7)");
+        return stringBuilder.toString();
+    }
+
+    public double getAttributeNotNf(String key) {
         double total = 0;
+        // 固定点
         if (points.containsKey(key)) {
             total += points.get(key);
         }
+        // 而外点
         if (bonusAttrib.containsKey(key)) {
             total += bonusAttrib.get(key);
         }
+        // 职业属性
+        for (PlayerClass playerClass : getClasses()) {
+            total += playerClass.getData().getAttribute(key, playerClass.getLevel());
+        }
+        // 临时而外点
         for (ConcurrentHashMap<String, Integer> map : addAttrib.values()) {
             if (map.containsKey(key)) {
                 total += map.get(key);
             }
         }
-        for (PlayerClass playerClass : getClasses()) {
-            total += playerClass.getData().getAttribute(key, playerClass.getLevel());
+
+        return total;
+    }
+
+    public double scaleAttrib(String key, double value) {
+        double total = value; // 初始值
+        for (ConcurrentHashMap<String, Double> map : scaleAttrib.values()) {
+            if (map.containsKey(key)) {
+                total += map.getOrDefault(key, 0.0) * value;
+            }
         }
-        return AttributeParseUtils.round(total, 1);
+        return total;
+    }
+
+    public double getAttribute(String key) {
+        double total = getAttributeNotNf(key);
+        // nf start
+        AttributePlayer attributePlayer = me.neon.flash.attribute.AttributeManager.INSTANCE.getAttributePlayer().get(player.getUniqueId());
+        if (attributePlayer != null) {
+            Double value = attributePlayer.getAttributes().get(key);
+            if (value != null) {
+                total += value;
+            }
+        }
+        // nf end
+
+        return AttributeParseUtils.round(scaleAttrib(key, total), 1);
     }
 
     /**
@@ -408,6 +537,9 @@ public class PlayerData {
      * @return modified value
      */
     public double scaleStat(final String stat, final double value) {
+      //  if (stat.equalsIgnoreCase(AttributeManager.MOVE_SPEED)) {
+         //   System.out.println("scaleStat value "+value);
+     //   }
         final AttributeManager manager = SkillAPI.getAttributeManager();
         if (manager == null) { return value; }
 
@@ -421,6 +553,9 @@ public class PlayerData {
                 modified = attribute.modifyStat(stat, modified, amount);
             }
         }
+        //if (stat.equalsIgnoreCase(AttributeManager.MOVE_SPEED)) {
+           // System.out.println("scaleStat modified "+modified);
+       // }
         return modified;
     }
 
@@ -1073,7 +1208,7 @@ public class PlayerData {
                 playerClass.giveLevels(amount);
             }
         }
-        updateHealthAndMana(getPlayer());
+        //updateHealthAndMana(getPlayer());
         return success;
     }
 
@@ -1096,6 +1231,7 @@ public class PlayerData {
     //                  Health and Mana                  //
     //                                                   //
     ///////////////////////////////////////////////////////
+
 
     /**
      * Updates the player's max health and mana using class data.
@@ -1120,8 +1256,13 @@ public class PlayerData {
         if (health <= 0) {
             health = SkillAPI.getSettings().getDefaultHealth();
         }
-        if (SkillAPI.getSettings().isModifyHealth()) { player.setMaxHealth(health); }
-
+      //  System.out.println("生命值 "+health);
+        health += getAttribute("最大生命值");
+        if (SkillAPI.getSettings().isModifyHealth()) {
+        //    System.out.println("设置生命值 "+health);
+            player.getAttribute(Attribute.GENERIC_MAX_HEALTH).setBaseValue(health);
+           // player.setMaxHealth(health);
+        }
 
         mana = Math.min(mana, maxMana);
 
@@ -1147,16 +1288,8 @@ public class PlayerData {
         bonusHealth += amount;
         final Player player = getPlayer();
         if (player != null) {
-            if (VersionManager.isVersionAtLeast(VersionManager.V1_9_0)) {
-                final AttributeInstance attribute = player.getAttribute(Attribute.GENERIC_MAX_HEALTH);
-                attribute.setBaseValue(attribute.getBaseValue() + amount);
-            } else {
-                final double newHealth = player.getMaxHealth() + amount;
-                player.setMaxHealth(newHealth);
-                if (player.getMaxHealth() > newHealth) {
-                    player.setMaxHealth(newHealth * 2 - player.getMaxHealth());
-                }
-            }
+            final AttributeInstance attribute = player.getAttribute(Attribute.GENERIC_MAX_HEALTH);
+            attribute.setBaseValue(attribute.getBaseValue() + amount);
         }
     }
 
@@ -1317,6 +1450,7 @@ public class PlayerData {
     }
 
     public void setManaRestoreTick(long tick) {
+     //   System.out.println("被阻止设置 tick "+tick);
         if (tick <= 0) {
             return;
         }
@@ -1327,8 +1461,10 @@ public class PlayerData {
         ManaRestoreTickStartEvent startEvent = new ManaRestoreTickStartEvent(getPlayer(), timer);
         Bukkit.getPluginManager().callEvent(startEvent);
         if (startEvent.isCancelled()) {
+         //   System.out.println("被阻止设置 manaRestoreTick "+timer);
             return;
         }
+       // System.out.println("设置 manaRestoreTick "+timer);
         this.manaRestoreTick.set(timer);
     }
 
@@ -1364,7 +1500,6 @@ public class PlayerData {
         bonusMana = 0;
         bonusHealth = 0;
         bonusAttrib.clear();
-        equips = new PlayerEquips(this);
     }
 
 
@@ -1454,6 +1589,12 @@ public class PlayerData {
         return cast(skills.get(skillName.toLowerCase()));
     }
 
+    private void debug(String message, String skill) {
+        if (skill.equalsIgnoreCase("恶趣味")) {
+            System.out.println(message);
+        }
+    }
+
     /**
      * Casts a skill for the player. In order to cast the skill,
      * the player must be online, have the skill unlocked, have enough mana,
@@ -1470,14 +1611,23 @@ public class PlayerData {
         int level = skill.getLevel();
 
         // Not unlocked or on cooldown
-        if (!check(skill, true, true)) { return false; }
+        if (!check(skill, true, true)) {
+          //  debug("Not unlocked or on cooldown", skill.getData().getName());
+            return false;
+        }
 
         // Dead players can't cast skills
         Player p = getPlayer();
-        if (p.isDead()) { return PlayerSkillCastFailedEvent.invoke(skill, CASTER_DEAD); }
+        if (p.isDead()) {
+         //   debug("Dead players can't cast skills", skill.getData().getName());
+            return PlayerSkillCastFailedEvent.invoke(skill, CASTER_DEAD);
+        }
 
         // Disable casting in spectator mode
-        if (p.getGameMode().name().equals("SPECTATOR")) { return PlayerSkillCastFailedEvent.invoke(skill, SPECTATOR); }
+        if (p.getGameMode().name().equals("SPECTATOR")) {
+          //  debug("Disable casting in spectator mode", skill.getData().getName());
+            return PlayerSkillCastFailedEvent.invoke(skill, SPECTATOR);
+        }
 
         // Skill Shots
         if (skill.getData() instanceof SkillShot) {
@@ -1493,7 +1643,12 @@ public class PlayerData {
                     setKeyTimer(skill.getKeyTimer());
                     if (((SkillShot) skill.getData()).cast(p, level)) {
                         //System.out.println(" skill applyUse");
-                        return applyUse(p, skill, event.getManaCost());
+                        boolean accept = applyUse(p, skill, event.getManaCost());
+                        if (accept) {
+                            PlayerCastSkillEndEvent event2 = new PlayerCastSkillEndEvent(this, skill, p);
+                            Bukkit.getPluginManager().callEvent(event2);
+                        }
+                        return accept;
                     } else {
                       //  System.out.println(" skill cast EFFECT_FAILED");
                         return PlayerSkillCastFailedEvent.invoke(skill, EFFECT_FAILED);
@@ -1504,6 +1659,7 @@ public class PlayerData {
                     return PlayerSkillCastFailedEvent.invoke(skill, EFFECT_FAILED);
                 }
             } else {
+             //   debug("PlayerSkillCastFailedEvent", skill.getData().getName());
               //  System.out.println("  技能 " + skill.getData().getName() + " 执行事件被阻断");
                 return PlayerSkillCastFailedEvent.invoke(skill, CANCELED);
             }
@@ -1529,7 +1685,13 @@ public class PlayerData {
                     final boolean canAttack = !SkillAPI.getSettings().canAttack(p, target);
                     if (((TargetSkill) skill.getData()).cast(p, target, level, canAttack)) {
                      //   System.out.println(" skill applyUse");
-                        return applyUse(p, skill, event.getManaCost());
+                       // return applyUse(p, skill, event.getManaCost());
+                        boolean accept = applyUse(p, skill, event.getManaCost());
+                        if (accept) {
+                            PlayerCastSkillEndEvent event2 = new PlayerCastSkillEndEvent(this, skill, p);
+                            Bukkit.getPluginManager().callEvent(event2);
+                        }
+                        return accept;
                     } else {
                       //  System.out.println(" skill cast EFFECT_FAILED");
                         return PlayerSkillCastFailedEvent.invoke(skill, EFFECT_FAILED);
@@ -1617,7 +1779,6 @@ public class PlayerData {
             return;
         }
         AttributeListener.updatePlayer(this);
-        getEquips().update(player);
         this.updateHealthAndMana(player);
         this.startPassives(player);
         if (this.getLastHealth() > 0 && !player.isDead()) {

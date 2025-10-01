@@ -14,16 +14,12 @@ import ink.ptms.adyeshach.core.entity.EntityTypes;
 import ink.ptms.adyeshach.core.entity.manager.FastAPIKt;
 import ink.ptms.adyeshach.core.entity.manager.ManagerType;
 import ink.ptms.adyeshach.core.entity.type.AdyHuman;
-import ink.ptms.adyeshach.core.entity.type.AdyPufferfish;
-import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.World;
-import org.bukkit.entity.ArmorStand;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
-import org.bukkit.util.EulerAngle;
 import org.bukkit.util.Vector;
 
 import java.util.ArrayList;

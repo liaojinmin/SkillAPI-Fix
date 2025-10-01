@@ -27,6 +27,17 @@ public class PlaceholderAPIHook extends PlaceholderExpansion {
         PLACEHOLDERS.put("attrib_spent:", (p, attribute) -> Integer.toString(p.getInvestedAttribute(attribute)));
         PLACEHOLDERS.put("attrib_total:", (p, attribute) -> Double.toString(p.getAttribute(attribute)));
         PLACEHOLDERS.put("attrib_total_int:", (p, attribute) -> Integer.toString((int)p.getAttribute(attribute)));
+        PLACEHOLDERS.put("attrib_text:", (p, attribute) -> p.getAddAttributeText(attribute, false, false));
+
+        PLACEHOLDERS.put("attrib_total_format_int:", (p, attribute) -> p.getTotalFormatAttribute(attribute, true, false));
+        PLACEHOLDERS.put("attrib_total_format_scale:", (p, attribute) -> p.getTotalFormatAttribute(attribute, false, true));
+        PLACEHOLDERS.put("attrib_total_format_scale_int:", (p, attribute) -> p.getTotalFormatAttribute(attribute, true, true));
+
+        PLACEHOLDERS.put("attrib_text_int:", (p, attribute) -> p.getAddAttributeText(attribute, true, false));
+        PLACEHOLDERS.put("attrib_text_sc_int:", (p, attribute) -> p.getAddAttributeText(attribute, true, false, true));
+        PLACEHOLDERS.put("attrib_text_scale:", (p, attribute) -> p.getAddAttributeText(attribute, false, true));
+        PLACEHOLDERS.put("attrib_text_scale_int:", (p, attribute) -> p.getAddAttributeText(attribute, true, true));
+
         PLACEHOLDERS.put("exp", (p, u) -> getExp(p.getMainClass()));
         PLACEHOLDERS.put("exp:", (p, group) -> getExp(p.getClass(group)));
         PLACEHOLDERS.put("exp_total", (p, u) -> getTotalExp(p.getMainClass()));
@@ -66,6 +77,9 @@ public class PlaceholderAPIHook extends PlaceholderExpansion {
         return "1.0";
     }
 
+    /**
+     * %sapi_attrib_text:GeekTeamPlus$力量%
+     */
     public String onPlaceholderRequest(Player player, String id) {
         int paramIndex = id.indexOf(58) + 1;
         String param;

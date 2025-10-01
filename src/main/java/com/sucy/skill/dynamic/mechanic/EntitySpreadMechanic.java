@@ -1,9 +1,7 @@
 package com.sucy.skill.dynamic.mechanic;
 
 import com.germ.germplugin.api.GermPacketAPI;
-import com.sucy.skill.SkillAPI;
-import com.sucy.skill.api.projectile.CustomProjectile;
-import com.sucy.skill.api.projectile.EntityProjectile2;
+import com.sucy.skill.api.projectile.EntityProjectile;
 import com.sucy.skill.api.skills.SkillContext;
 import com.sucy.skill.dynamic.TempEntity;
 import me.neon.core.listener.KeyListener;
@@ -49,7 +47,7 @@ public class EntitySpreadMechanic extends MechanicComponent {
         final double forward = parseValues(caster, "forward", level, 0.0);
         final double distance = caster.getLocation().distance(tar.getLocation());
         try {
-            EntityProjectile2 ne = new EntityProjectile2(
+            EntityProjectile ne = new EntityProjectile(
                     caster,
                     tar.getLocation(),
                     tar,
@@ -64,7 +62,7 @@ public class EntitySpreadMechanic extends MechanicComponent {
             ne.setRotationAngle(angle);
             ne.setGravity(gravity);
             ne.setTrace(trace);
-            EntityProjectile2 old = EntityProjectile2.cache.put(caster.getUniqueId(), ne);
+            EntityProjectile old = EntityProjectile.cache.put(caster.getUniqueId(), ne);
             if (old != null) {
                 old.cancel();
             }
@@ -75,14 +73,14 @@ public class EntitySpreadMechanic extends MechanicComponent {
                      runnable = it -> {
 
                         if (caster instanceof Player) {
-                            KeyListener.keyModifierUseDisable.remove(caster.getUniqueId());
-                            KeyListener.keyGlobalDisable.remove(caster.getUniqueId());
+                          //  KeyListener.keyModifierUseDisable.remove(caster.getUniqueId());
+                            KeyListener.delSpecialGlobalDisable((Player) caster);
                             caster.setGravity(true);
                             GermPacketAPI.sendUnlockPlayerMove((Player) caster);
                         }
                         if (tar instanceof Player) {
-                            KeyListener.keyModifierUseDisable.remove(tar.getUniqueId());
-                            KeyListener.keyGlobalDisable.remove(tar.getUniqueId());
+                        //    KeyListener.keyModifierUseDisable.remove(tar.getUniqueId());
+                            KeyListener.delSpecialGlobalDisable((Player) tar);
                             GermPacketAPI.sendUnlockPlayerMove((Player) tar);
                         } else {
                             tar.setAI(true);
@@ -93,14 +91,15 @@ public class EntitySpreadMechanic extends MechanicComponent {
                     runnable = it -> {
 
                         if (caster instanceof Player) {
-                            KeyListener.keyModifierUseDisable.remove(caster.getUniqueId());
-                            KeyListener.keyGlobalDisable.remove(caster.getUniqueId());
+                            //KeyListener.keyModifierUseDisable.remove(caster.getUniqueId());
+                            KeyListener.delSpecialGlobalDisable((Player) caster);
                             caster.setGravity(true);
                             GermPacketAPI.sendUnlockPlayerMove((Player) caster);
                         }
                         if (tar instanceof Player) {
-                            KeyListener.keyModifierUseDisable.remove(tar.getUniqueId());
-                            KeyListener.keyGlobalDisable.remove(tar.getUniqueId());
+
+                            //KeyListener.keyModifierUseDisable.remove(tar.getUniqueId());
+                            KeyListener.delSpecialGlobalDisable((Player) tar);
                             GermPacketAPI.sendUnlockPlayerMove((Player) tar);
                         }
                         callback(caster, tar);
@@ -111,13 +110,14 @@ public class EntitySpreadMechanic extends MechanicComponent {
                 ne.registerExpire(runnable);
                 if (caster instanceof Player) {
                     caster.setGravity(false);
-                    KeyListener.keyModifierUseDisable.put(caster.getUniqueId(), true);
-                    KeyListener.keyGlobalDisable.put(caster.getUniqueId(), true);
+                   // KeyListener.keyModifierUseDisable.put(caster.getUniqueId(), true);
+                    KeyListener.addSpecialGlobalDisable((Player) caster, 99999);
                     GermPacketAPI.sendLockPlayerMove((Player) caster, 99999);
                 }
                 if (tar instanceof Player) {
-                    KeyListener.keyModifierUseDisable.put(tar.getUniqueId(), true);
-                    KeyListener.keyGlobalDisable.put(tar.getUniqueId(), true);
+                    //KeyListener.keyModifierUseDisable.put(tar.getUniqueId(), true);
+
+                    KeyListener.addSpecialGlobalDisable((Player) tar, 99999);
                     GermPacketAPI.sendLockPlayerMove((Player) tar, 99999);
                 } else {
                     tar.setAI(false);

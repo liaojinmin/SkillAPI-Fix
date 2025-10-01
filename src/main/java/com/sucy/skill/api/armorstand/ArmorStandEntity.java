@@ -1,0 +1,652 @@
+
+package com.sucy.skill.api.armorstand;
+
+import com.google.common.collect.ImmutableList;
+import com.sucy.skill.api.util.Nearby;
+import com.sucy.skill.dynamic.ArmorStandCarrier;
+import org.bukkit.*;
+import org.bukkit.attribute.Attribute;
+import org.bukkit.attribute.AttributeInstance;
+import org.bukkit.block.Block;
+import org.bukkit.block.PistonMoveReaction;
+import org.bukkit.entity.*;
+import org.bukkit.event.entity.EntityDamageEvent;
+import org.bukkit.event.player.PlayerTeleportEvent;
+import org.bukkit.inventory.EntityEquipment;
+import org.bukkit.inventory.ItemStack;
+import org.bukkit.metadata.MetadataValue;
+import org.bukkit.permissions.Permission;
+import org.bukkit.permissions.PermissionAttachment;
+import org.bukkit.permissions.PermissionAttachmentInfo;
+import org.bukkit.plugin.Plugin;
+import org.bukkit.potion.PotionEffect;
+import org.bukkit.potion.PotionEffectType;
+import org.bukkit.util.Vector;
+import org.jetbrains.annotations.Nullable;
+
+import java.util.*;
+
+public class ArmorStandEntity implements LivingEntity {
+
+    private final ArmorStandCarrier armorStandCarrier;
+
+    private final LivingEntity owner;
+
+    public ArmorStandEntity(ArmorStandCarrier armorStandCarrier, LivingEntity owner) {
+        this.armorStandCarrier = armorStandCarrier;
+        this.owner = owner;
+    }
+
+    public ArmorStandCarrier getArmorStandCarrier() {
+        return armorStandCarrier;
+    }
+
+    public LivingEntity getOwner() {
+        return owner;
+    }
+
+    public double getEyeHeight() {
+        return 0.2;
+    }
+
+    public double getEyeHeight(boolean b) {
+        return 0.2;
+    }
+
+    public Location getEyeLocation() {
+        return armorStandCarrier.getEyeLocation();
+    }
+
+    public List<Block> getLineOfSight(HashSet<Byte> hashSet, int i) {
+        return Collections.emptyList();
+    }
+
+    public List<Block> getLineOfSight(Set<Material> set, int i) {
+        return Collections.emptyList();
+    }
+
+    public Block getTargetBlock(HashSet<Byte> hashSet, int i) {
+        return null;
+    }
+
+    public Block getTargetBlock(Set<Material> set, int i) {
+        return null;
+    }
+
+    public List<Block> getLastTwoTargetBlocks(HashSet<Byte> hashSet, int i) {
+        return Collections.emptyList();
+    }
+
+    public List<Block> getLastTwoTargetBlocks(Set<Material> set, int i) {
+        return Collections.emptyList();
+    }
+
+    public Egg throwEgg() {
+        return null;
+    }
+
+    public Snowball throwSnowball() {
+        return null;
+    }
+
+    public Arrow shootArrow() {
+        return null;
+    }
+
+    public int getRemainingAir() {
+        return 0;
+    }
+
+    public void setRemainingAir(int i) {
+
+    }
+
+    public int getMaximumAir() {
+        return 0;
+    }
+
+    public void setMaximumAir(int i) {
+
+    }
+
+    public int getMaximumNoDamageTicks() {
+        return 0;
+    }
+
+    public void setMaximumNoDamageTicks(int i) {
+
+    }
+
+    public double getLastDamage() {
+        return 0;
+    }
+
+
+    public void setLastDamage(double v) {
+
+    }
+
+    public int getNoDamageTicks() {
+        return 0;
+    }
+
+    public void setNoDamageTicks(int i) {
+
+    }
+
+    public Player getKiller() {
+        return null;
+    }
+
+    @Override
+    public void setKiller(@Nullable Player player) {
+
+    }
+
+    public boolean addPotionEffect(PotionEffect potionEffect) {
+        return false;
+    }
+
+    public boolean addPotionEffect(PotionEffect potionEffect, boolean b) {
+        return false;
+    }
+
+    public boolean addPotionEffects(Collection<PotionEffect> collection) {
+        return false;
+    }
+
+    public boolean hasPotionEffect(PotionEffectType potionEffectType) {
+        return false;
+    }
+
+    public PotionEffect getPotionEffect(PotionEffectType potionEffectType) {
+        return null;
+    }
+
+    public void removePotionEffect(PotionEffectType potionEffectType) {
+
+    }
+
+    public Collection<PotionEffect> getActivePotionEffects() {
+        return ImmutableList.of();
+    }
+
+    public boolean hasLineOfSight(Entity entity) {
+        return false;
+    }
+
+    public boolean getRemoveWhenFarAway() {
+        return false;
+    }
+
+    public void setRemoveWhenFarAway(boolean b) {
+
+    }
+
+    public EntityEquipment getEquipment() {
+        return null;
+    }
+
+    public void setCanPickupItems(boolean b) {
+
+    }
+
+    public boolean getCanPickupItems() {
+        return false;
+    }
+
+    public void setCustomName(String s) {
+
+    }
+
+    public String getCustomName() {
+        return null;
+    }
+
+    public void setCustomNameVisible(boolean b) {
+
+    }
+
+    public boolean isCustomNameVisible() {
+        return false;
+    }
+
+    public void setGlowing(boolean b) {
+
+    }
+
+    public boolean isGlowing() {
+        return false;
+    }
+
+    public void setInvulnerable(boolean b) {
+
+    }
+
+    public boolean isInvulnerable() {
+        return false;
+    }
+
+    public boolean isSilent() {
+        return false;
+    }
+
+    public void setSilent(boolean b) {
+
+    }
+
+    public boolean hasGravity() {
+        return false;
+    }
+
+    public void setGravity(boolean b) {
+
+    }
+
+    public int getPortalCooldown() {
+        return 0;
+    }
+
+    public void setPortalCooldown(int i) {
+
+    }
+
+    public Set<String> getScoreboardTags() {
+        return null;
+    }
+
+    public boolean addScoreboardTag(String s) {
+        return false;
+    }
+
+    public boolean removeScoreboardTag(String s) {
+        return false;
+    }
+
+    public PistonMoveReaction getPistonMoveReaction() {
+        return null;
+    }
+
+    @Override
+    public Spigot spigot() {
+        return null;
+    }
+
+    @Override
+    public Location getOrigin() {
+        return null;
+    }
+
+    @Override
+    public boolean fromMobSpawner() {
+        return false;
+    }
+
+    @Override
+    public Chunk getChunk() {
+        return null;
+    }
+
+    public boolean isLeashed() {
+        return false;
+    }
+
+    public Entity getLeashHolder() throws IllegalStateException {
+        return null;
+    }
+
+    public boolean setLeashHolder(Entity entity) {
+        return false;
+    }
+
+    public boolean isGliding() {
+        return false;
+    }
+
+    public void setGliding(boolean b) {
+
+    }
+
+    public void setAI(boolean b) { }
+
+    public boolean hasAI() {
+        return false;
+    }
+
+    public void setCollidable(boolean b) {
+
+    }
+
+    public boolean isCollidable() {
+        return false;
+    }
+
+    @Override
+    public int getArrowsStuck() {
+        return 0;
+    }
+
+    @Override
+    public void setArrowsStuck(int i) {
+
+    }
+
+    @Override
+    public int getShieldBlockingDelay() {
+        return 0;
+    }
+
+    @Override
+    public void setShieldBlockingDelay(int i) {
+
+    }
+
+    @Override
+    public ItemStack getActiveItem() {
+        return null;
+    }
+
+    @Override
+    public int getItemUseRemainingTime() {
+        return 0;
+    }
+
+    @Override
+    public int getHandRaisedTime() {
+        return 0;
+    }
+
+    @Override
+    public boolean isHandRaised() {
+        return false;
+    }
+
+    public void damage(double v) {
+
+    }
+
+
+    public void damage(double v, Entity entity) {
+
+    }
+
+
+    public double getHealth() {
+        return 1;
+    }
+
+
+    public void setHealth(double v) {
+
+    }
+
+    public double getMaxHealth() {
+        return 1;
+    }
+
+    public void setMaxHealth(double v) {
+
+    }
+
+    public void resetMaxHealth() {
+
+    }
+
+    public Location getLocation() {
+        return armorStandCarrier.getLocation().clone();
+    }
+
+    public Location getLocation(final Location location) {
+        final Location loc = armorStandCarrier.getLocation();
+        location.setX(loc.getX());
+        location.setY(loc.getY());
+        location.setZ(loc.getZ());
+        location.setWorld(loc.getWorld());
+        location.setYaw(loc.getYaw());
+        location.setPitch(loc.getPitch());
+        return location;
+    }
+
+    public void setVelocity(Vector vector) {
+    }
+
+    public Vector getVelocity() {
+        return new Vector(0, 0, 0);
+    }
+
+    public double getHeight() {
+        return 0;
+    }
+
+    public double getWidth() {
+        return 0;
+    }
+
+    public boolean isOnGround() {
+        return true;
+    }
+
+    public World getWorld() {
+        return armorStandCarrier.getLocation().getWorld();
+    }
+
+    public boolean teleport(Location location) {
+        armorStandCarrier.teleport(location);
+        return true;
+    }
+
+    public boolean teleport(Location location, PlayerTeleportEvent.TeleportCause teleportCause) {
+        return teleport(location);
+    }
+
+    public boolean teleport(Entity entity) {
+        return teleport(entity.getLocation());
+    }
+
+    public boolean teleport(Entity entity, PlayerTeleportEvent.TeleportCause teleportCause) {
+        return teleport(entity.getLocation());
+    }
+
+    public List<Entity> getNearbyEntities(double x, double y, double z) {
+        return Nearby.getNearby(armorStandCarrier.getLocation(), x);
+    }
+
+    public int getEntityId() {
+        return armorStandCarrier.getEntityId();
+    }
+
+    public int getFireTicks() {
+        return 0;
+    }
+
+    public int getMaxFireTicks() {
+        return 0;
+    }
+
+    public void setFireTicks(int i) {
+
+    }
+
+    public void remove() {
+        armorStandCarrier.setDead(true);
+    }
+
+    public boolean isDead() {
+        return armorStandCarrier.isDead();
+    }
+
+    public boolean isValid() {
+        return !armorStandCarrier.isDead();
+    }
+
+    public void sendMessage(String s) {
+
+    }
+
+    public void sendMessage(String[] strings) {
+
+    }
+
+    public Server getServer() {
+        return Bukkit.getServer();
+    }
+
+    public String getName() {
+        return armorStandCarrier.getDisplayName();
+    }
+
+    public Entity getPassenger() {
+        return null;
+    }
+
+    public boolean setPassenger(Entity entity) {
+        return false;
+    }
+
+    public List<Entity> getPassengers() {
+        return Collections.emptyList();
+    }
+
+    public boolean addPassenger(final Entity entity) {
+        return false;
+    }
+
+    public boolean removePassenger(final Entity entity) {
+        return false;
+    }
+
+    public boolean isEmpty() {
+        return false;
+    }
+
+    public boolean eject() {
+        return false;
+    }
+
+    public float getFallDistance() {
+        return 0;
+    }
+
+    public void setFallDistance(float v) {
+
+    }
+
+    public void setLastDamageCause(EntityDamageEvent entityDamageEvent) {
+
+    }
+
+    public EntityDamageEvent getLastDamageCause() {
+        return null;
+    }
+
+    public UUID getUniqueId() {
+        return armorStandCarrier.getUniqueId();
+    }
+
+    public int getTicksLived() {
+        return 0;
+    }
+
+    public void setTicksLived(int i) {
+
+    }
+
+    public void playEffect(EntityEffect entityEffect) {
+    }
+
+    public EntityType getType() {
+        return armorStandCarrier.getEntityType();
+    }
+
+    public boolean isInsideVehicle() {
+        return false;
+    }
+
+    public boolean leaveVehicle() {
+        return false;
+    }
+
+    public Entity getVehicle() {
+        return null;
+    }
+
+    public void setMetadata(String s, MetadataValue metadataValue) {
+
+    }
+
+    public List<MetadataValue> getMetadata(String s) {
+        return Collections.emptyList();
+    }
+
+    public boolean hasMetadata(String s) {
+        return false;
+    }
+
+    public void removeMetadata(String s, Plugin plugin) {
+
+    }
+
+    public <T extends Projectile> T launchProjectile(Class<? extends T> aClass) {
+        return null;
+    }
+
+    public <T extends Projectile> T launchProjectile(Class<? extends T> aClass, Vector vector) {
+        return null;
+    }
+
+    public boolean isPermissionSet(String s) {
+        return false;
+    }
+
+    public boolean isPermissionSet(Permission permission) {
+        return false;
+    }
+
+    public boolean hasPermission(String s) {
+        return false;
+    }
+
+    public boolean hasPermission(Permission permission) {
+        return false;
+    }
+
+    public PermissionAttachment addAttachment(Plugin plugin, String s, boolean b) {
+        return null;
+    }
+
+    public PermissionAttachment addAttachment(Plugin plugin) {
+        return null;
+    }
+
+    public PermissionAttachment addAttachment(Plugin plugin, String s, boolean b, int i) {
+        return null;
+    }
+
+    public PermissionAttachment addAttachment(Plugin plugin, int i) {
+        return null;
+    }
+
+    public void removeAttachment(PermissionAttachment permissionAttachment) {
+
+    }
+
+    public void recalculatePermissions() {
+
+    }
+
+    public Set<PermissionAttachmentInfo> getEffectivePermissions() {
+        return null;
+    }
+
+    public boolean isOp() {
+        return false;
+    }
+
+    public void setOp(boolean b) {
+
+    }
+
+    public AttributeInstance getAttribute(Attribute attribute) {
+        return null;
+    }
+}

@@ -184,6 +184,7 @@ public class ComponentRegistry {
         register(new ElevationCondition());
         register(new ElseCondition());
         register(new EntityTypeCondition());
+        register(new EntityExcludeCondition());
         register(new FireCondition());
         register(new FlagCondition());
         register(new GroundCondition());
@@ -207,6 +208,7 @@ public class ComponentRegistry {
         register(new WeatherCondition());
         register(new ShieldCondition());
         register(new DataCondition());
+        register(new WorldCondition());
 
         // Mechanics
         register(new AttributeMechanic());
@@ -239,6 +241,7 @@ public class ComponentRegistry {
         register(new ImmunityMechanic());
         register(new InterruptMechanic());
         register(new ItemMechanic());
+        register(new ItemPacketMechanic());
         register(new ItemProjectileMechanic());
         register(new ItemRemoveMechanic());
         register(new LaunchMechanic());

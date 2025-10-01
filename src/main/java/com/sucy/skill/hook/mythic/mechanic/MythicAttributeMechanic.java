@@ -45,7 +45,7 @@ public class MythicAttributeMechanic extends SkillMechanic implements ITargetedE
         if (target.getHealth() <= 0.0d) {
             return false;
         }
-        MobAttributeData mobAttributeData = MobAttribute.getData(target.getUniqueId(), true);
+        MobAttributeData mobAttributeData = MobAttribute.getData(target.getBukkitEntity(), true);
         String pair = SkillAPI.getAttributeManager().normalize(attribute.get(data));
         if (mobAttributeData != null && pair != null) {
             mobAttributeData.addAttribute(pair, amount, timer);

@@ -16,6 +16,8 @@ import java.util.List;
  */
 public class SkillContext extends HashMap<String, Object> {
 
+    public static final String SKILL_NAME = "SKILL-NAME";
+
     public SkillContext() {
     }
 
@@ -24,7 +26,10 @@ public class SkillContext extends HashMap<String, Object> {
         stringContent(def);
     }
 
-    public SkillContext(@NotNull String key, @NotNull Object def) {
+    public SkillContext(@NotNull String key, @Nullable Object def) {
+        if (def == null) {
+            return;
+        }
         put(key, def);
     }
 

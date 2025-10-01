@@ -52,10 +52,8 @@ public class WarpSwapMechanic extends MechanicComponent
      * @return true if applied to something, false otherwise
      */
     @Override
-    public boolean execute(LivingEntity caster, SkillContext context, int level, List<LivingEntity> targets)
-    {
-        if (targets.size() > 0)
-        {
+    public boolean execute(LivingEntity caster, SkillContext context, int level, List<LivingEntity> targets) {
+        if (!targets.isEmpty()) {
             Location tloc = targets.get(0).getLocation();
             Location cloc = caster.getLocation();
             targets.get(0).teleport(cloc);

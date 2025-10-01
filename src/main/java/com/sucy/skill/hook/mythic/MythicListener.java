@@ -1,6 +1,6 @@
 package com.sucy.skill.hook.mythic;
 
-import com.sucy.skill.api.projectile.EntityProjectile2;
+import com.sucy.skill.api.projectile.EntityProjectile;
 import com.sucy.skill.hook.mythic.drop.MythicExpDrop;
 import com.sucy.skill.hook.mythic.mechanic.*;
 import com.sucy.skill.listener.SkillAPIListener;
@@ -85,7 +85,7 @@ public class MythicListener extends SkillAPIListener {
     @EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
     public void a(EntityDeathEvent event) {
         markMap.remove(event.getEntity().getUniqueId());
-        EntityProjectile2.cache.remove(event.getEntity().getUniqueId());
+        EntityProjectile.cache.remove(event.getEntity().getUniqueId());
         AgentSkill.delMark(event.getEntity().getUniqueId());
     }
 
