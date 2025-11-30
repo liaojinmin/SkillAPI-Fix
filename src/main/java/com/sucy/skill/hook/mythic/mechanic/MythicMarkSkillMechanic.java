@@ -59,11 +59,11 @@ public class MythicMarkSkillMechanic extends MetaSkillMechanic {
     public boolean cast(SkillMetadata skillMetadata) {
         try {
             SkillMetadata data;
-            if (!this.parameters.isEmpty()) {
-                data = this.injectParameters(skillMetadata);
-            } else {
+           // if (!this.parameters.isEmpty()) {
+              //  data = this.injectParameters(skillMetadata);
+          //  } else {
                 data = skillMetadata;
-            }
+          //  }
             AgentSkill skill = getSkill();
             if (skill != null && skill.isUsable(data)) {
                 skill.execute(data);
@@ -80,11 +80,14 @@ public class MythicMarkSkillMechanic extends MetaSkillMechanic {
     }
 
 
+    /*
     private SkillMetadata injectParameters(SkillMetadata data) {
         data = data.deepClone();
         data.getParameters().putAll(this.parameters);
         return data;
     }
+
+     */
 
 
 

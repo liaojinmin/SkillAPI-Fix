@@ -5,6 +5,8 @@ import com.sucy.skill.SkillAPI;
 import com.sucy.skill.api.player.PlayerClass;
 import com.sucy.skill.api.player.PlayerData;
 import com.sucy.skill.dynamic.DynamicSkill;
+import com.sucy.skill.hook.mythic.MythicManager;
+import com.sucy.skill.hook.mythic.SummonData;
 import me.clip.placeholderapi.PlaceholderAPI;
 import me.clip.placeholderapi.expansion.PlaceholderExpansion;
 import org.bukkit.entity.LivingEntity;
@@ -27,17 +29,11 @@ public class PlaceholderAPIHook extends PlaceholderExpansion {
         PLACEHOLDERS.put("attrib_spent:", (p, attribute) -> Integer.toString(p.getInvestedAttribute(attribute)));
         PLACEHOLDERS.put("attrib_total:", (p, attribute) -> Double.toString(p.getAttribute(attribute)));
         PLACEHOLDERS.put("attrib_total_int:", (p, attribute) -> Integer.toString((int)p.getAttribute(attribute)));
-        PLACEHOLDERS.put("attrib_text:", (p, attribute) -> p.getAddAttributeText(attribute, false, false));
 
-        PLACEHOLDERS.put("attrib_total_format_int:", (p, attribute) -> p.getTotalFormatAttribute(attribute, true, false));
-        PLACEHOLDERS.put("attrib_total_format_scale:", (p, attribute) -> p.getTotalFormatAttribute(attribute, false, true));
-        PLACEHOLDERS.put("attrib_total_format_scale_int:", (p, attribute) -> p.getTotalFormatAttribute(attribute, true, true));
+        PLACEHOLDERS.put("attrib_text_int:", (p, attribute) -> p.getAddFormatAttribute(attribute, true));
+        PLACEHOLDERS.put("attrib_text:", (p, attribute) -> p.getAddFormatAttribute(attribute, false));
 
-        PLACEHOLDERS.put("attrib_text_int:", (p, attribute) -> p.getAddAttributeText(attribute, true, false));
-        PLACEHOLDERS.put("attrib_text_sc_int:", (p, attribute) -> p.getAddAttributeText(attribute, true, false, true));
-        PLACEHOLDERS.put("attrib_text_scale:", (p, attribute) -> p.getAddAttributeText(attribute, false, true));
-        PLACEHOLDERS.put("attrib_text_scale_int:", (p, attribute) -> p.getAddAttributeText(attribute, true, true));
-
+        PLACEHOLDERS.put("summon_timer", (p, u) -> getSummonTimer(p.getPlayer()));
         PLACEHOLDERS.put("exp", (p, u) -> getExp(p.getMainClass()));
         PLACEHOLDERS.put("exp:", (p, group) -> getExp(p.getClass(group)));
         PLACEHOLDERS.put("exp_total", (p, u) -> getTotalExp(p.getMainClass()));
@@ -130,6 +126,14 @@ public class PlaceholderAPIHook extends PlaceholderExpansion {
 
     private static String getManaName(PlayerClass playerClass) {
         return playerClass == null ? "" : playerClass.getData().getManaName();
+    }
+
+    private static String getSummonTimer(Player player) {
+        SummonData data = MythicManager.INSTANCE.getSummonMap().get(player.getUniqueId());
+        if (data != null) {
+            return data.getFirstTimer();
+        }
+        return "0";
     }
 
     private static String formats(Object value) {

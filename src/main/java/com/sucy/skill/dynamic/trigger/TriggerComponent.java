@@ -31,6 +31,7 @@ public class TriggerComponent extends EffectComponent {
         );
     }
 
+
     @Override
     public String getKey() {
         return "trigger";

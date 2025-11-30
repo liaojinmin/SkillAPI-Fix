@@ -41,6 +41,7 @@ import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
 import org.bukkit.event.Cancellable;
 import org.bukkit.event.Listener;
+import org.jetbrains.annotations.Nullable;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -198,6 +199,7 @@ public class DynamicSkill extends Skill implements SkillShot, PassiveSkill, List
      */
     @Override
     public void update(final LivingEntity user, final int prevLevel, final int newLevel) {
+       // System.out.println("update "+user.getName() + " by active put");
         active.put(user.getEntityId(), newLevel);
         for (final TriggerHandler triggerHandler : triggers) {
             triggerHandler.init(user, newLevel);
@@ -213,6 +215,7 @@ public class DynamicSkill extends Skill implements SkillShot, PassiveSkill, List
     @Override
     public void initialize(final LivingEntity user, final int level) {
         trigger(user, user, level, initializeTrigger);
+       // System.out.println("initialize "+user.getName() + " by active put");
         active.put(user.getEntityId(), level);
         for (final TriggerHandler triggerHandler : triggers) {
             triggerHandler.init(user, level);
@@ -252,6 +255,14 @@ public class DynamicSkill extends Skill implements SkillShot, PassiveSkill, List
     @Override
     public boolean cast(final LivingEntity user, final int level) {
         return trigger(user, user, level, castTrigger);
+    }
+
+    @Override
+    public boolean cast(final LivingEntity user, final int level, @Nullable LivingEntity target) {
+        if (target == null) {
+            return cast(user, level);
+        }
+        return trigger(user, target, level, castTrigger);
     }
 
     /**

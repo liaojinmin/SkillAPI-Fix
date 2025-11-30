@@ -22,6 +22,7 @@ import com.sucy.skill.manager.AttributeManager;
 import com.sucy.skill.screen.AttributeGermScreen;
 import com.sucy.skill.screen.AttributeScreenKt;
 import com.sucy.skill.utils.AttributeParseUtils;
+import com.sucy.skill.utils.ExpiringMap;
 import me.neon.flash.attribute.AttributePlayer;
 import me.neon.flash.attribute.comp.SuitData;
 import org.bukkit.Bukkit;
@@ -30,11 +31,15 @@ import org.bukkit.attribute.Attribute;
 import org.bukkit.attribute.AttributeInstance;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.locks.ReentrantLock;
+import java.util.function.Predicate;
+import java.util.function.Supplier;
 
 import static com.sucy.skill.api.event.PlayerSkillCastFailedEvent.Cause.*;
 
@@ -55,6 +60,8 @@ public class PlayerData {
      * value=加点等级
      **/
     private final HashMap<String, Integer> points = new HashMap<>();
+
+    public final ExpiringMap<String, Double> expiring = new ExpiringMap<>();
 
     /**
      * 无源临时数据
@@ -204,151 +211,83 @@ public class PlayerData {
     //                                                   //
     ///////////////////////////////////////////////////////
 
-    public String getTotalFormatAttribute(String attr_, boolean hasInt, boolean hasScale) {
-        int dollarIndex = attr_.indexOf('$');
-        String symbol = "";
-        // 如果没有找到 '$'，直接返回空字符串
-        String attr = attr_;
-        if (dollarIndex != -1) {
-            symbol = attr_.substring(dollarIndex + 1);
-            attr = attr_.substring(0, dollarIndex);
-        }
-        double value = getAttribute(attr);
-        double add = 0;
-        AttributePlayer attributePlayer = me.neon.flash.attribute.AttributeManager.INSTANCE.getAttributePlayer().get(player.getUniqueId());
-        if (attributePlayer != null) {
-            if (attr.equals("最大生命值")) {
-                add += attributePlayer.getAddScaleHealth();
-            } else {
-                if (hasScale) {
-                    for (Map<String, Double> map : attributePlayer.getSourceOfScaleMap().values()) {
-                        add += (map.getOrDefault(attr, 0.0) * 100);
-                    }
-                } else {
-                    for (Map<String, Double> map : attributePlayer.getSourceMap().values()) {
-                        add += map.getOrDefault(attr, 0.0);
-                    }
-                }
-            }
-        }
-
-        if (hasScale) {
-            for (Map<String, Double> map : scaleAttrib.values()) {
-                add += (map.getOrDefault(attr, 0.0) * 100);
-            }
-        } else {
-            for (Map<String, Integer> map : addAttrib.values()) {
-                add += map.getOrDefault(attr, 0);
-            }
-        }
-        StringBuilder stringBuilder = new StringBuilder(String.valueOf(value));
-        stringBuilder.append(symbol);
-        if (add > 0) {
-            stringBuilder.append(" §7(§a+");
-            if (hasInt) {
-                stringBuilder.append((int) value);
-            } else {
-                stringBuilder.append(value);
-            }
-            if (hasScale) {
-                stringBuilder.append("﹪");
-            }
-            stringBuilder.append("§7)");
-        }
-        return stringBuilder.toString();
-    }
-
-    private final List<String> pluginAddAttribute = new ArrayList<String>() {{
+    private static final List<String> pluginAddAttribute = new ArrayList<String>() {{
         add("GeekTeamPlus");
         add("NeonArena");
     }};
 
-    public String getAddAttributeText(String attr, boolean hasInt, boolean hasScale) {
-        return getAddAttributeText(attr, hasInt, hasScale, false);
-    }
-    // val = GeekTeamPlus$狂暴
-    public String getAddAttributeText(String attr, boolean hasInt, boolean hasScale, boolean useScale) {
+    public String getAddFormatAttribute(String attr, boolean hasInt) {
+        AttributePlayer attributePlayer = me.neon.flash.attribute.AttributeManager.INSTANCE
+                .getAttributePlayer().get(player.getUniqueId());
 
-
-        AttributePlayer attributePlayer = me.neon.flash.attribute.AttributeManager.INSTANCE.getAttributePlayer().get(player.getUniqueId());
-        double value = 0;
+        double base = 0;            // 所有非插件来源属性
+        double pluginBase = 0;      // 插件来源普通属性
+        double scale = 0;           // 插件百分比加成
         if (attributePlayer != null) {
             if (attr.equals("最大生命值")) {
-                value += attributePlayer.getAddScaleHealth();
-            } else {
-                if (hasScale) {
-                    for (String key : pluginAddAttribute) {
-                        value += (attributePlayer.getSourceOrCreateOfScale(key).getOrDefault(attr, 0.0) * 100);
-                    }
-                } else {
-                    for (String key : pluginAddAttribute) {
-                        value += attributePlayer.getSourceOrCreate(key).getOrDefault(attr, 0.0);
-                    }
+                // 未包含直接增加的值，这个只是生命值被放大后的值，需要把基数增加
+                base += attributePlayer.getAddScaleHealth();
+            }
+            base += attributePlayer.getBaseAttribute(attr);
+            for (SuitData suitData : attributePlayer.getSuitDataMap().values()) {
+                Map<String, Double> entry = suitData.getAttribute();
+                if (entry.containsKey(attr)) {
+                    base += entry.get(attr);
                 }
+            }
+            for (String plugin : pluginAddAttribute) {
+                pluginBase += attributePlayer.getSourceOrCreate(plugin).getOrDefault(attr, 0.0);
+            }
+            for (String plugin : pluginAddAttribute) {
+                scale += attributePlayer.getSourceOrCreateOfScale(plugin).getOrDefault(attr, 0.0);
+            }
+        }
+        base += points.getOrDefault(attr, 0);
+        base += bonusAttrib.getOrDefault(attr, 0.0);
+        base += expiring.getOrDefault(attr, 0.0);
+
+        // 自身容器
+        for (String plugin : pluginAddAttribute) {
+            Map<String, Integer> map0 = addAttrib.get(plugin);
+            if (map0 != null) {
+                pluginBase += map0.getOrDefault(attr, 0);
+            }
+
+            Map<String, Double> map = scaleAttrib.get(plugin);
+            if (map != null) {
+                scale += map.getOrDefault(attr, 0.0);
+            }
+        }
+        double all = base + pluginBase;
+        if (scale > 0 && !"最大生命值".equals(attr)) {
+            pluginBase += (all * scale);
+        }
+
+        if (pluginBase <= 0 || (hasInt && (int) pluginBase == 0)) {
+            return "";
+        }
+
+        // ===== SkillAPI 属性最大值限制处理 =====
+        AttributeManager.Attribute attribute = SkillAPI.getAttributeManager().getAttribute(attr);
+        if (attribute != null) {
+            double max = attribute.getMax();
+            if (max > 0 && all > max) {
+                StringBuilder stringBuilder = new StringBuilder("§7(§a");
+                stringBuilder.append("Max");
+                stringBuilder.append("§7)");
+                return stringBuilder.toString();
             }
         }
 
-        for (String key : pluginAddAttribute) {
-            if (hasScale) {
-                Map<String, Double> map = scaleAttrib.get(key);
-                if (map != null) {
-                    value += (map.getOrDefault(attr, 0.0) * 100);
-                }
-            } else {
-                Map<String, Integer> map = addAttrib.get(key);
-                if (map != null) {
-                    value += map.getOrDefault(attr, 0);
-                }
-            }
-        }
-        if (value <= 0) {
-            return "";
-        }
         StringBuilder stringBuilder = new StringBuilder("§7(§a+");
+
         if (hasInt) {
-            stringBuilder.append((int) value);
+            stringBuilder.append((int) pluginBase);
         } else {
-            stringBuilder.append(value);
-        }
-        if (hasScale || useScale) {
-            stringBuilder.append("﹪");
+            stringBuilder.append(pluginBase);
         }
         stringBuilder.append("§7)");
         return stringBuilder.toString();
-    }
-
-    public double getAttributeNotNf(String key) {
-        double total = 0;
-        // 固定点
-        if (points.containsKey(key)) {
-            total += points.get(key);
-        }
-        // 而外点
-        if (bonusAttrib.containsKey(key)) {
-            total += bonusAttrib.get(key);
-        }
-        // 职业属性
-        for (PlayerClass playerClass : getClasses()) {
-            total += playerClass.getData().getAttribute(key, playerClass.getLevel());
-        }
-        // 临时而外点
-        for (ConcurrentHashMap<String, Integer> map : addAttrib.values()) {
-            if (map.containsKey(key)) {
-                total += map.get(key);
-            }
-        }
-
-        return total;
-    }
-
-    public double scaleAttrib(String key, double value) {
-        double total = value; // 初始值
-        for (ConcurrentHashMap<String, Double> map : scaleAttrib.values()) {
-            if (map.containsKey(key)) {
-                total += map.getOrDefault(key, 0.0) * value;
-            }
-        }
-        return total;
     }
 
     public double getAttribute(String key) {
@@ -362,8 +301,157 @@ public class PlayerData {
             }
         }
         // nf end
+        double out = AttributeParseUtils.round(scaleAttrib(key, total, false, null), 1);
+        AttributeManager.Attribute attribute = SkillAPI.getAttributeManager().getAttribute(key);
+        if (attribute != null) {
+            if (attribute.getMax() > 0 && attribute.getMax() < out) {
+                return attribute.getMax();
+            }
+        }
+        return out;
+    }
 
-        return AttributeParseUtils.round(scaleAttrib(key, total), 1);
+    public double getAttributeNotNf(String key) {
+        return getAttributeNotNf(key, null);
+    }
+
+    public double getAttributeNotNf(@NotNull String key, @Nullable Predicate<String> containerFilter) {
+        double total = 0;
+        // 固定点
+        if (points.containsKey(key)) {
+            total += points.get(key);
+        }
+        // 时限
+        if (expiring.containsKey(key)) {
+            total += expiring.get(key);
+        }
+        // 额外点
+        if (bonusAttrib.containsKey(key)) {
+            total += bonusAttrib.get(key);
+        }
+        // 职业属性
+        for (PlayerClass playerClass : getClasses()) {
+            total += playerClass.getData().getAttribute(key, playerClass.getLevel());
+        }
+        // 临时额外点
+        for (Map.Entry<String, ConcurrentHashMap<String, Integer>> map : addAttrib.entrySet()) {
+            if (containerFilter == null || containerFilter.test(map.getKey())) {
+                if (map.getValue().containsKey(key)) {
+                    total += map.getValue().get(key);
+                }
+            }
+        }
+        AttributeManager.Attribute attribute = SkillAPI.getAttributeManager().getAttribute(key);
+        if (attribute != null) {
+            if (attribute.getMax() > 0 && attribute.getMax() < total) {
+                return attribute.getMax();
+            }
+        }
+        return total;
+    }
+
+    public double getAttributeNoSk(@NotNull String attr, @Nullable Predicate<String> containerFilter) {
+        double total = 0;
+        AttributePlayer attributePlayer = me.neon.flash.attribute.AttributeManager.INSTANCE.getAttributePlayer().get(player.getUniqueId());
+        if (attributePlayer != null) {
+            if (containerFilter == null || containerFilter.test("base")) {
+                // 基本
+                total += attributePlayer.getBaseAttribute(attr);
+            }
+            // 套装
+            for (SuitData suitData : attributePlayer.getSuitDataMap().values()) {
+                Map<String, Double> entry = suitData.getAttribute();
+                if (entry.containsKey(attr)) {
+                    total += entry.get(attr);
+                }
+            }
+            // 源属性
+            for (Map.Entry<String, Map<String, Double>> map : attributePlayer.getSourceMap().entrySet()) {
+                if (containerFilter == null || containerFilter.test(map.getKey())) {
+                    if (map.getValue().containsKey(attr)) {
+                        total += map.getValue().get(attr);
+                    }
+                }
+            }
+        }
+        AttributeManager.Attribute attribute = SkillAPI.getAttributeManager().getAttribute(attr);
+        if (attribute != null) {
+            if (attribute.getMax() > 0 && attribute.getMax() < total) {
+                return attribute.getMax();
+            }
+        }
+        return total;
+    }
+
+    public double getGlobalAttribute(@NotNull String attr, @Nullable Predicate<String> containerFilter) {
+        return getGlobalAttribute(attr, true, containerFilter);
+    }
+
+    public double getGlobalAttribute(@NotNull String attr, @NotNull Boolean scale, @Nullable Predicate<String> containerFilter){
+        double total = getAttributeNotNf(attr, containerFilter);
+
+        // nf start
+        AttributePlayer attributePlayer = me.neon.flash.attribute.AttributeManager.INSTANCE.getAttributePlayer().get(player.getUniqueId());
+        if (attributePlayer != null) {
+
+            if (containerFilter == null || containerFilter.test("base")) {
+                // 基本
+                total += attributePlayer.getBaseAttribute(attr);
+            }
+
+            // 套装
+            for (SuitData suitData : attributePlayer.getSuitDataMap().values()) {
+                Map<String, Double> entry = suitData.getAttribute();
+                if (entry.containsKey(attr)) {
+                    total += entry.get(attr);
+                }
+            }
+
+            // 源属性
+            for (Map.Entry<String, Map<String, Double>> map : attributePlayer.getSourceMap().entrySet()) {
+                if (containerFilter == null || containerFilter.test(map.getKey())) {
+                    if (map.getValue().containsKey(attr)) {
+                        total += map.getValue().get(attr);
+                    }
+                }
+            }
+        }
+        double out;
+        if (scale) out = AttributeParseUtils.round(scaleAttrib(attr, total, true, containerFilter), 1);
+        else out = AttributeParseUtils.round(total, 1);
+
+        AttributeManager.Attribute attribute = SkillAPI.getAttributeManager().getAttribute(attr);
+        if (attribute != null) {
+            if (attribute.getMax() > 0 && attribute.getMax() < out) {
+                return attribute.getMax();
+            }
+        }
+        return out;
+    }
+
+    public double scaleAttrib(@NotNull String attr, double value, boolean applyNf, @Nullable Predicate<String> containerFilter) {
+        double total = value; // 初始值
+        for (Map.Entry<String, ConcurrentHashMap<String, Double>> map : scaleAttrib.entrySet()) {
+            if (containerFilter == null || containerFilter.test(map.getKey())) {
+                if (map.getValue().containsKey(attr)) {
+                    total += map.getValue().getOrDefault(attr, 0.0) * value;
+                }
+            }
+        }
+        if (applyNf) {
+            AttributePlayer attributePlayer = me.neon.flash.attribute.AttributeManager.INSTANCE.getAttributePlayer().get(player.getUniqueId());
+            if (attributePlayer != null) {
+                // 缩放
+                for (Map.Entry<String, Map<String, Double>> map : attributePlayer.getSourceOfScaleMap().entrySet()) {
+                    if (containerFilter == null || containerFilter.test(map.getKey())) {
+                        if (map.getValue().containsKey(attr)) {
+                            total += map.getValue().get(attr) * total;
+                        }
+                    }
+                }
+            }
+        }
+        return total;
     }
 
     /**
@@ -551,6 +639,8 @@ public class PlayerData {
             double amount = getAttribute(attribute.getKey());
             if (amount > 0) {
                 modified = attribute.modifyStat(stat, modified, amount);
+               // System.out.println("attribute: "+ attribute.getKey());
+               // System.out.println("  modified "+modified);
             }
         }
         //if (stat.equalsIgnoreCase(AttributeManager.MOVE_SPEED)) {
@@ -1671,7 +1761,10 @@ public class PlayerData {
             LivingEntity target = TargetHelper.getLivingTarget(p, skill.getData().getRange(level));
 
             // Must have a target
-            if (target == null) { return PlayerSkillCastFailedEvent.invoke(skill, NO_TARGET); }
+            if (target == null) {
+                PlayerSkillCastFailedEvent.invoke(skill, NO_TARGET);
+                return false;
+            }
 
             PlayerCastSkillEvent event = new PlayerCastSkillEvent(this, skill, p);
             Bukkit.getPluginManager().callEvent(event);

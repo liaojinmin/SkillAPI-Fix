@@ -45,7 +45,7 @@ public class PermissionCondition extends ConditionComponent {
     }
 
     @Override
-    boolean test(final LivingEntity caster, final int level, final LivingEntity target) {
+    public boolean test(final LivingEntity caster, final int level, final LivingEntity target) {
         return caster.hasPermission(settings.getString(PERM));
     }
 }

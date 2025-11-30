@@ -1,5 +1,6 @@
 package com.sucy.skill.api.attribute.mob;
 
+import com.sucy.skill.api.player.PlayerData;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.LivingEntity;
@@ -30,5 +31,6 @@ public class MobAttribute {
         }
         return data.get(entity.getUniqueId());
     }
+
 
 }

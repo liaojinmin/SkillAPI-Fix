@@ -17,15 +17,18 @@ public class MythicSkillMechanic extends SkillMechanic implements ITargetedEntit
 
     protected PlaceholderInt level;
     protected PlaceholderString name;
+    protected Boolean saveTarget;
 
     public MythicSkillMechanic(String line, MythicLineConfig mlc) {
         super(line, mlc);
         this.name = PlaceholderString.of(mlc.getString(new String[]{"name", "n"}, "null"));
         this.level = PlaceholderInt.of(mlc.getString(new String[]{"level", "l"}, "1"));
+        this.saveTarget = mlc.getBoolean(new String[]{"saveTarget", "st"}, false);
     }
 
     @Override
     public boolean castAtEntity(SkillMetadata data, AbstractEntity target) {
+
         if (target.isDead()) {
             return false;
         }
@@ -34,16 +37,29 @@ public class MythicSkillMechanic extends SkillMechanic implements ITargetedEntit
             return false;
         }
 
-        int level = this.level.get(data, target);
-        Skill skill = SkillAPI.getSkill(name.get(data, target));
+        AbstractEntity cast = target;
+        // 如果保留目标，则把技能施法者换成当前技能的施法者，目标继续遗传到sk
+        if (saveTarget) {
+            cast = data.getCaster().getEntity();
+        }
+       // System.out.println("saveTarget: "+saveTarget);
+       // System.out.println("  cast: "+cast.getName());
+       // System.out.println("  target: "+target.getName());
+
+        Skill skill = SkillAPI.getSkill(name.get(data, cast));
         if (skill == null) {
             return false;
         }
+        int level = this.level.get(data, cast);
 
-        Entity entity = target.getBukkitEntity();
-        if (entity instanceof LivingEntity) {
-            SkillCastAPI.cast((LivingEntity) entity, skill, level);
-            return true;
+        if (saveTarget) {
+            SkillCastAPI.cast(
+                    (LivingEntity) cast.getBukkitEntity(),
+                    skill, level,
+                    (LivingEntity) target.getBukkitEntity()
+            );
+        } else {
+            SkillCastAPI.cast((LivingEntity) cast.getBukkitEntity(), skill, level);
         }
         return false;
     }

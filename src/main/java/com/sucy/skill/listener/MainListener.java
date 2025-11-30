@@ -337,21 +337,19 @@ public class MainListener extends SkillAPIListener {
     @EventHandler(priority = EventPriority.MONITOR)
     public void onPhysicalDamage(EntityDamageByEntityEvent event) {
         if (event.isCancelled()) return;
+
         if (Skill.isSkillDamage() || event.getCause() == EntityDamageEvent.DamageCause.CUSTOM
             || !(event.getEntity() instanceof LivingEntity)
             || event.getDamage() <= 0.0) {
             return;
         }
       //  System.out.println("EntityDamageByEntityEvent Damage "+event.getDamage() +" start "+event.isCancelled());
-        if (event.isCancelled()) {
-           // System.out.println("中断计算");
-            return;
-        }
+
         PhysicalDamageEvent e = new PhysicalDamageEvent(ListenerUtil.getDamager(event), (LivingEntity) event.getEntity(), event.getDamage(), event.getDamager() instanceof Projectile);
         Bukkit.getPluginManager().callEvent(e);
         event.setDamage(e.getDamage());
         if (e.isCancelled()) {
-            event.setCancelled(true);
+         //   event.setCancelled(true);
         }
     }
 

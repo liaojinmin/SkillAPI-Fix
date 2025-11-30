@@ -9,7 +9,7 @@ public class CeilingCondition extends ConditionComponent
     private static final String AT_LEAST = "at-least";
 
     @Override
-    boolean test(final LivingEntity caster, final int level, final LivingEntity target) {
+    public boolean test(final LivingEntity caster, final int level, final LivingEntity target) {
         final boolean atLeast = settings.getBool(AT_LEAST, true);
         final int distance = (int) parseValues(caster, DISTANCE, level, 5);
 

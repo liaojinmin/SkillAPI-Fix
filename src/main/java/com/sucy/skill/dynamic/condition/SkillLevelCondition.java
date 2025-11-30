@@ -48,7 +48,7 @@ public class SkillLevelCondition extends ConditionComponent {
     }
 
     @Override
-    boolean test(final LivingEntity caster, final int level, final LivingEntity target) {
+    public boolean test(final LivingEntity caster, final int level, final LivingEntity target) {
         final int min = settings.getInt(MIN_LEVEL, 1);
         final int max = settings.getInt(MAX_LEVEL, 99);
 

@@ -42,7 +42,12 @@ var Trigger = {
     PHYSICAL_DAMAGE      : { name: 'Physical Damage',      container: true, construct: TriggerPhysicalDamage     },
     SKILL_DAMAGE         : { name: 'Skill Damage',         container: true, construct: TriggerSkillDamage        },
     TOOK_PHYSICAL_DAMAGE : { name: 'Took Physical Damage', container: true, construct: TriggerTookPhysicalDamage },
-    TOOK_SKILL_DAMAGE    : { name: 'Took Skill Damage',    container: true, construct: TriggerTookSkillDamage    }
+    TOOK_SKILL_DAMAGE    : { name: 'Took Skill Damage',    container: true, construct: TriggerTookSkillDamage    },
+    MYTHIC_SUMMON_DEATH    : { name: 'Mythic Summon Death',    container: true, construct: TriggerMythicSummonDeath    },
+    PLAYER_TEAM_START    : { name: 'Player Team Start',    container: true, construct: TriggerPlayerTeamStart,   premium: true },
+    PLAYER_ARENA_START    : { name: 'Player Arena Start',    container: true, construct: TriggerPlayerArenaStart,  premium: true},
+    PLAYER_KILLER_ENTITY    : { name: 'Player Killer Entity',    container: true, construct: TriggerPlayerKillerEntity,  premium: true}, // 2025/11/30
+    PLAYER_HEALTH_RESTORE  : { name: 'Player Health Restore',    container: true, construct: TriggerPlayerHealthRestore,  premium: true} // 2025/11/30
 };
 
 /**
@@ -58,7 +63,8 @@ var Target = {
     REMEMBER : { name: 'Remember', container: true, construct: TargetRemember },
     SELF     : { name: 'Self',     container: true, construct: TargetSelf     },
     SINGLE   : { name: 'Single',   container: true, construct: TargetSingle   },
-    CONTEXT_ARMOR_STAND   : { name: 'ContextArmorStand',   container: true, construct: TargetContextArmorStand   }
+    CONTEXT_ARMOR_STAND   : { name: 'ContextArmorStand',   container: true, construct: TargetContextArmorStand   },
+    SUMMON_OWNER     : { name: 'Summon Owner',     container: true, construct: TargetSummonOwner     }
 };
 
 /**
@@ -79,6 +85,7 @@ var Condition = {
     ELEVATION:   { name: 'Elevation',   container: true, construct: ConditionElevation  },
     ELSE:        { name: 'Else',        container: true, construct: ConditionElse,      premium: true },
     ENTITY_TYPE: { name: 'Entity Type', container: true, construct: ConditionEntityType,premium: true },
+    ENTITY_CATEGORY: { name: 'Entity Category', container: true, construct: ConditionEntityCategory,premium: true },
     ENTITY_EXCLUDE: { name: 'Entity Exclude', container: true, construct: ConditionEntityExclude,premium: true },
     FIRE:        { name: 'Fire',        container: true, construct: ConditionFire       },
     FLAG:        { name: 'Flag',        container: true, construct: ConditionFlag       },
@@ -102,7 +109,11 @@ var Condition = {
     WATER:       { name: 'Water',       container: true, construct: ConditionWater      },
     WEATHER:     { name: 'Weather',     container: true, construct: ConditionWeather,   premium: true },
     DATA:        { name: 'Data',        container: true, construct: ConditionData,      premium: true },
-    WORLD:       { name: 'World',       container: true, construct: ConditionWorld,     premium: true}
+    WORLD:       { name: 'World',       container: true, construct: ConditionWorld,     premium: true},
+    AREA_ENTITY:       { name: 'Area Entity',       container: true, construct: ConditionAreaEntity,     premium: true }, // 2025/11/30
+    HEALTH_SCALE:       { name: 'Health Scale',       container: true, construct: ConditionHealthScale,     premium: true }, // 2025/11/30
+    HEALTH_COMPARISON:       { name: 'Health Comparison',       container: true, construct: ConditionHealthComparison,     premium: true }, // 2025/11/30
+    MYTHIC_SUMMON_SURVIVAL:       { name: 'Mythic Summon Survival',       container: true, construct: ConditionMythicSummonSurvival,     premium: true}
 };
 
 /**
@@ -189,6 +200,8 @@ var Mechanic = {
     WARP_VALUE:          { name: 'Warp Value',          container: false, construct: MechanicWarpValue          },
     WOLF:                { name: 'Wolf',                container: true,  construct: MechanicWolf               },
     ARMOR_STAND:         { name: 'Armor Stand',         container: true,  construct: MechanicArmorStand         },
+    MYTHIC_FACTION:      { name: 'Mythic Faction',      container: true,  construct: MechanicMythicFaction,      premium: true },
+    MYTHIC_SUMMON:       { name: 'Mythic Summon',       container: true,  construct: MechanicMythicSummon,      premium: true },
     Adyeshach:           { name: 'Adyeshach',           container: true,  construct: MechanicAdyeshach          },
     ARMOR_STAND_REMOVE:  { name: 'Armor Stand Remove',  container: true,  construct: MechanicArmorStandRemove   },
     GERM_ANIMATION_START:{ name: 'Germ Animation Start',container: true,  construct: MechanicGermAnimationStart },
@@ -197,6 +210,11 @@ var Mechanic = {
     MYTHIC_CAST:         { name: 'Mythic cast',         container: false, construct: MechanicMythicCast         },
     MYTHIC_CAST_TARGET:  { name: 'Mythic cast target',  container: false, construct: MechanicMythicCastTarget   },
     ARENA_SHOW:          { name: 'Arena Show',          container: false, construct: MechanicArenaShow          },
+    SKILL_CAST:          { name: 'skill cast',          container: true,  construct: MechanicSkillCast,         premium: true },
+    // mythic summon delete
+    MYTHIC_SUMMON_DELETE:{ name: 'Mythic Summon Delete',container: true,  construct: MechanicMythicSummonDelete,premium: true },
+    MYTHIC_SUMMON_VALUE:{ name: 'Mythic Summon Value',container: true,  construct: MechanicMythicSummonValue,premium: true },
+    BADGE_COOLDOWN_RESET:{ name: 'Badge Cooldown Reset',container: true,  construct: MechanicBadgeCooldownReset,premium: true }, // 2025/11/30
 };
 
 var saveIndex;
@@ -787,6 +805,72 @@ function TriggerTookSkillDamage()
     );
 }
 
+// TriggerMythicSummonDeath
+extend('TriggerMythicSummonDeath', 'Component');
+function TriggerMythicSummonDeath()
+{
+    this.super('Mythic Summon Death', Type.TRIGGER, true);
+
+    this.description = '当召唤物死亡、清除时触发，可判断种类';
+
+    this.data.push(new StringListValue('MythicType', 'mythicType', [ 'default' ] )
+        .setTooltip('种类列表，MM 生物配置的 ID 非怪物展示名称')
+    );
+}
+// TriggerPlayerTeamStart
+extend('TriggerPlayerTeamStart', 'Component');
+function TriggerPlayerTeamStart()
+{
+    this.super('Player Team Start', Type.TRIGGER, true);
+
+    this.description = '副本其它完成后对玩家触发';
+
+    this.data.push(new StringListValue('Dungeon', 'dungeon', [ '' ] )
+        .setTooltip('筛选副本名称')
+    );
+    this.data.push(new StringListValue('Difficulty', 'difficulty', [ '' ] )
+        .setTooltip('筛选副本难度')
+    );
+}
+
+extend('TriggerPlayerArenaStart', 'Component');
+function TriggerPlayerArenaStart()
+{
+    this.super('Player Arena Start', Type.TRIGGER, true);
+
+    this.description = '对战其它完成后对玩家触发';
+}
+
+extend('TriggerPlayerKillerEntity', 'Component');
+function TriggerPlayerKillerEntity()
+{
+    this.super('Player Killer Entity', Type.TRIGGER, true);
+
+    this.description = '玩家使用技能击杀敌人时触发';
+
+    this.data.push(new StringListValue('Skill', 'skill', [ '' ] )
+        .setTooltip('击杀时的技能')
+    );
+    this.data.push(new StringListValue('Classification', 'classification', [ '' ] )
+        .setTooltip('伤害类型')
+    );
+}
+
+extend('TriggerPlayerHealthRestore', 'Component');
+function TriggerPlayerHealthRestore()
+{
+    this.super('Player Health Restore', Type.TRIGGER, true);
+
+    this.description = '玩家恢复生命值时触发， 可通过Key`PLAYER_HEALTH_RESTORE`取得恢复量';
+
+    this.data.push(new AttributeValue('Min Amount', 'minAmount', 1, 0)
+        .setTooltip('要求的最小存在数量')
+    );
+    this.data.push(new AttributeValue('Max Amount', 'maxAmount', 999, 0)
+        .setTooltip('要求的最大存在数量')
+    );
+}
+
 // -- Target constructors ------------------------------------------------------ //
 
 extend('TargetArea', 'Component');
@@ -942,6 +1026,14 @@ function TargetSelf()
     this.super('Self', Type.TARGET, true);
 
     this.description = 'Returns the current target back to the caster.';
+}
+
+extend('TargetSummonOwner', 'Component');
+function TargetSummonOwner()
+{
+    this.super('Summon Owner', Type.TARGET, true);
+
+    this.description = '获取施法者的主人，如果有的话';
 }
 
 extend('TargetSingle', 'Component');
@@ -1177,6 +1269,19 @@ function ConditionEntityType()
 
     this.data.push(new MultiListValue('Types', 'types', [ 'BAT', 'BLAZE', 'CAVE_SPIDER', 'CHICKEN', 'COW', 'CREEPER', 'DONKEY', 'ELDER_GUARDIAN', 'ENDER_DRAGON', 'ENDERMAN', 'ENDERMITE', 'EVOKER', 'GHAST', 'GIANT', 'GUARDIAN', 'HORSE', 'HUSK', 'IRON_GOLEM', 'LLAMA', 'MAGMA_CUBE', 'MULE', 'MUSHROOM_COW', 'OCELOT', 'PIG', 'PIG_ZOMBIE', 'PLAYER', 'POLAR_BEAR', 'RABBIT', 'SHEEP', 'SHULKER', 'SILVERFISH', 'SKELETON', 'SKELETON_HORSE', 'SLIME', 'SNOWMAN', 'SPIDER', 'SQUID', 'VEX', 'VILLAGER', 'VINDICATOR', 'WITCH', 'WITHER', 'WITHER_SKELETON', 'WOLF', 'ZOMBIE', 'ZOMBIE_HORSE', 'ZOMBIE_VILLAGER' ])
         .setTooltip('The entity types to target')
+    );
+}
+
+// ConditionEntityCategory
+extend('ConditionEntityCategory', 'Component');
+function ConditionEntityCategory()
+{
+    this.super('Entity Category', Type.CONDITION, true);
+
+    this.description = '判断生物分类'
+
+    this.data.push(new MultiListValue('Category', 'category', [ 'PLAYER', 'BOSS', 'MOB' ])
+        .setTooltip('分类类型')
     );
 }
 
@@ -1547,6 +1652,85 @@ function ConditionWorld() {
     this.data.push(new ListValue('ExcludePlayer', 'exclude-player', [ 'True', 'False' ], 'False')
         .setTooltip('世界条件达成后，如果为 True，则技能不会对玩家生效')
     );
+}
+
+//ConditionMythicSummonSurvival
+extend('ConditionMythicSummonSurvival', 'Component');
+function ConditionMythicSummonSurvival() {
+    this.super('Mythic Summon Survival', Type.CONDITION, true);
+
+    this.description = '判断目标指定召唤物数量';
+
+    // 指定世界
+    this.data.push(new StringValue('MythicType', 'mythicType', 'default')
+        .setTooltip('MM 生物配置的 ID 非怪物展示名称')
+    );
+
+    this.data.push(new AttributeValue('Min Amount', 'minAmount', 1, 0)
+        .setTooltip('要求的最小存在数量')
+    );
+    this.data.push(new AttributeValue('Max Amount', 'maxAmount', 999, 0)
+        .setTooltip('要求的最大存在数量')
+    );
+    this.data.push(new AttributeValue('Range', 'range', 10.0, 0)
+        .setTooltip('范围、可选')
+    );
+
+}
+
+extend('ConditionAreaEntity', 'Component');
+function ConditionAreaEntity() {
+    this.super('Area Entity', Type.CONDITION, true);
+
+    this.description = '范围内敌对生物';
+
+    // 指定世界
+    this.data.push(new StringListValue('Type', 'type', ["ally", "all", "ot"])
+        .setTooltip('ally = 要求是盟友, all = 任意,ot = 敌对')
+    );
+
+    this.data.push(new AttributeValue('Min Amount', 'minAmount', 1, 0)
+        .setTooltip('要求的最小存在数量')
+    );
+    this.data.push(new AttributeValue('Max Amount', 'maxAmount', 999, 0)
+        .setTooltip('要求的最大存在数量')
+    );
+    this.data.push(new AttributeValue('Range', 'range', 10.0, 0)
+        .setTooltip('范围')
+    );
+
+}
+
+extend('ConditionHealthScale', 'Component');
+function ConditionHealthScale() {
+    this.super('Health Scale', Type.CONDITION, true);
+
+    this.description = '血量比例';
+
+    // 指定世界
+    this.data.push(new ListValue('Much', 'much', ["true", "False"], 'False')
+        .setTooltip('true = 血量低于 scale; false = 高于 scale')
+    );
+    this.data.push(new AttributeValue('Scale', 'scale', 0.0, 0)
+        .setTooltip('比例')
+    );
+
+}
+
+extend('ConditionHealthComparison', 'Component');
+function ConditionHealthComparison() {
+    this.super('Health Comparison', Type.CONDITION, true);
+
+    this.description = '血量比较';
+
+    // 指定世界
+    this.data.push(new ListValue('Direction', 'direction', ["higher", "lower"], 'higher')
+        .setTooltip('比较方向：higher / lower')
+    );
+    this.data.push(new AttributeValue('Scale', 'scale', 0.0, 0)
+        .setTooltip('比例')
+    );
+
 }
 
 // -- Mechanic constructors ---------------------------------------------------- //
@@ -3127,6 +3311,34 @@ function MechanicArmorStand() {
 
 }
 
+extend('MechanicMythicSummon', 'Component');
+function MechanicMythicSummon() {
+    this.super('Mythic Summon', Type.MECHANIC, true);
+
+    this.description = '召唤MM实体，并关联召唤者';
+    this.data.push(new StringValue('怪物内部ID', 'type', 'Husk'));
+    this.data.push(new ListValue('是否使用内置AI', 'useAi', ['True', 'False'], 'False')
+        .setTooltip('如果设置使用，需要把MM怪物的AI全部清除，内置AI会主动寻敌'));
+    this.data.push(new AttributeValue('继承生命值比例', 'health', 0.5, 0));
+    this.data.push(new AttributeValue('删除时间', 'duration', 5, 0));
+    this.data.push(new AttributeValue('前偏移', 'forward', 0, 0));
+    this.data.push(new AttributeValue('上偏移', 'upward', 0, 0));
+    this.data.push(new AttributeValue('右偏移', 'right', 0, 0));
+
+}
+// MechanicMythicFaction
+extend('MechanicMythicFaction', 'Component');
+function MechanicMythicFaction() {
+    this.super('Mythic Faction', Type.MECHANIC, true);
+
+    this.description = '临时切换MM怪物派系，前提是SK所选的目标是MM怪物';
+    this.data.push(new StringValue('派系名称', 'faction', 'default')
+    );
+    this.data.push(new AttributeValue('恢复时间', 'duration', 5, 0)
+    );
+
+}
+
 extend('MechanicAdyeshach', 'Component');
 function MechanicAdyeshach() {
     this.super('Adyeshach', Type.MECHANIC, true);
@@ -3225,7 +3437,6 @@ function MechanicMythicCast() {
 }
 
 extend('MechanicMythicCastTarget', 'Component');
-
 function MechanicMythicCastTarget() {
     this.super('Mythic Cast Target', Type.MECHANIC, false);
 
@@ -3240,7 +3451,6 @@ function MechanicMythicCastTarget() {
 }
 
 extend('MechanicArenaShow', 'Component');
-
 function MechanicArenaShow() {
     this.super('Arena Showt', Type.MECHANIC, false);
 
@@ -3252,6 +3462,54 @@ function MechanicArenaShow() {
 
     this.data.push(new AttributeValue('Range', 'range', 10, 0)
         .setTooltip('现形范围')
+    );
+}
+
+// MechanicSkillCast
+extend('MechanicSkillCast', 'Component');
+function MechanicSkillCast() {
+    this.super('Skill cast', Type.MECHANIC, false);
+
+    this.description = '执行另外一个SK技能';
+
+    this.data.push(new StringValue('Skill', 'skill', "")
+        .setTooltip('技能名称')
+    );
+
+}
+
+// MechanicMythicSummonDelete
+extend('MechanicMythicSummonDelete', 'Component');
+function MechanicMythicSummonDelete() {
+    this.super('Mythic Summon Delete', Type.MECHANIC, false);
+
+    this.description = '移除目标指定类型的召唤物';
+
+    this.data.push(new StringValue('MythicType', 'mythicType', "default")
+        .setTooltip('MM 生物配置的 ID 非怪物展示名称')
+    );
+
+}
+
+extend('MechanicMythicSummonValue', 'Component');
+function MechanicMythicSummonValue() {
+    this.super('Mythic Summon Value', Type.MECHANIC, false);
+    this.description = '将目标指定召唤物总存在数更新至 Value 容器，共 Value 操作器使用';
+    this.data.push(new StringValue('MythicType', 'mythicType', "default")
+        .setTooltip('MM 生物配置的 ID 非怪物展示名称')
+    );
+    this.data.push(new StringValue('Key', 'key', "default")
+        .setTooltip('存活数存入 Value 容器时使用的 KEY')
+    );
+
+}
+
+extend('MechanicBadgeCooldownReset', 'Component');
+function MechanicBadgeCooldownReset() {
+    this.super('Badge Cooldown Reset', Type.MECHANIC, false);
+    this.description = '重置徽章冷却实际';
+    this.data.push(new StringListValue('Type', 'type', ["R", "E", "ALL"])
+        .setTooltip('重置什么按键的')
     );
 }
 

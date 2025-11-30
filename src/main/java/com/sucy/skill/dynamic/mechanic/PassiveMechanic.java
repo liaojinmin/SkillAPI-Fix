@@ -102,7 +102,7 @@ public class PassiveMechanic extends MechanicComponent {
                     targets.remove(i);
                 }
             }
-            if (!skill.isActive(caster) || targets.size() == 0) {
+            if (!skill.isActive(caster) || targets.isEmpty()) {
                 cancel();
                 return;
             } else if (caster instanceof Player) {

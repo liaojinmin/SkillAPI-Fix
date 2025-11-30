@@ -70,12 +70,13 @@ public class ValueAttributeMechanic extends MechanicComponent
         String attr = settings.getString(ATTR);
         Map<String, Object> data = DynamicSkill.getCastData(caster);
         if (targets.isEmpty()) {
+           // System.out.println("-------- "+key + " --------- TARGET EMPTY");
             data.put(key, 0.0);
             return true;
         }
         double attribute = AttributeAPI.getAttribute(targets.get(0), attr);
         data.put(key, attribute);
-       // data.put(key, (double) SkillAPI.getPlayerData((Player) targets.get(0)).getAttribute(attr));
+
         return true;
     }
 }

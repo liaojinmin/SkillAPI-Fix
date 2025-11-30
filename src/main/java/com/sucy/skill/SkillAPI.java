@@ -18,6 +18,7 @@ import com.sucy.skill.data.io.IOManager;
 import com.sucy.skill.data.io.SQLImpl;
 import com.sucy.skill.dynamic.DynamicClass;
 import com.sucy.skill.dynamic.DynamicSkill;
+import com.sucy.skill.hook.mythic.MythicManager;
 import com.sucy.skill.hook.PlaceholderAPIHook;
 import com.sucy.skill.hook.mythic.MythicListener;
 import com.sucy.skill.listener.*;
@@ -26,12 +27,15 @@ import com.sucy.skill.task.ManaTask;
 import com.sucy.skill.task.MobAttributeTask;
 import com.sucy.skill.thread.MainThread;
 import com.sucy.skill.manager.*;
+import com.sucy.skill.utils.EventCancelTracker;
+import me.neon.libs.NeonLibsLoader;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.OfflinePlayer;
 import org.bukkit.attribute.Attribute;
 import org.bukkit.entity.Player;
 import org.bukkit.event.HandlerList;
+import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.bukkit.metadata.FixedMetadataValue;
 import org.bukkit.metadata.MetadataValue;
 import org.bukkit.metadata.Metadatable;
@@ -68,6 +72,10 @@ public class SkillAPI extends JavaPlugin {
 
     public SkillAPI() {
         singleton = this;
+        NeonLibsLoader.initializePlugin(this, this.getClass(), () -> {
+            singleton.getLogger().info("因 NeonLibs 卸载，部分功能将出现异常...");
+            //Bukkit.getPluginManager().disablePlugin(this);
+        });
     }
 
     /**
@@ -76,6 +84,7 @@ public class SkillAPI extends JavaPlugin {
      */
     @Override
     public void onEnable() {
+       // EventCancelTracker.hookEventHandlers(EntityDamageByEntityEvent.class);
         singleton = this;
         mainThread = new MainThread();
         Particle.init();
@@ -115,6 +124,7 @@ public class SkillAPI extends JavaPlugin {
         // MM 事件
         listen(new MobListener(), settings.isAttributeMobEnabled());
         listen(new MythicListener(), true);
+
         MainThread.register(new MobAttributeTask());
         // Set up tasks
         if (settings.isManaEnabled()) {
@@ -140,6 +150,8 @@ public class SkillAPI extends JavaPlugin {
             PlaceholderAPIHook.init();
             Bukkit.getLogger().info("ProSkillAPI hook into PlaceholderAPI: " + ChatColor.GREEN + "success.");
         }
+        Bukkit.getPluginManager().registerEvents(MythicManager.INSTANCE, this);
+        MythicManager.INSTANCE.onStart();
     }
 
     private void listen(SkillAPIListener listener, boolean enabled) {
@@ -156,6 +168,7 @@ public class SkillAPI extends JavaPlugin {
         for (Player player : Bukkit.getOnlinePlayers()) {
             unloadPlayerData(player, false, true);
         }
+        MythicManager.INSTANCE.onShutdown();
         playerDataMap.clear();
         EffectManager.cleanUp();
         ArmorStandManager.cleanUp();

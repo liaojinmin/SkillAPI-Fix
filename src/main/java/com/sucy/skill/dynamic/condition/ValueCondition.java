@@ -48,7 +48,7 @@ public class ValueCondition extends ConditionComponent {
     }
 
     @Override
-    boolean test(final LivingEntity caster, final int level, final LivingEntity target) {
+    public boolean test(final LivingEntity caster, final int level, final LivingEntity target) {
         final String key = settings.getString(KEY);
         final double min = parseValues(caster, MIN, level, 1);
         final double max = parseValues(caster, MAX, level, 999);

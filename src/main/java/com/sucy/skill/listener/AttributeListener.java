@@ -20,6 +20,7 @@ import org.bukkit.event.EventPriority;
 import org.bukkit.event.entity.EntityDamageEvent;
 import org.bukkit.event.entity.EntityRegainHealthEvent;
 import org.bukkit.event.entity.FoodLevelChangeEvent;
+import org.bukkit.event.inventory.InventoryCloseEvent;
 import org.bukkit.event.player.*;
 import org.jetbrains.annotations.Nullable;
 
@@ -127,6 +128,14 @@ public class AttributeListener extends SkillAPIListener {
     public void onInvest(PlayerUpAttributeEvent event) {
         updatePlayer(event.getPlayerData());
     }
+
+    /*
+    @EventHandler
+    public void onClose(InventoryCloseEvent event) {
+        updatePlayer(SkillAPI.getPlayerData(event.getPlayer().getUniqueId()));
+    }
+
+     */
 
     /**
      * Apply attributes to mana regen
@@ -298,7 +307,10 @@ public class AttributeListener extends SkillAPIListener {
 
             data.addMaxHealth(change);
 
-            change = updateStat(data, AttributeManager.MANA, data.getMaxMana(), 0, Double.MAX_VALUE);
+            change = updateStat(data, AttributeManager.MANA, data.getMaxMana(),
+                    -data.getMaxMana(), Double.MAX_VALUE
+            );
+            //System.out.println("maxMana: " + data.getMaxMana() + " change: " + change);
             data.addMaxMana(change);
 
             change = updateStat(data, AttributeManager.MOVE_SPEED, 0.2f, -2, 2);

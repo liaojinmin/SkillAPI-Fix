@@ -29,8 +29,11 @@ public abstract class ConditionComponent extends EffectComponent {
                 .filter(t -> test(caster, level, t))
                 .collect(Collectors.toList());
 
-        return filtered.size() > 0 && executeChildren(caster, context, level, filtered);
+        return !filtered.isEmpty() && executeChildren(caster, context, level, filtered);
     }
 
-    abstract boolean test(final LivingEntity caster, final int level, final LivingEntity target);
+    public boolean test(final LivingEntity caster, final int level, final LivingEntity target) {
+        return true;
+    }
+
 }

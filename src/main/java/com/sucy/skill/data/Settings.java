@@ -7,22 +7,20 @@ import com.rit.sucy.config.parse.DataSection;
 import com.rit.sucy.config.parse.NumberParser;
 import com.rit.sucy.text.TextFormatter;
 import com.rit.sucy.version.VersionManager;
-import com.sucy.party.Parties;
-import com.sucy.party.Party;
 import com.sucy.skill.SkillAPI;
-import com.sucy.skill.api.CombatProtection;
-import com.sucy.skill.api.DefaultCombatProtection;
 import com.sucy.skill.api.armorstand.ArmorStandEntity;
-import com.sucy.skill.api.attribute.AttributeAPI;
 import com.sucy.skill.api.player.PlayerClass;
 import com.sucy.skill.api.skills.Skill;
 import com.sucy.skill.data.formula.Formula;
 import com.sucy.skill.data.formula.value.CustomValue;
 import com.sucy.skill.dynamic.DynamicSkill;
+import com.sucy.skill.hook.mythic.MythicManager;
 import com.sucy.skill.log.Logger;
 import me.geek.team.common.TeamHandler;
 import me.geek.team.common.TeamManager;
-import org.bukkit.Bukkit;
+import me.neon.arena.manager.GameTeamManager;
+import me.neon.arena.utils.GameUtilsKt;
+import org.bukkit.GameMode;
 import org.bukkit.Material;
 import org.bukkit.World;
 import org.bukkit.entity.*;
@@ -226,25 +224,12 @@ public class Settings {
     ///////////////////////////////////////////////////////
 
     private static final String TARGET_BASE    = "Targeting.";
-    private static final String TARGET_MONSTER = TARGET_BASE + "monsters-enemy";
-    private static final String TARGET_PASSIVE = TARGET_BASE + "passive-ally";
-    private static final String TARGET_PLAYER  = TARGET_BASE + "player-ally";
-    private static final String TARGET_PARTIES = TARGET_BASE + "parties-ally";
     private static final String TARGET_NPC     = TARGET_BASE + "affect-npcs";
     private static final String TARGET_STANDS  = TARGET_BASE + "affect-armor-stands";
 
-    private final ArrayList<String> monsterWorlds = new ArrayList<>();
-    private final ArrayList<String> passiveWorlds = new ArrayList<>();
-    private final ArrayList<String> playerWorlds  = new ArrayList<>();
 
-    private boolean monsterEnemy;
-    private boolean passiveAlly;
-    private boolean playerAlly;
-    private boolean partiesAlly;
     private boolean affectNpcs;
     private boolean affectArmorStands;
-
-    private CombatProtection combatProtection = new DefaultCombatProtection();
 
     /**
      * Checks whether or not something can be attacked
@@ -255,59 +240,103 @@ public class Settings {
      * @return true if can be attacked, false otherwise
      */
     public boolean canAttack(LivingEntity attacker, LivingEntity target) {
+        //if (attacker.getEntityId() == target.getEntityId()) return false;
+
+        if (target instanceof Player) {
+            if (((Player) target).getGameMode() == GameMode.CREATIVE) {
+                return false;
+            }
+        }
+
+        if (attacker instanceof Player) {
+            if (MythicManager.INSTANCE.isOwner(attacker.getUniqueId(), target)) {
+                return false;
+            }
+            LivingEntity owner = MythicManager.INSTANCE.getSummonAscription().get(target.getUniqueId());
+            if (owner != null) {
+                if (isTeam((Player) attacker, owner)) {
+                    return false;
+                }
+            }
+        }
+
+
+        // 召唤物判断
+        LivingEntity owner = MythicManager.INSTANCE.getSummonAscription().get(attacker.getUniqueId());
+        if (owner != null) {
+            if (target.getEntityId() == owner.getEntityId()) return false;
+            // 确定目标是不是也是召唤物
+            LivingEntity targetOwner = MythicManager.INSTANCE.getSummonAscription().get(target.getUniqueId());
+            if (targetOwner != null) {
+                // 同一个人的召唤物
+                if (targetOwner.getEntityId() == owner.getEntityId()) return false;
+
+                // 如果召唤物的主人，和当前主人是一个队伍，则取消
+                if (owner instanceof Player) {
+                    if (isTeam((Player) owner, targetOwner)) {
+                        return false;
+                    }
+                }
+            }
+            attacker = owner;
+        }
+
         //召唤物的判断依赖于召唤者
         if (attacker instanceof ArmorStandEntity) {
-            attacker = ((ArmorStandEntity) attacker).getOwner();
+            owner = ((ArmorStandEntity) attacker).getOwner();
+            if (owner.getEntityId() == target.getEntityId()) return false;
+            // 确定目标是不是也是召唤物
+            if (target instanceof ArmorStandEntity) {
+                LivingEntity targetOwner = ((ArmorStandEntity) target).getOwner();
+                if (targetOwner != null) {
+                    // 同一个人的召唤物
+                    if (targetOwner.getEntityId() == owner.getEntityId()) return false;
+                    // 如果召唤物的主人，和当前主人是一个队伍，则取消
+                    if (owner instanceof Player) {
+                        if (isTeam((Player) owner, targetOwner)) {
+                            return false;
+                        }
+                    }
+                }
+            }
+            attacker = owner;
         }
 
         if (attacker instanceof Player) {
             final Player player = (Player) attacker;
+
             if (!player.getWorld().getPVP() && target instanceof Player) {
                 return false;
             }
-            if (target instanceof Animals && !(target instanceof Tameable)) {
-                if (passiveAlly || passiveWorlds.contains(attacker.getWorld().getName())) { return false; }
-            } else if (target instanceof Monster) {
-                if (monsterEnemy || monsterWorlds.contains(attacker.getWorld().getName())) { return true; }
-            } else if (target instanceof Player) {
 
-                if (playerAlly || playerWorlds.contains(attacker.getWorld().getName())) {
-                    return false;
+            if (target instanceof Player) {
+                return !isTeam(player, target);
+            }
+            return true;
+        }
+        return true;
+    }
+
+    private boolean isTeam(Player player, LivingEntity target) {
+        if (target instanceof Player) {
+            try {
+                GameTeamManager gameTeamManager = GameUtilsKt.getGameTeamManager(player);
+                if (gameTeamManager != null && gameTeamManager.contains((Player) target)) {
+                    return true;
                 }
 
-                if (partiesAlly) {
-                    final Parties parties = Parties.getPlugin(Parties.class);
-                    final Party p1 = parties.getJoinedParty(player);
-                    final Party p2 = parties.getJoinedParty((Player) target);
-                    return p1 == null || p1 != p2;
-                }
-                try {
-                    // 检查 GeekTeamPlus 队伍
-                    TeamHandler teamHandler = TeamManager.INSTANCE.getTeamByPlayerID(player.getUniqueId());
-                    if (teamHandler != null) {
-                        if (teamHandler.getPart().containPlayer(target.getUniqueId())) {
-                            return false;
-                        }
+                // 检查 GeekTeamPlus 队伍
+                TeamHandler teamHandler = TeamManager.INSTANCE.getTeamByPlayerID(player.getUniqueId());
+                if (teamHandler != null) {
+                    if (teamHandler.getPart().containPlayer(target.getUniqueId())) {
+                        return true;
                     }
-                } catch (NoClassDefFoundError ignored) {}
-
-                // 世界PVP设置，最后
-                if (!player.getWorld().getPVP()) {
-                    return false;
                 }
-                return combatProtection.canAttack(player, (Player) target);
+            } catch (NoClassDefFoundError ignored) {
             }
+        }
 
-            return combatProtection.canAttack(player, target);
-        } else if (attacker instanceof Tameable) {
-            Tameable tameable = (Tameable) attacker;
-            if (tameable.isTamed() && (tameable.getOwner() instanceof LivingEntity)) {
-                return (tameable.getOwner() != target)
-                        && canAttack((LivingEntity) tameable.getOwner(), target);
-            }
-        } else { return !(target instanceof Monster); }
-
-        return combatProtection.canAttack(attacker, target);
+        return false;
     }
 
     /**
@@ -321,32 +350,7 @@ public class Settings {
                 && (!target.getType().name().equals("ARMOR_STAND") || affectArmorStands);
     }
 
-    /**
-     * Swaps out the default combat protection for a custom one
-     *
-     * @param combatProtection combat protection to use
-     */
-    public void setCombatProtection(final CombatProtection combatProtection) {
-        this.combatProtection = combatProtection;
-    }
-
     private void loadTargetingSettings() {
-        if (config.isList(TARGET_MONSTER)) {
-            monsterWorlds.addAll(config.getList(TARGET_MONSTER));
-            monsterEnemy = false;
-        } else { monsterEnemy = config.getBoolean(TARGET_MONSTER); }
-
-        if (config.isList(TARGET_PASSIVE)) {
-            passiveWorlds.addAll(config.getList(TARGET_PASSIVE));
-            passiveAlly = false;
-        } else { passiveAlly = config.getBoolean(TARGET_PASSIVE); }
-
-        if (config.isList(TARGET_PLAYER)) {
-            playerWorlds.addAll(config.getList(TARGET_PLAYER));
-            playerAlly = false;
-        } else { playerAlly = config.getBoolean(TARGET_PLAYER); }
-
-        partiesAlly = config.getBoolean(TARGET_PARTIES);
         affectArmorStands = config.getBoolean(TARGET_STANDS);
         affectNpcs = config.getBoolean(TARGET_NPC);
     }

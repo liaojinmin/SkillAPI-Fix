@@ -1,7 +1,5 @@
 package com.sucy.skill.hook.mythic.mechanic;
 
-import com.sucy.skill.SkillAPI;
-import com.sucy.skill.api.event.SkillDamageEvent;
 import com.sucy.skill.api.skills.Skill;
 import io.lumine.xikage.mythicmobs.adapters.AbstractEntity;
 import io.lumine.xikage.mythicmobs.io.MythicLineConfig;
@@ -45,33 +43,31 @@ public class MythicDamageMechanic extends SkillMechanic implements ITargetedEnti
     }
 
     @Override
-    public boolean castAtEntity(SkillMetadata data, AbstractEntity target) {
+    public boolean castAtEntity(SkillMetadata data, AbstractEntity t) {
         if (value < 0) {
             return false;
         }
-        if (target.isDead()) {
+        if (t.isDead()) {
             return false;
         }
-        if (target.isLiving() && target.getHealth() <= 0.0d) {
+        if (t.isLiving() && t.getHealth() <= 0.0d) {
             return false;
         }
 
-        Entity caster = data.getCaster().getEntity().getBukkitEntity();
-        if (!(caster instanceof LivingEntity)) {
+        Entity c = data.getCaster().getEntity().getBukkitEntity();
+        if (!(c instanceof LivingEntity)) {
             return false;
         }
-        LivingEntity damager = (LivingEntity) caster;
+        LivingEntity damager = (LivingEntity) c;
 
-        Entity targetSkill = target.getBukkitEntity();
+        Entity targetSkill = t.getBukkitEntity();
         if (!(targetSkill instanceof LivingEntity)) {
             return false;
         }
+        LivingEntity target = (LivingEntity) targetSkill;
+
 
         try {
-            data.getCaster().setUsingDamageSkill(true);
-            data.getCaster().getEntity().setMetadata("doing-skill-damage", true);
-
-            LivingEntity entity = (LivingEntity) targetSkill;
             String pString = type.get(data).toLowerCase();
             double amount;
             switch (pString) {
@@ -99,15 +95,29 @@ public class MythicDamageMechanic extends SkillMechanic implements ITargetedEnti
                     break;
             }
 
+
+            DamageMetadata meta = new DamageMetadata(
+                    data.getCaster(),
+                    amount,
+                    classifier.get(data),
+                    trueDamage,
+                    true,
+                    trueDamage
+            );
+            data.getCaster().setUsingDamageSkill(true);
+            data.getCaster().getEntity().setMetadata("doing-skill-damage", true);
+            t.setMetadata("skill-damage", meta);
+
             //System.out.println("攻击伤害: " + amount + " trueDamage: " + trueDamage);
             if (trueDamage) {
-                skill.trueDamageAndBack(entity, amount, damager,  "",(it) -> {
+                skill.trueDamageAndBack(target, amount, damager, classifier.get(data),(it) -> {
                     if (data.getCaster() instanceof ActiveMob) {
                         ((ActiveMob)data.getCaster()).setLastDamageSkillAmount(it);
                     }
                 });
             } else {
-                skill.damageAndBack(entity, amount, damager, classifier.get(data), true, false, (it) -> {
+                skill.damageAndBack(target, amount,
+                        damager, classifier.get(data), true, false, (it) -> {
                     if (data.getCaster() instanceof ActiveMob) {
                         ((ActiveMob)data.getCaster()).setLastDamageSkillAmount(it);
                     }
@@ -118,7 +128,7 @@ public class MythicDamageMechanic extends SkillMechanic implements ITargetedEnti
         } finally {
             data.getCaster().getEntity().removeMetadata("doing-skill-damage");
             data.getCaster().setUsingDamageSkill(false);
-            target.removeMetadata("skill-damage");
+            t.removeMetadata("skill-damage");
         }
         return true;
     }

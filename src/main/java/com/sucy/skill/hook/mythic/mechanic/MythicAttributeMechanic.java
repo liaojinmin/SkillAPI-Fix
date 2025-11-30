@@ -3,6 +3,7 @@ package com.sucy.skill.hook.mythic.mechanic;
 import com.sucy.skill.SkillAPI;
 import com.sucy.skill.api.attribute.mob.MobAttribute;
 import com.sucy.skill.api.attribute.mob.MobAttributeData;
+import com.sucy.skill.api.player.PlayerData;
 import com.sucy.skill.api.skills.Skill;
 import com.sucy.skill.api.skills.SkillCastAPI;
 import com.sucy.skill.utils.AttributeParseUtils;
@@ -19,8 +20,10 @@ import io.lumine.xikage.mythicmobs.skills.placeholders.parsers.PlaceholderInt;
 import io.lumine.xikage.mythicmobs.skills.placeholders.parsers.PlaceholderString;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.LivingEntity;
+import org.bukkit.entity.Player;
 
 import java.util.HashSet;
+import java.util.concurrent.TimeUnit;
 
 public class MythicAttributeMechanic extends SkillMechanic implements ITargetedEntitySkill {
 
@@ -45,12 +48,23 @@ public class MythicAttributeMechanic extends SkillMechanic implements ITargetedE
         if (target.getHealth() <= 0.0d) {
             return false;
         }
-        MobAttributeData mobAttributeData = MobAttribute.getData(target.getBukkitEntity(), true);
+        if (timer <= 0) return false;
         String pair = SkillAPI.getAttributeManager().normalize(attribute.get(data));
-        if (mobAttributeData != null && pair != null) {
-            mobAttributeData.addAttribute(pair, amount, timer);
+        if (pair != null) {
+            if (target.getBukkitEntity() instanceof Player) {
+                PlayerData playerData = SkillAPI.getPlayerData(target.getUniqueId());
+                if (playerData == null) {
+                    return false;
+                }
+                playerData.expiring.put(pair, amount.doubleValue(), Math.min(timer / 20, 1), TimeUnit.SECONDS);
+            } else {
+                MobAttributeData mobAttributeData = MobAttribute.getData(target.getBukkitEntity(), true);
+                if (mobAttributeData != null) {
+                    mobAttributeData.addAttribute(pair, amount, timer);
+                }
+            }
+            return true;
         }
-
         return false;
     }
 

@@ -34,21 +34,21 @@ public class CmdAttributeAction implements IFunction {
          */
         if (args.length >= 2) {
             Player player = Bukkit.getPlayer(args[1]);
-            if (args[0].equalsIgnoreCase("give")) {
-                if (player != null) {
-                    Pair<String, Integer> pair = AttributeParseUtils.getAttribute(args[2]);
-                    if (pair != null) {
+            if (player != null) {
+                Pair<String, Integer> pair = AttributeParseUtils.getAttribute(args[2]);
+                if (pair != null) {
+                    if (args[0].equalsIgnoreCase("give")) {
+                        AttributeAPI.setAttribute(player, ATTRIBUTE_NAME, pair.key, pair.value);
+                    } else if (args[0].equalsIgnoreCase("add")) {
                         AttributeAPI.addAttribute(player, ATTRIBUTE_NAME, pair.key, pair.value);
                     } else {
-                        sender.sendMessage("属性不存在 -> " + args[2]);
+                        AttributeAPI.clearSource(player, ATTRIBUTE_NAME);
                     }
                 } else {
-                    sender.sendMessage("玩家不存在 -> " + args[1]);
+                    sender.sendMessage("属性不存在 -> " + args[2]);
                 }
             } else {
-                if (player != null) {
-                    AttributeAPI.clearSource(player, ATTRIBUTE_NAME);
-                }
+                sender.sendMessage("玩家不存在 -> " + args[1]);
             }
         }
 

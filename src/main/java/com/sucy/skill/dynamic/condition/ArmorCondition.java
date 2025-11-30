@@ -74,7 +74,7 @@ public class ArmorCondition extends ConditionComponent {
     }
 
     @Override
-    boolean test(final LivingEntity caster, final int level, final LivingEntity target) {
+    public boolean test(final LivingEntity caster, final int level, final LivingEntity target) {
         final EntityEquipment equipment = target.getEquipment();
         return equipment != null && getters.stream().anyMatch(
                 getter -> ItemChecker.check(getter.apply(equipment), level, settings));

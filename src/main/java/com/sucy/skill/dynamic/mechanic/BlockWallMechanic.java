@@ -3,6 +3,7 @@ package com.sucy.skill.dynamic.mechanic;
 import com.sucy.skill.SkillAPI;
 import com.sucy.skill.api.skills.SkillContext;
 import com.sucy.skill.dynamic.ArmorStandCarrier;
+import com.sucy.skill.dynamic.TempEntity;
 import me.neon.libs.carrier.minecraft.meta.ArmorStandMeta;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
@@ -17,6 +18,7 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.*;
+import java.util.stream.Collectors;
 
 /**
  * SkillAPI-Fix
@@ -34,7 +36,14 @@ public class BlockWallMechanic extends MechanicComponent {
     private static final String NAME = "name"; // 盔甲架名称
     private static final HashSet<Location> pending = new HashSet<>();
     private static final Map<Integer, List<RevertTask>> tasks = new HashMap<>();
-    private static final ArmorStandMeta meta = new ArmorStandMeta(false, false, true, false, true, false);
+    private static final ArmorStandMeta meta = new ArmorStandMeta(
+            false,
+            false,
+            true,
+            false,
+            true,
+            false
+    );
 
     @Override
     public String getKey() {
@@ -114,6 +123,11 @@ public class BlockWallMechanic extends MechanicComponent {
         final RevertTask task = new RevertTask(caster, old);
         task.runTaskLater(SkillAPI.singleton(), ticks);
         tasks.computeIfAbsent(caster.getEntityId(), ArrayList::new).add(task);
+        executeChildren(caster, context, level,
+                old.stream()
+                        .map(it -> new TempEntity(it.blockLocation))
+                        .collect(Collectors.toList())
+        );
         return true;
     }
 

@@ -10,7 +10,7 @@ public class GroundCondition extends ConditionComponent {
     private static final String type = "type";
 
     @Override
-    boolean test(final LivingEntity caster, final int level, final LivingEntity target) {
+    public boolean test(final LivingEntity caster, final int level, final LivingEntity target) {
         final boolean onGround = target.isOnGround();
         final boolean wantOnGround = settings.getString(type, "on ground").equalsIgnoreCase("on ground");
     //    System.out.println("GroundCondition onGround: "+onGround+" wantOnGround: "+wantOnGround);

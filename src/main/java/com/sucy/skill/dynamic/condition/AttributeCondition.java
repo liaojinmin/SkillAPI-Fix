@@ -40,7 +40,7 @@ public class AttributeCondition extends ConditionComponent
 
 
     @Override
-    boolean test(final LivingEntity caster, final int level, final LivingEntity target) {
+    public boolean test(final LivingEntity caster, final int level, final LivingEntity target) {
         final String attr = settings.getString(ATTR, null);
         final int min = (int) parseValues(caster, MIN, level, 0);
         final int max = (int) parseValues(caster, MAX, level, Integer.MAX_VALUE);

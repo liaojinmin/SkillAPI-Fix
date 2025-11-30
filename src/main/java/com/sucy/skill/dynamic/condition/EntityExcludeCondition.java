@@ -59,7 +59,7 @@ public class EntityExcludeCondition extends ConditionComponent {
     }
 
     @Override
-    boolean test(final LivingEntity caster, final int level, final LivingEntity target) {
+    public boolean test(final LivingEntity caster, final int level, final LivingEntity target) {
         if (types.isEmpty() || names.isEmpty()) return true;
         return !types.contains(target.getType().name()) && !names.contains(target.getName());
     }

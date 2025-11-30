@@ -64,7 +64,7 @@ public class ReturnMechanic extends MechanicComponent {
 
         private void close() {
             if (bukkitTask != null) {
-                System.out.println("  >>> bukkitTask 中断关闭成功...");
+                //System.out.println("  >>> bukkitTask 中断关闭成功...");
                 bukkitTask.cancel();
             }
         }
@@ -92,7 +92,7 @@ public class ReturnMechanic extends MechanicComponent {
 
         private void close() {
             if (markTask != null) {
-                System.out.println("MarkTask " + uniqueId + " 尝试中断关闭...");
+                //.out.println("MarkTask " + uniqueId + " 尝试中断关闭...");
                 markTask.close();
             }
         }
@@ -284,8 +284,8 @@ public class ReturnMechanic extends MechanicComponent {
         context.remove("trigger_mark");
         for (LivingEntity target : targets) {
             if (delMark(target, mark)) {
-                System.out.println("ReturnMechanic caster: " + caster.getName() + " target: "+target.getName() + " mark >> "+ Arrays.toString(mark));
-                System.out.println("  执行动作: "+germAction);
+                //System.out.println("ReturnMechanic caster: " + caster.getName() + " target: "+target.getName() + " mark >> "+ Arrays.toString(mark));
+                //System.out.println("  执行动作: "+germAction);
                 applyDeny(caster, target, germAction, commands);
             }
         }

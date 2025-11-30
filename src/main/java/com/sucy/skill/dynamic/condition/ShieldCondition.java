@@ -34,7 +34,7 @@ public class ShieldCondition  extends ConditionComponent {
     }
 
     @Override
-    boolean test(LivingEntity caster, int level, LivingEntity target) {
+    public boolean test(LivingEntity caster, int level, LivingEntity target) {
         final boolean tar = settings.getBool(TARGET, false);
         Player player;
         if (tar) {

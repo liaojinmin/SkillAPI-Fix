@@ -21,6 +21,8 @@ public class SkillDamageEvent extends Event implements Cancellable {
     private boolean range;
     private boolean      cancelled;
 
+    public Throwable cancelStack; // 记录取消调用堆栈
+
     /**
      * Initializes a new event
      *
@@ -108,6 +110,9 @@ public class SkillDamageEvent extends Event implements Cancellable {
     @Override
     public void setCancelled(boolean cancelled) {
         this.cancelled = cancelled;
+        if (cancelled) {
+            this.cancelStack = new Throwable("SkillDamageEvent 被取消的位置");
+        }
     }
 
     /**

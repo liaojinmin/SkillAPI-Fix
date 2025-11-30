@@ -3,6 +3,7 @@ package com.sucy.skill.utils.target;
 import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
+import com.sucy.skill.SkillAPI;
 import com.sucy.skill.hook.DisguiseHook;
 import com.sucy.skill.hook.PluginChecker;
 import com.sucy.skill.utils.ExpiringMap;
@@ -31,7 +32,7 @@ public abstract class TargetHelper {
     private static final ExpiringMap<UUID, List<UUID>> freeTarget = new ExpiringMap<>();
 
     /**
-     * 推荐召唤生物为队友
+     * 添加召唤生物为队友
      * @param owner 召唤物拥有者
      * @param target 目标生物
      * @param delay 延迟时间
@@ -56,27 +57,12 @@ public abstract class TargetHelper {
     }
 
     public static boolean isAlly(LivingEntity attacker, LivingEntity target) {
-        if (attacker instanceof Player) {
-            try {
-                TeamHandler teamHandler = TeamManager.INSTANCE.getTeamByPlayerID(attacker.getUniqueId());
-                if (teamHandler != null) {
-                    if (target instanceof Player) {
-                        return teamHandler.getPart().containPlayer(target.getUniqueId());
-                    } else {
-                        UUID targetUuid = target.getUniqueId();
-                        for (UUID uuid : teamHandler.getPart().getPart()) {
-                            if (hasSummonAlly(uuid, targetUuid)) {
-                                return true;
-                            }
-                        }
-                    }
-                }
-                return false;
-            } catch (NoClassDefFoundError e) {
-                e.printStackTrace();
+        if (freeTarget.size() > 0) {
+            if (hasSummonAlly(attacker.getUniqueId(), target.getUniqueId())) {
+                return true;
             }
         }
-        return false;
+        return !SkillAPI.getSettings().canAttack(attacker, target);
     }
 
     /**
@@ -144,7 +130,7 @@ public abstract class TargetHelper {
      */
     public static LivingEntity getLivingTarget(LivingEntity source, double range, double tolerance) {
         List<LivingEntity> targets = getLivingTargets(source, range, tolerance);
-        if (targets.size() == 0) return null;
+        if (targets.isEmpty()) return null;
         return targets.get(0);
     }
 

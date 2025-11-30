@@ -53,6 +53,11 @@ public class ExpiringMap<K, V> {
         return wrapper != null ? wrapper.value : null;
     }
 
+    public V getOrDefault(K key, V default_) {
+        ValueWrapper<V> wrapper = map.get(key);
+        return wrapper != null ? wrapper.value : default_;
+    }
+
     // Remove a key-value pair
     public V remove(K key) {
         ValueWrapper<V> wrapper = map.remove(key);

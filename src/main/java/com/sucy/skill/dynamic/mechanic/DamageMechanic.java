@@ -29,11 +29,18 @@ package com.sucy.skill.dynamic.mechanic;
 import com.sucy.skill.api.armorstand.ArmorStandEntity;
 import com.sucy.skill.api.attribute.AttributeAPI;
 import com.sucy.skill.api.skills.SkillContext;
+import com.sucy.skill.dynamic.DynamicSkill;
+import com.sucy.skill.hook.mythic.MythicManager;
+import io.lumine.xikage.mythicmobs.mobs.ActiveMob;
+import io.lumine.xikage.mythicmobs.skills.damage.DamageMetadata;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.LivingEntity;
+import org.bukkit.entity.Player;
 
 import java.util.List;
+import java.util.Map;
+import java.util.Optional;
 import java.util.UUID;
 
 /**
@@ -76,15 +83,17 @@ public class DamageMechanic extends MechanicComponent {
             damage = parseValues(other, DAMAGE, level, 1.0);
         } else {
             damage = parseValues(caster, DAMAGE, level, 1.0);
-
         }
         boolean knockback = settings.getBool(KNOCKBACK, true);
         String classification = settings.getString(CLASSIFIER, "default");
-        if (damage < 0) {
+
+        if (damage <= 0) {
             return false;
         }
+
         boolean range = targets.size() > 1;
         int index = 0;
+
         for (LivingEntity target : targets) {
             if (target.isDead()) {
                 continue;
@@ -98,17 +107,70 @@ public class DamageMechanic extends MechanicComponent {
             } else if (left) {
                 amount = damage * target.getHealth() / 100;
             }
-            if (trueDmg) {
-                skill.trueDamage(target, amount, other);
-            } else {
-                if (index > 0) {
-                    skill.damage(target, amount, other, classification, knockback, range);
+
+            ActiveMob castAM;
+            ActiveMob targetAM = null;
+            if (!(other instanceof Player)) {
+                Optional<ActiveMob> c = MythicManager.INSTANCE.getApi().getActiveMob(other.getUniqueId());
+                if (c != null && c.isPresent()) {
+                    castAM = c.get();
                 } else {
-                    skill.damage(target, amount, other, classification, knockback, false);
+                    castAM = null;
                 }
-                index++;
+                Optional<ActiveMob> t = MythicManager.INSTANCE.getApi().getActiveMob(target.getUniqueId());
+                if (t != null && t.isPresent()) {
+                    targetAM = t.get();
+                }
+                if (castAM != null) {
+                    castAM.setUsingDamageSkill(true);
+                    castAM.getEntity().setMetadata("doing-skill-damage", true);
+                    if (targetAM != null) {
+                        targetAM.getEntity().setMetadata(
+                                "skill-damage",
+                                new DamageMetadata(
+                                        castAM,
+                                        amount,
+                                        classification,
+                                        trueDmg,
+                                        true,
+                                        trueDmg
+                                )
+                        );
+                    }
+                }
+            } else {
+                castAM = null;
+            }
+            try {
+                if (trueDmg) {
+                    skill.trueDamage(target, amount, other);
+                } else {
+                    if (index > 0) {
+                        skill.damageAndBack(target, amount, other, classification, knockback, range, (it) -> {
+                            if (castAM != null) {
+                                castAM.setLastDamageSkillAmount(it);
+                            }
+                        });
+                    } else {
+                        skill.damageAndBack(target, amount, other, classification, knockback, false, (it) -> {
+                            if (castAM != null) {
+                                castAM.setLastDamageSkillAmount(it);
+                            }
+                        });
+                    }
+                    index++;
+                }
+                //System.out.println("target: " +target.getName() + " amount: "+amount);
+            } finally {
+                if (castAM != null) {
+                    castAM.setUsingDamageSkill(false);
+                    castAM.getEntity().removeMetadata("doing-skill-damage");
+                    if (targetAM != null) {
+                        targetAM.getEntity().removeMetadata("skill-damage");
+                    }
+                }
             }
         }
-        return targets.size() > 0;
+        return !targets.isEmpty();
     }
 }

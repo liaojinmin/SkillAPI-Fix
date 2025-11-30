@@ -3,6 +3,7 @@ package com.sucy.skill.api.attribute.mob;
 import com.sucy.skill.SkillAPI;
 import com.sucy.skill.api.attribute.AttributeAPI;
 import com.sucy.skill.api.event.AttributeEntityAddEvent;
+import com.sucy.skill.api.player.PlayerData;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.LivingEntity;
@@ -13,6 +14,8 @@ import java.util.concurrent.ConcurrentHashMap;
 
 public class MobAttributeData {
 
+    public final PlayerData owner;
+
     private final Entity entity;
 
     public final HashMap<String, Double> map = new HashMap<>();
@@ -22,6 +25,12 @@ public class MobAttributeData {
     public final HashMap<String, HashMap<String, Double>> temp = new HashMap<>();
 
     public MobAttributeData(LivingEntity entity) {
+        owner = null;
+        this.entity = entity;
+    }
+
+    public MobAttributeData(PlayerData owner, Entity entity) {
+        this.owner = owner;
         this.entity = entity;
     }
 
@@ -82,7 +91,14 @@ public class MobAttributeData {
             temps += value.getOrDefault(attribute, 0.0);
         }
         temps += timerMap.getOrDefault(attribute, 0.0);
-        return map.getOrDefault(attribute, 0.0) + temps;
+        temps += map.getOrDefault(attribute, 0.0);
+        // owner = 召唤它的玩家，可直接取得该玩家的属性容器
+        if (owner != null) {
+           // System.out.println("owner != null old: "+temps + " attribute: "+attribute);
+            temps += owner.getGlobalAttribute(attribute, null);
+           // System.out.println("  addValue: "+temps);
+        }
+        return temps;
     }
 
     public UUID getUuid() {

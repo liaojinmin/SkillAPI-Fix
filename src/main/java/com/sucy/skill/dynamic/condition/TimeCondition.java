@@ -48,7 +48,7 @@ public class TimeCondition extends ConditionComponent {
     }
 
     @Override
-    boolean test(final LivingEntity caster, final int level, final LivingEntity target) {
+    public boolean test(final LivingEntity caster, final int level, final LivingEntity target) {
         final boolean night = settings.getString(TIME).toLowerCase().equals("night");
         return night == (caster.getWorld().getTime() >= 12300 && caster.getWorld().getTime() <= 23850);
     }

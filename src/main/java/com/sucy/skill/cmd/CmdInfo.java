@@ -47,6 +47,7 @@ import org.bukkit.plugin.Plugin;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.atomic.AtomicReference;
 
 /**
  * A command that displays a player's current class information
@@ -83,10 +84,11 @@ public class CmdInfo implements IFunction
 
         // Only can show info of a player so console needs to provide a name
         else if (sender instanceof Player || args.length >= 1) {
+            AtomicReference<PlayerData> parseOwner = new AtomicReference<>();
             OfflinePlayer target = args.length == 0 ? (OfflinePlayer) sender : VersionManager.getOfflinePlayer(args[0], false);
             if (target == null) {
-
                 MobAttribute.getData(args[0]).forEach(it -> {
+                    parseOwner.set(it.owner);
                     sender.sendMessage("怪物 "+it.getDisplay() + " UUID: "+it.getUuid());
                     sender.sendMessage(ChatColor.GOLD + "基本属性:");
                     for (Map.Entry<String, Double> a : it.map.entrySet()) {
@@ -104,11 +106,17 @@ public class CmdInfo implements IFunction
                         }
                     }
                 });
-                //cmd.sendMessage(sender, NOT_PLAYER, ChatColor.RED + "That is not a valid player name");
-                return;
+                if (parseOwner.get() == null) {
+                    return;
+                }
             }
-
-            PlayerData data = SkillAPI.getPlayerData(target.getUniqueId());
+            PlayerData data;
+            if (parseOwner.get() != null) {
+                data = parseOwner.get();
+                target = data.getPlayer();
+            } else {
+                data = SkillAPI.getPlayerData(target.getUniqueId());
+            }
             if (data == null) {
                 sender.sendMessage("玩家数据未加载...");
                 return;
@@ -135,22 +143,15 @@ public class CmdInfo implements IFunction
             sender.sendMessage(ChatColor.GOLD + "NeonFlash:");
             AttributePlayer attributePlayer = me.neon.flash.attribute.AttributeManager.INSTANCE.getAttributePlayer().get(target.getUniqueId());
             if (attributePlayer != null) {
-                sender.sendMessage("  常规属性: ");
+                sender.sendMessage("  前台属性: ");
                 for (Map.Entry<String, Double> entry : attributePlayer.getAttributes().entrySet()) {
                     sender.sendMessage("    key: " + entry.getKey() + " value: " + entry.getValue());
                 }
-                sender.sendMessage("  套装属性: ");
-                for (SuitData suitData : attributePlayer.getSuitDataMap().values()) {
-                    sender.sendMessage("  套装: "+suitData.getConfig().getDisplay());
-                    for (Map.Entry<String, Double> entry : suitData.getAttribute().entrySet()) {
-                        sender.sendMessage("    key: " + entry.getKey() + " value: " + entry.getValue());
-                    }
-                }
             }
+
             // nf end
             for (String group : SkillAPI.getGroups()) {
                 PlayerClass c = data.getClass(group);
-
                 // Separator message if not the first group
                 if (first) {
                     first = false;

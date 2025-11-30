@@ -52,6 +52,7 @@ public class CmdManager {
                 )
         );
         root.addSubCommands(
+                new ConfigurableCommand(api, "mythicSummonDelete", SenderType.ANYONE, new CmdMythicSummonDelete(), "清理玩家指定种类的召唤物", "<player> <mythicType>", "MythicSummonDelete"),
                 new ConfigurableCommand(api, "attAction", SenderType.ANYONE, new CmdAttributeAction(), "临时属性", "", Permissions.AttributeAction),
                 new ConfigurableCommand(api, "cast", SenderType.PLAYER_ONLY, new CmdCast(), "Casts a skill", "<skill>", Permissions.FORCE),
             new ConfigurableCommand(api, "changeclass", SenderType.ANYONE, new CmdChangeClass(), "Swaps classes", "<player> <group> <class>", Permissions.FORCE),

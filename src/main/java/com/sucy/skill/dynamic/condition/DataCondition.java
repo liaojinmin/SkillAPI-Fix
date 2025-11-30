@@ -55,7 +55,7 @@ public class DataCondition extends ConditionComponent {
     }
 
     @Override
-    boolean test(final LivingEntity caster, final int level, final LivingEntity target) {
+    public boolean test(final LivingEntity caster, final int level, final LivingEntity target) {
         final String key = settings.getString(KEY)
                 .replace("{caster}", caster.getName());
         final double min = parseValues(caster, MIN, level, 1);

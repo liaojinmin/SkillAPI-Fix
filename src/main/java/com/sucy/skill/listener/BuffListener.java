@@ -33,6 +33,10 @@ public class BuffListener extends SkillAPIListener {
 
     @EventHandler(priority = EventPriority.LOW, ignoreCancelled = true)
     public void onSkill(final SkillDamageEvent event) {
+       // //System.out.println("SkillDamageEvent");
+       // System.out.println("  target: "+event.getTarget().getName());
+       // System.out.println("  Damager: "+event.getDamager().getName());
+//System.out.println("  onSkill >>> value: "+event.getDamage());
         if (event.getClassification().equalsIgnoreCase(AttributeListener.PHYSICAL)) {
             final double withDamageBuffs = BuffManager.apply(
                     event.getDamager(),

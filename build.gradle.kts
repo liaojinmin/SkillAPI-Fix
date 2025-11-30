@@ -4,9 +4,8 @@ import com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar
 plugins {
     id("java")
     id("com.github.johnrengelman.shadow") version "7.1.2"
-    id("org.jetbrains.kotlin.jvm") version "1.7.20"
+    id("org.jetbrains.kotlin.jvm") version "1.9.0"
 }
-
 
 repositories {
     mavenLocal()
@@ -48,9 +47,11 @@ tasks {
         // hikari
         relocate("com.zaxxer.hikari", "com.zaxxer.hikari_4_0_3_skillapi")
     }
+
     build {
         dependsOn(shadowJar)
     }
+
 }
 
 
@@ -63,7 +64,7 @@ dependencies {
 
     implementation("com.alibaba.fastjson2:fastjson2:2.0.31")
 
-    compileOnly("me.neon.libs:NeonLibs:1.0.1.5-local")
+    compileOnly("me.neon.libs:NeonLibs:1.0.1.6-local")
     compileOnly("me.neon.flash:NeonFlash:1.0.1-SNAPSHOT-local")
     compileOnly("ink.ptms.adyeshach:all:2.0.0-snapshot-1")
 
@@ -71,7 +72,7 @@ dependencies {
 
     // Libraries
     compileOnly(fileTree("lib"))
-    compileOnly(fileTree("libs"))
+   // compileOnly(fileTree("libs"))
 
 }
 

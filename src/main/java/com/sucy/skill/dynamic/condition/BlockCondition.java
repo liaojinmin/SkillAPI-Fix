@@ -60,7 +60,7 @@ public class BlockCondition extends ConditionComponent {
     }
 
     @Override
-    boolean test(final LivingEntity caster, final int level, final LivingEntity target) {
+    public boolean test(final LivingEntity caster, final int level, final LivingEntity target) {
         final Block in = target.getLocation().getBlock();
         final Block tested = this.in ? in : in.getRelative(BlockFace.DOWN);
         return negated != types.contains(tested.getType().name());

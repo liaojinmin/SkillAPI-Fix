@@ -15,6 +15,7 @@ import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
 
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 public class AttributeAPI {
@@ -45,6 +46,15 @@ public class AttributeAPI {
         return mobAttributeData.getAttribute(key);
     }
 
+    public static void setAttribute(Player entity, String source, String attribute, Integer value) {
+        PlayerData playerData = SkillAPI.getPlayerData(entity.getUniqueId());
+        if (playerData == null) {
+            return;
+        }
+        Map<String, Integer> map = playerData.addAttrib.computeIfAbsent(source, key -> new ConcurrentHashMap<>());
+        map.put(attribute, value);
+    }
+
     /**
      * 给实体增加属性 会自动判断是玩家还是Mob
      *
@@ -59,7 +69,9 @@ public class AttributeAPI {
             if (playerData == null) {
                 return;
             }
-            playerData.addAttrib.computeIfAbsent(source, key -> new ConcurrentHashMap<>()).put(attribute, value);
+            Map<String, Integer> map = playerData.addAttrib.computeIfAbsent(source, key -> new ConcurrentHashMap<>());
+            int old = map.getOrDefault(attribute, 0);
+            map.put(attribute, value + old);
             return;
         }
         MobAttributeData mobAttributeData = MobAttribute.getData(entity, true);
@@ -105,6 +117,7 @@ public class AttributeAPI {
         }
 
         for (final AttributeManager.Attribute attribute : matches) {
+           // System.out.println("Attribute >>> "+attribute.getKey() + " nowValue: "+value);
             // value
             double amount = getAttribute(entity, attribute.getKey());
             if (amount > 0) {

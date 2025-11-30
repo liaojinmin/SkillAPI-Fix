@@ -9,6 +9,7 @@ import com.rit.sucy.text.TextFormatter;
 import com.sucy.skill.SkillAPI;
 import com.sucy.skill.api.ReadOnlySettings;
 import com.sucy.skill.api.Settings;
+import com.sucy.skill.api.event.PlayerKillerEntityEvent;
 import com.sucy.skill.api.event.SkillDamageEvent;
 import com.sucy.skill.api.event.TrueDamageEvent;
 import com.sucy.skill.api.player.PlayerData;
@@ -28,10 +29,16 @@ import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.Location;
 import org.bukkit.Material;
+import org.bukkit.entity.Hanging;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
+import org.bukkit.event.Cancellable;
+import org.bukkit.event.Event;
+import org.bukkit.event.HandlerList;
+import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
+import org.bukkit.plugin.RegisteredListener;
 
 import java.text.DecimalFormat;
 import java.util.ArrayList;
@@ -670,7 +677,6 @@ public abstract class Skill implements IconHolder
         damage(target, damage, source, "default");
     }
 
-
     public void damage(LivingEntity target, double damage, LivingEntity source, String classification) {
         damageAndBack(target, damage, source, classification, true, false, null);
     }
@@ -678,14 +684,13 @@ public abstract class Skill implements IconHolder
     public void damage(LivingEntity target, double damage, LivingEntity source, String classification, boolean knockback, boolean range) {
         damageAndBack(target, damage, source, classification, knockback, range, null);
     }
-
     public void damageAndBack(LivingEntity target, double damage, LivingEntity source, String classification, boolean knockback, boolean range, Consumer<Double> callback) {
         if (target instanceof TempEntity) {
             return;
         }
         MetaKt.setMeta(target, "SkillAPI-skill", this);
         MetaKt.setMeta(target, "SkillAPI-classification", classification);
-    //    System.out.println("  --START");
+       // System.out.println("  --START");
         SkillDamageEvent event = new SkillDamageEvent(this, source, target, damage, classification, range);
         Bukkit.getPluginManager().callEvent(event);
         if (!event.isCancelled()) {
@@ -695,29 +700,32 @@ public abstract class Skill implements IconHolder
             if (callback != null) {
                 callback.accept(event.getDamage());
             }
-            /*
-            EntityDamageByEntityEvent bukkitEvent = new EntityDamageByEntityEvent(
-                    event.getDamager(),
-                    event.getTarget(),
-                    EntityDamageEvent.DamageCause.CUSTOM,
-                    damage
-            );
-            Bukkit.getPluginManager().callEvent(bukkitEvent);
-            event.getTarget().setLastDamageCause(bukkitEvent);
-            if (bukkitEvent.isCancelled()) {
-                return;
-            }
-             */
+
             if (knockback) {
                 target.damage(event.getDamage(), source);
             } else {
                 target.damage(event.getDamage());
             }
+            //System.out.println("伤害成功造成...");
             target.setNoDamageTicks(ticks);
             MetaKt.removeMeta(target, "SkillAPI-skill");
             MetaKt.removeMeta(target, "SkillAPI-classification");
             skillDamage = false;
-        }
+            // 如果目标死亡，则触发击杀
+            if (source instanceof Player) {
+                if (!target.isValid() || target.isDead() || target.getHealth() <= 0.0) {
+                    PlayerKillerEntityEvent entityEvent = new PlayerKillerEntityEvent(
+                            (Player) source, target, classification, name
+                    );
+                    Bukkit.getPluginManager().callEvent(entityEvent);
+                }
+            }
+        } //else {
+           // System.out.println("SkillDamageEvent isCancelled");
+           // if (event.cancelStack != null) {
+             //   event.cancelStack.printStackTrace();
+           // }
+      //  }
     }
 
     /**
@@ -747,6 +755,15 @@ public abstract class Skill implements IconHolder
                 callback.accept(event.getDamage());
             }
             target.setHealth(Math.max(Math.min(target.getHealth() - event.getDamage(), target.getMaxHealth()), 0));
+            // 如果目标死亡，则触发击杀
+            if (source instanceof Player) {
+                if (!target.isValid() || target.isDead() || target.getHealth() <= 0.0) {
+                    PlayerKillerEntityEvent entityEvent = new PlayerKillerEntityEvent(
+                            (Player) source, target, classification, name
+                    );
+                    Bukkit.getPluginManager().callEvent(entityEvent);
+                }
+            }
         }
     }
 
@@ -821,12 +838,9 @@ public abstract class Skill implements IconHolder
      *
      * @param config config to save to
      */
-    public void softSave(DataSection config)
-    {
-
+    public void softSave(DataSection config) {
         boolean neededOnly = config.keys().size() > 0;
-        if (!neededOnly)
-        {
+        if (!neededOnly){
             save(config);
         }
     }

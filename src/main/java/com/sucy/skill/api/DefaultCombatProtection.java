@@ -1,7 +1,6 @@
 package com.sucy.skill.api;
 
 import com.rit.sucy.player.Protection;
-import com.sucy.skill.hook.NoCheatHook;
 import com.sucy.skill.hook.PluginChecker;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
@@ -27,9 +26,9 @@ public class DefaultCombatProtection implements CombatProtection {
         boolean canAttack;
         if (PluginChecker.isNoCheatActive() && attacker instanceof Player) {
             Player player = (Player) attacker;
-            NoCheatHook.exempt(player);
+
             canAttack = Protection.canAttack(attacker, defender);
-            NoCheatHook.unexempt(player);
+
         } else { canAttack = Protection.canAttack(attacker, defender); }
 
         return canAttack;

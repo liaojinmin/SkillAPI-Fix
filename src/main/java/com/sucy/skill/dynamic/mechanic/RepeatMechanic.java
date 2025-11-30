@@ -28,13 +28,16 @@ package com.sucy.skill.dynamic.mechanic;
 
 import com.sucy.skill.SkillAPI;
 import com.sucy.skill.api.skills.SkillContext;
+import org.bukkit.command.CommandSender;
 import org.bukkit.entity.LivingEntity;
+import org.bukkit.entity.Player;
 import org.bukkit.scheduler.BukkitRunnable;
 
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 /**
  * Executes child components multiple times
@@ -52,9 +55,13 @@ public class RepeatMechanic extends MechanicComponent {
     @Override
     public boolean execute(LivingEntity caster, SkillContext context, int level, List<LivingEntity> targets) {
         skillContext = context;
-        if (targets.size() > 0) {
+       // System.out.println("RepeatMechanic");
+        if (!targets.isEmpty()) {
             final int count = (int) parseValues(caster, REPETITIONS, level, 3.0);
-            if (count <= 0) { return false; }
+            if (count <= 0) {
+                return false;
+            }
+           // System.out.println("  cast: "+caster.getName() + " target: "+targets.stream().map(CommandSender::getName).collect(Collectors.joining()));
 
             final int delay = (int) (settings.getDouble(DELAY, 0.0) * 20);
             final int period = (int) (settings.getDouble(PERIOD, 1.0) * 20);
@@ -104,6 +111,7 @@ public class RepeatMechanic extends MechanicComponent {
 
         @Override
         public void cancel() {
+           // System.out.println("RepeatTask cancel");
             super.cancel();
             final List<RepeatTask> casterTasks = tasks.get(caster.getEntityId());
             if (casterTasks != null) {
@@ -113,26 +121,43 @@ public class RepeatMechanic extends MechanicComponent {
 
         @Override
         public void run() {
-            for (int i = 0; i < targets.size(); i++) {
-                if (targets.get(i).isDead() || !targets.get(i).isValid()) { targets.remove(i); }
-            }
+            try {
+                for (int i = 0; i < targets.size(); i++) {
+                    if (targets.get(i).isDead() || !targets.get(i).isValid()) {
+                        targets.remove(i);
+                    }
+                }
 
-            if (!skill.isActive(caster) || targets.size() == 0) {
-                cancel();
-                return;
-            }
+                if (targets.isEmpty()) {
+                    cancel();
+                    return;
+                }
 
-            final int level = skill.getActiveLevel(caster);
-            if (skillContext == null) {
-                skillContext = new SkillContext();
-            }
-            boolean success = executeChildren(caster, skillContext, level, targets);
+                if (caster instanceof Player) {
+                    if (!skill.isActive(caster)) {
+                        cancel();
+                        return;
+                    }
+                }
 
-            if (--count <= 0 || (!success && stopOnFail)) {
-                cancel();
-            }
+                final int level;
+                if (caster instanceof Player) {
+                    level = skill.getActiveLevel(caster);
+                } else level = 1;
+                if (skillContext == null) {
+                    skillContext = new SkillContext();
+                }
+                boolean success = executeChildren(caster, skillContext, level, targets);
 
-            if (skill.checkCancelled()) {
+                if (--count <= 0 || (!success && stopOnFail)) {
+                    cancel();
+                }
+
+                if (skill.checkCancelled()) {
+                    cancel();
+                }
+            } catch (Exception e) {
+                e.printStackTrace();
                 cancel();
             }
         }

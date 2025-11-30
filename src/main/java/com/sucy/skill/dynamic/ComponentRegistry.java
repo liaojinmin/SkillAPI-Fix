@@ -2,25 +2,20 @@ package com.sucy.skill.dynamic;
 
 import com.sucy.skill.SkillAPI;
 import com.sucy.skill.dynamic.condition.*;
+import com.sucy.skill.dynamic.condition.summon.MythicSummonSurvivalCondition;
 import com.sucy.skill.dynamic.custom.CustomComponent;
 import com.sucy.skill.dynamic.custom.CustomEffectComponent;
 import com.sucy.skill.dynamic.custom.EditorOption;
 import com.sucy.skill.dynamic.mechanic.*;
+import com.sucy.skill.dynamic.mechanic.MythicFactionMechanic;
+import com.sucy.skill.dynamic.mechanic.summon.MythicSummonDeleteMechanic;
+import com.sucy.skill.dynamic.mechanic.summon.MythicSummonMechanic;
+import com.sucy.skill.dynamic.mechanic.summon.MythicSummonValueMechanic;
 import com.sucy.skill.dynamic.target.*;
-import com.sucy.skill.dynamic.trigger.BlockBreakTrigger;
-import com.sucy.skill.dynamic.trigger.BlockPlaceTrigger;
-import com.sucy.skill.dynamic.trigger.CrouchTrigger;
-import com.sucy.skill.dynamic.trigger.DeathTrigger;
-import com.sucy.skill.dynamic.trigger.EnvironmentalTrigger;
-import com.sucy.skill.dynamic.trigger.KillTrigger;
-import com.sucy.skill.dynamic.trigger.LandTrigger;
-import com.sucy.skill.dynamic.trigger.LaunchTrigger;
-import com.sucy.skill.dynamic.trigger.MoveTrigger;
-import com.sucy.skill.dynamic.trigger.PhysicalDealtTrigger;
-import com.sucy.skill.dynamic.trigger.PhysicalTakenTrigger;
-import com.sucy.skill.dynamic.trigger.SkillDealtTrigger;
-import com.sucy.skill.dynamic.trigger.SkillTakenTrigger;
-import com.sucy.skill.dynamic.trigger.Trigger;
+import com.sucy.skill.dynamic.trigger.*;
+import com.sucy.skill.dynamic.trigger.summon.MythicSummonDeathTrigger;
+import com.sucy.skill.dynamic.trigger.team.PlayerStartArenaTrigger;
+import com.sucy.skill.dynamic.trigger.team.PlayerTeamStartTrigger;
 import org.bukkit.event.Event;
 import org.bukkit.plugin.EventExecutor;
 
@@ -155,6 +150,12 @@ public class ComponentRegistry {
         register(new PhysicalTakenTrigger());
         register(new SkillDealtTrigger());
         register(new SkillTakenTrigger());
+        register(new MythicSummonDeathTrigger());
+        register(new PlayerTeamStartTrigger());
+        register(new PlayerStartArenaTrigger());
+
+        register(new PlayerKillerEntityTrigger());
+        register(new PlayerHealthRestoreTrigger());
 
         // Targets
         register(new AreaTarget());
@@ -167,6 +168,7 @@ public class ComponentRegistry {
         register(new SelfTarget());
         register(new SingleTarget());
         register(new ContextArmorStandTarget());
+        register(new SummonOwnerTarget());
 
         // Conditions
         register(new ArmorCondition());
@@ -184,6 +186,7 @@ public class ComponentRegistry {
         register(new ElevationCondition());
         register(new ElseCondition());
         register(new EntityTypeCondition());
+        register(new EntityCategoryCondition());
         register(new EntityExcludeCondition());
         register(new FireCondition());
         register(new FlagCondition());
@@ -209,6 +212,11 @@ public class ComponentRegistry {
         register(new ShieldCondition());
         register(new DataCondition());
         register(new WorldCondition());
+        register(new MythicSummonSurvivalCondition());
+
+        register(new AreaEntityCondition());
+        register(new HealthScaleCondition());
+        register(new HealthComparisonCondition());
 
         // Mechanics
         register(new AttributeMechanic());
@@ -309,5 +317,14 @@ public class ComponentRegistry {
 
         // NeonArena
         register(new ArenaShowMechanic());
+
+        register(new MythicFactionMechanic());
+        register(new SkillCastMechanic());
+
+        register(new MythicSummonMechanic());
+        register(new MythicSummonDeleteMechanic());
+        register(new MythicSummonValueMechanic());
+
+        register(new BadgeCooldownResetMechanic());
     }
 }

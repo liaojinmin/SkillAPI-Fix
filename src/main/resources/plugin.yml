@@ -2,8 +2,8 @@ name: SkillAPI
 main: com.sucy.skill.SkillAPI
 version: 1.90
 author: [Eniripsa96, 老廖]
-depend: [MCCore]
-softdepend: [Vault]
+depend: [MCCore,NeonLibs,MythicMobs]
+softdepend: [Vault, MythicMobs]
 loadbefore: [Quests,PlaceholderAPI]
 api-version: 1.13
 
