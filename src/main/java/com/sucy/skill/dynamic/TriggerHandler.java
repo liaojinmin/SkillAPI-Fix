@@ -82,11 +82,17 @@ public class TriggerHandler implements Listener {
     }
 
     public void register() {
-        Bukkit.getPluginManager().registerEvent(
-                trigger.getEvent(),
-                this,
-                EventPriority.HIGHEST,
-                ComponentRegistry.getExecutor(trigger), SkillAPI.singleton(), true);
+        try {
+
+            Bukkit.getPluginManager().registerEvent(
+                    trigger.getEvent(),
+                    this,
+                    EventPriority.HIGHEST,
+                    ComponentRegistry.getExecutor(trigger), SkillAPI.singleton(), true);
+        } catch (Exception e) {
+            System.out.println("event: "+trigger.getEvent());
+            e.printStackTrace();
+        }
     }
 
     <T extends Event> void apply(final T event, final Trigger<T> trigger) {

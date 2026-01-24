@@ -156,6 +156,8 @@ public class ComponentRegistry {
 
         register(new PlayerKillerEntityTrigger());
         register(new PlayerHealthRestoreTrigger());
+        register(new SkillLinkTrigger());
+        register(new TrailHurtTrigger());
 
         // Targets
         register(new AreaTarget());
@@ -169,6 +171,7 @@ public class ComponentRegistry {
         register(new SingleTarget());
         register(new ContextArmorStandTarget());
         register(new SummonOwnerTarget());
+
 
         // Conditions
         register(new ArmorCondition());
@@ -217,6 +220,7 @@ public class ComponentRegistry {
         register(new AreaEntityCondition());
         register(new HealthScaleCondition());
         register(new HealthComparisonCondition());
+        register(new HealthIntervalCondition());
 
         // Mechanics
         register(new AttributeMechanic());
@@ -326,5 +330,9 @@ public class ComponentRegistry {
         register(new MythicSummonValueMechanic());
 
         register(new BadgeCooldownResetMechanic());
+        register(new BadgeCooldownScaleMechanic());
+
+        register(new TrailStartMechanic());
+        register(new TrailEndMechanic());
     }
 }

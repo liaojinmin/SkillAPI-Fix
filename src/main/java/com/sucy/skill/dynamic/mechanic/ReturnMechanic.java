@@ -243,7 +243,7 @@ public class ReturnMechanic extends MechanicComponent {
         } else entityMark.addMark(markTask, mark);
     }
 
-    private static boolean delMark(@NotNull Entity entity, @NotNull String... mark) {
+    public static boolean delMark(@NotNull Entity entity, @NotNull String... mark) {
         EntityMark entityMark = taskMark.get(entity.getEntityId());
         return entityMark != null && entityMark.delMark(mark);
     }

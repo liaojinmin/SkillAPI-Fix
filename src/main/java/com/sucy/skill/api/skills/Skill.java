@@ -24,6 +24,7 @@ import com.sucy.skill.language.NotificationNodes;
 import com.sucy.skill.language.RPGFilter;
 import com.sucy.skill.language.SkillNodes;
 import com.sucy.skill.log.Logger;
+import com.sucy.skill.utils.target.TargetHelper;
 import me.neon.libs.util.MetaKt;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
@@ -715,7 +716,7 @@ public abstract class Skill implements IconHolder
             if (source instanceof Player) {
                 if (!target.isValid() || target.isDead() || target.getHealth() <= 0.0) {
                     PlayerKillerEntityEvent entityEvent = new PlayerKillerEntityEvent(
-                            (Player) source, target, classification, name
+                            (Player) source, target, classification, name, TargetHelper.isBehind(source, target)
                     );
                     Bukkit.getPluginManager().callEvent(entityEvent);
                 }
@@ -759,7 +760,7 @@ public abstract class Skill implements IconHolder
             if (source instanceof Player) {
                 if (!target.isValid() || target.isDead() || target.getHealth() <= 0.0) {
                     PlayerKillerEntityEvent entityEvent = new PlayerKillerEntityEvent(
-                            (Player) source, target, classification, name
+                            (Player) source, target, classification, name, TargetHelper.isBehind(source, target)
                     );
                     Bukkit.getPluginManager().callEvent(entityEvent);
                 }

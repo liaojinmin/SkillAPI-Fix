@@ -4,20 +4,14 @@ package com.sucy.skill.cmd;
 import com.rit.sucy.commands.CommandManager;
 import com.rit.sucy.commands.ConfigurableCommand;
 import com.rit.sucy.commands.IFunction;
-import com.sucy.skill.api.attribute.AttributeAPI;
-import com.sucy.skill.hook.mythic.MythicManager;
-import com.sucy.skill.hook.mythic.Summon;
-import com.sucy.skill.hook.mythic.SummonData;
-import com.sucy.skill.utils.AttributeParseUtils;
-import com.sucy.skill.utils.Pair;
+import com.sucy.skill.trail.TrailManager;
+import com.sucy.skill.trail.TrailEntity;
 import org.bukkit.Bukkit;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.Plugin;
 
-import java.util.Collection;
-
-public class CmdMythicSummonDelete implements IFunction {
+public class CmdTrailDemo implements IFunction {
 
     /**
      * Executes the command
@@ -29,21 +23,21 @@ public class CmdMythicSummonDelete implements IFunction {
      */
     @Override
     public void execute(ConfigurableCommand command, Plugin plugin, CommandSender sender, String[] args) {
-
-        if (args.length >= 2) {
+        if (args.length >= 1) {
             Player player = Bukkit.getPlayerExact(args[0]);
             if (player != null) {
-                String type = args[1];
-                SummonData summonData = MythicManager.INSTANCE.getSummonMap().get(player.getUniqueId());
-                if (summonData != null) {
-                    Collection<Summon> list = summonData.getAllSummon((it) ->
-                        it.getActiveMob().getMobType().equalsIgnoreCase(type)
+                TrailEntity trailEntity = TrailManager.INSTANCE.getDemoTrailEntity();
+                if (trailEntity == null) {
+                    trailEntity = new TrailEntity(
+                            player, "生化狂人",
+                            player.getWidth() / 2,
+                            -1, 2700, 2700, 20
                     );
-                    for (Summon summon : list) {
-                        summon.safeRemove();
-                    }
-                } else  {
-                    sender.sendMessage("summonData is null -> " + args[0]);
+                    TrailManager.INSTANCE.setDemoTrailEntity(trailEntity);
+                    sender.sendMessage("开始 TrailEntity 测试");
+                } else {
+                    TrailManager.INSTANCE.setDemoTrailEntity(null);
+                    sender.sendMessage("关闭 TrailEntity 测试");
                 }
             } else {
                 sender.sendMessage("玩家不存在 -> " + args[1]);

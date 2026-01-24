@@ -47,7 +47,9 @@ var Trigger = {
     PLAYER_TEAM_START    : { name: 'Player Team Start',    container: true, construct: TriggerPlayerTeamStart,   premium: true },
     PLAYER_ARENA_START    : { name: 'Player Arena Start',    container: true, construct: TriggerPlayerArenaStart,  premium: true},
     PLAYER_KILLER_ENTITY    : { name: 'Player Killer Entity',    container: true, construct: TriggerPlayerKillerEntity,  premium: true}, // 2025/11/30
-    PLAYER_HEALTH_RESTORE  : { name: 'Player Health Restore',    container: true, construct: TriggerPlayerHealthRestore,  premium: true} // 2025/11/30
+    PLAYER_HEALTH_RESTORE  : { name: 'Player Health Restore',    container: true, construct: TriggerPlayerHealthRestore,  premium: true}, // 2025/11/30
+    SKILL_LINK  : { name: 'Skill Link',                    container: true, construct: TriggerSkillLink,  premium: true}, // 2025/12/1
+    TRAIL_HURT  : { name: 'Trail Hurt',                    container: true, construct: TriggerTrailHurt,  premium: true} // 2026/01/19
 };
 
 /**
@@ -113,6 +115,7 @@ var Condition = {
     AREA_ENTITY:       { name: 'Area Entity',       container: true, construct: ConditionAreaEntity,     premium: true }, // 2025/11/30
     HEALTH_SCALE:       { name: 'Health Scale',       container: true, construct: ConditionHealthScale,     premium: true }, // 2025/11/30
     HEALTH_COMPARISON:       { name: 'Health Comparison',       container: true, construct: ConditionHealthComparison,     premium: true }, // 2025/11/30
+    HEALTH_INTERVAL:       { name: 'Health Interval',       container: true, construct: ConditionHealthInterval,     premium: true }, // 2026/01/11
     MYTHIC_SUMMON_SURVIVAL:       { name: 'Mythic Summon Survival',       container: true, construct: ConditionMythicSummonSurvival,     premium: true}
 };
 
@@ -215,6 +218,10 @@ var Mechanic = {
     MYTHIC_SUMMON_DELETE:{ name: 'Mythic Summon Delete',container: true,  construct: MechanicMythicSummonDelete,premium: true },
     MYTHIC_SUMMON_VALUE:{ name: 'Mythic Summon Value',container: true,  construct: MechanicMythicSummonValue,premium: true },
     BADGE_COOLDOWN_RESET:{ name: 'Badge Cooldown Reset',container: true,  construct: MechanicBadgeCooldownReset,premium: true }, // 2025/11/30
+    BADGE_COOLDOWN_SCALE:{ name: 'Badge Cooldown Scale',container: true,  construct: MechanicBadgeCooldownScale,premium: true }, // 2025/12/25
+
+    TRAIL_START:{ name: 'Trail Start',container: true,  construct: MechanicTrailStart,premium: true }, // 2026/01/19
+    TRAIL_END:{ name: 'Trail End',container: true,  construct: MechanicTrailEnd,premium: true } // 2026/01/19
 };
 
 var saveIndex;
@@ -863,13 +870,47 @@ function TriggerPlayerHealthRestore()
 
     this.description = '玩家恢复生命值时触发， 可通过Key`PLAYER_HEALTH_RESTORE`取得恢复量';
 
-    this.data.push(new AttributeValue('Min Amount', 'minAmount', 1, 0)
+    this.data.push(new IntValue('Min Amount', 'minAmount', 1)
         .setTooltip('要求的最小存在数量')
     );
-    this.data.push(new AttributeValue('Max Amount', 'maxAmount', 999, 0)
+    this.data.push(new IntValue('Max Amount', 'maxAmount', 999)
         .setTooltip('要求的最大存在数量')
     );
 }
+
+// TriggerSkillLink
+extend('TriggerSkillLink', 'Component');
+function TriggerSkillLink()
+{
+    this.super('Skill Link', Type.TRIGGER, true);
+
+    this.description = '技能连续触发器。两次同名技能衔接间隔1秒';
+
+    this.data.push(new IntValue('Amount', 'amount', 2)
+        .setTooltip('匹配衔接次数')
+    );
+    this.data.push(new StringListValue('Skill', 'skill', [ '' ] )
+        .setTooltip('匹配技能名称')
+    );
+    this.data.push(new StringListValue('Classification', 'classification', [ '' ] )
+        .setTooltip('匹配伤害类型')
+    );
+}
+
+// TriggerTrailHurt
+extend('TriggerTrailHurt', 'Component');
+function TriggerTrailHurt()
+{
+    this.super('Trail Hurt', Type.TRIGGER, true);
+
+    this.description = '路径特效追踪';
+
+    this.data.push(new StringValue('EffectName', 'effectName', '' )
+        .setTooltip('匹配触发的特效名称')
+    );
+
+}
+
 
 // -- Target constructors ------------------------------------------------------ //
 
@@ -1685,7 +1726,7 @@ function ConditionAreaEntity() {
     this.description = '范围内敌对生物';
 
     // 指定世界
-    this.data.push(new StringListValue('Type', 'type', ["ally", "all", "ot"])
+    this.data.push(new ListValue('Type', 'type', ["ally", "all", "ot"], "all")
         .setTooltip('ally = 要求是盟友, all = 任意,ot = 敌对')
     );
 
@@ -1729,6 +1770,21 @@ function ConditionHealthComparison() {
     );
     this.data.push(new AttributeValue('Scale', 'scale', 0.0, 0)
         .setTooltip('比例')
+    );
+
+}
+
+extend('ConditionHealthInterval', 'Component');
+function ConditionHealthInterval() {
+    this.super('Health Interval', Type.CONDITION, true);
+
+    this.description = '血量区间比较';
+
+    this.data.push(new AttributeValue('Min', 'min', 0.3, 0)
+        .setTooltip('最小值')
+    );
+    this.data.push(new AttributeValue('Max', 'max', 0.5, 0)
+        .setTooltip('最大值')
     );
 
 }
@@ -3507,9 +3563,55 @@ function MechanicMythicSummonValue() {
 extend('MechanicBadgeCooldownReset', 'Component');
 function MechanicBadgeCooldownReset() {
     this.super('Badge Cooldown Reset', Type.MECHANIC, false);
-    this.description = '重置徽章冷却实际';
-    this.data.push(new StringListValue('Type', 'type', ["R", "E", "ALL"])
+    this.description = '重置徽章冷却时间';
+    this.data.push(new ListValue('Type', 'type', ["R", "E", "ALL"], "ALL")
         .setTooltip('重置什么按键的')
+    );
+}
+// MechanicBadgeCooldownScale
+extend('MechanicBadgeCooldownScale', 'Component');
+function MechanicBadgeCooldownScale() {
+    this.super('Badge Cooldown Scale', Type.MECHANIC, false);
+    this.description = '实在当前徽章技能冷却缩减百分比';
+    this.data.push(new ListValue('Type', 'type', ["R", "E", "ALL"], "ALL")
+        .setTooltip('重置什么按键的')
+    );
+    this.data.push(new AttributeValue('Proportion', 'proportion', 0.1, 0)
+        .setTooltip('缩减比例')
+    );
+}
+
+// MechanicTrailStart
+extend('MechanicTrailStart', 'Component');
+function MechanicTrailStart() {
+    this.super('Trail Start', Type.MECHANIC, false);
+    this.description = '路径追踪';
+    this.data.push(new StringValue('EffectName', 'effectName', "default")
+        .setTooltip('萌芽特效名称')
+    );
+    this.data.push(new AttributeValue('Radius', 'radius', 0.5, 0)
+        .setTooltip('单点范围')
+    );
+    this.data.push(new AttributeValue('Duration', 'duration', -1, 0)
+        .setTooltip('整体存活时间')
+    );
+    this.data.push(new AttributeValue('SegmentDuration', 'segmentDuration', 3, 0)
+        .setTooltip('路径存活时间')
+    );
+    this.data.push(new AttributeValue('EffectTiming', 'effectTiming', 3, 0)
+        .setTooltip('特效存活时间')
+    );
+    this.data.push(new AttributeValue('HitDuration', 'hitDuration', 1, 0)
+        .setTooltip('命中间隔')
+    );
+}
+
+extend('MechanicTrailEnd', 'Component');
+function MechanicTrailEnd() {
+    this.super('Trail End', Type.MECHANIC, false);
+    this.description = '路径追踪结束';
+    this.data.push(new StringValue('EffectName', 'effectName', "default")
+        .setTooltip('萌芽特效名称')
     );
 }
 

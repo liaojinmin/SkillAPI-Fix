@@ -1,8 +1,9 @@
-package com.sucy.skill.dynamic.mechanic.summon
+package com.sucy.skill.dynamic
 
 import com.sucy.skill.api.skills.SkillContext
 import com.sucy.skill.dynamic.mechanic.MechanicComponent
-import com.sucy.skill.hook.mythic.MythicManager
+import com.sucy.skill.trail.TrailEntity
+import com.sucy.skill.trail.TrailManager
 import org.bukkit.entity.LivingEntity
 
 /**
@@ -12,10 +13,10 @@ import org.bukkit.entity.LivingEntity
  * @author 老廖
  * @since 2025/10/23 20:12
  */
-class MythicSummonDeleteMechanic: MechanicComponent() {
+class TrailEndMechanic: MechanicComponent() {
 
     override fun getKey(): String {
-        return "mythic summon delete"
+        return "trail end"
     }
 
     override fun execute(
@@ -24,9 +25,8 @@ class MythicSummonDeleteMechanic: MechanicComponent() {
         level: Int,
         targets: MutableList<LivingEntity>,
     ): Boolean {
-        val type = settings.getString("mythicType")!!
-        targets.forEach { le ->
-            MythicManager.summonMap[le.uniqueId]?.safeRemoveOf(type)
+        targets.forEach {
+            TrailManager.unregister(it)
         }
         return true
     }

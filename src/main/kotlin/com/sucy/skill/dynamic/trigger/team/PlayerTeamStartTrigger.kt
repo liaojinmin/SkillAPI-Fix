@@ -37,12 +37,12 @@ class PlayerTeamStartTrigger: Trigger<PlayerStartGameEvent> {
     override fun shouldTrigger(event: PlayerStartGameEvent, level: Int, settings: Settings): Boolean {
         val types = settings.getStringList("dungeon")
         val difficulty = settings.getStringList("difficulty")
-        if (types.isEmpty()) return true
+        if (types.isEmpty() || (types.size == 1 && types[0].isEmpty())) return true
         if (types.contains(event.teamHandler.dungeon.dungeonName)) {
-            if (difficulty.isNotEmpty()) {
-                return difficulty.contains(event.teamHandler.dungeon.difficulty)
+            if (difficulty.isEmpty() || (types.size == 1 && types[0].isEmpty())) {
+                return true
             }
-            return true
+            return difficulty.contains(event.teamHandler.dungeon.difficulty)
         }
         return false
     }

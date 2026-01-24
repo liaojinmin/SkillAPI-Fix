@@ -1,6 +1,9 @@
 package com.sucy.skill.utils;
 
 import javax.print.DocFlavor;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
 import java.util.concurrent.*;
 
 /**
@@ -12,8 +15,12 @@ import java.util.concurrent.*;
  */
 public class ExpiringMap<K, V> {
 
+    private static final ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(1);
+
     private static class ValueWrapper<V> {
+
         V value;
+
         ScheduledFuture<?> future;
 
         ValueWrapper(V value, ScheduledFuture<?> future) {
@@ -23,7 +30,6 @@ public class ExpiringMap<K, V> {
     }
 
     private final ConcurrentHashMap<K, ValueWrapper<V>> map = new ConcurrentHashMap<>();
-    private final ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(1);
 
     // Add or update a key-value pair with an expiration time
     public void put(K key, V value, long delay, TimeUnit timeUnit) {
@@ -46,6 +52,7 @@ public class ExpiringMap<K, V> {
         }
         return null;
     }
+
 
     // Get the value associated with a key
     public V get(K key) {
@@ -82,5 +89,13 @@ public class ExpiringMap<K, V> {
     // Get the size of the map
     public int size() {
         return map.size();
+    }
+
+    public List<String> parseInfo() {
+        List<String> info = new ArrayList<>();
+        for (Map.Entry<K, ValueWrapper<V>> it : map.entrySet()) {
+            info.add("  key: " + it.getKey() + " value: " + it.getValue().value + " 剩余: "+it.getValue().future.getDelay(TimeUnit.SECONDS));
+        }
+        return info;
     }
 }

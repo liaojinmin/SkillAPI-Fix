@@ -27,7 +27,7 @@ class MythicSummonDeathTrigger: Trigger<MythicSummonDeathEvent> {
     }
 
     override fun getCaster(event: MythicSummonDeathEvent): LivingEntity {
-        return event.summon.ownerEntity ?: event.summon.bukkitEntity
+        return event.summon.owner
     }
 
     override fun setValues(event: MythicSummonDeathEvent, data: MutableMap<String, Any>) {
@@ -37,7 +37,7 @@ class MythicSummonDeathTrigger: Trigger<MythicSummonDeathEvent> {
     override fun shouldTrigger(event: MythicSummonDeathEvent, level: Int, settings: Settings): Boolean {
         val types = settings.getStringList("mythicType")
         if (types.isEmpty()) return true
-        val type= event.summon.activeMob.type.entityType
+        val type= event.summon.activeMob.mobType
         return types.contains(type)
     }
 

@@ -139,6 +139,9 @@ public class CmdInfo implements IFunction
                     sender.sendMessage("    key: " + it2.getKey() + " value: " + it2.getValue());
                 }
             }
+            sender.sendMessage(ChatColor.GOLD + "限时属性:");
+            data.expiring.parseInfo().forEach(sender::sendMessage);
+
             // nf start
             sender.sendMessage(ChatColor.GOLD + "NeonFlash:");
             AttributePlayer attributePlayer = me.neon.flash.attribute.AttributeManager.INSTANCE.getAttributePlayer().get(target.getUniqueId());

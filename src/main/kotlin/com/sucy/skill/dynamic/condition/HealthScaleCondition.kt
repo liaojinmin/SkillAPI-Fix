@@ -19,13 +19,9 @@ class HealthScaleCondition : ConditionComponent() {
         return "health scale"
     }
 
-    override fun load(skill: DynamicSkill, config: DataSection) {
-        super.load(skill, config)
-        much = settings.getBool("much", much)
-        scale = settings.getDouble("scale", 0.0)
-    }
-
     override fun test(caster: LivingEntity, level: Int, target: LivingEntity): Boolean {
+        much = settings.getBool("much", much)
+        scale = parseValues(caster, "scale", level, 0.0)
         if (scale <= 0.0) return false
         if (!target.isValid || target.isDead) return false
 

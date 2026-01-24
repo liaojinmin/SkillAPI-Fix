@@ -24,6 +24,8 @@ import com.sucy.skill.screen.AttributeScreenKt;
 import com.sucy.skill.utils.AttributeParseUtils;
 import com.sucy.skill.utils.ExpiringMap;
 import me.neon.flash.attribute.AttributePlayer;
+import me.neon.flash.attribute.comp.AttributeContainer;
+import me.neon.flash.attribute.comp.AttributeData;
 import me.neon.flash.attribute.comp.SuitData;
 import org.bukkit.Bukkit;
 import org.bukkit.OfflinePlayer;
@@ -70,7 +72,7 @@ public class PlayerData {
 
     /**
      * 有源临时属性
-     **/
+     */
     public final ConcurrentHashMap<String, ConcurrentHashMap<String, Integer>> addAttrib = new ConcurrentHashMap<>();
 
     /**
@@ -291,6 +293,8 @@ public class PlayerData {
     }
 
     public double getAttribute(String key) {
+        return getGlobalAttribute(key, null);
+        /*
         double total = getAttributeNotNf(key);
         // nf start
         AttributePlayer attributePlayer = me.neon.flash.attribute.AttributeManager.INSTANCE.getAttributePlayer().get(player.getUniqueId());
@@ -299,9 +303,26 @@ public class PlayerData {
             if (value != null) {
                 total += value;
             }
+            for (AttributeContainer container : attributePlayer.getAttributeContainerAt(
+                    attributeContainer -> !attributeContainer.getEnabledForAggregation()
+            )) {
+               // System.out.println("key: "+key);
+                AttributeData data = container.get(key);
+              //  if (data != null) {
+                  //  System.out.println("isMultiplier: "+data.getAttributeOption().isMultiplier());
+                 //   System.out.println("value: "+data.getAttributeValue());
+              //  }
+                if (data != null && !data.getAttributeOption().isMultiplier()) {
+                    total += data.getComputeAttributeValue();
+                }
+            }
         }
         // nf end
+
+        // 此处选择 applyNf 是因为考虑 attributePlayer.getAttributes().get(key) 返回的是前台值，包含缩放
         double out = AttributeParseUtils.round(scaleAttrib(key, total, false, null), 1);
+
+        // 最大值限制
         AttributeManager.Attribute attribute = SkillAPI.getAttributeManager().getAttribute(key);
         if (attribute != null) {
             if (attribute.getMax() > 0 && attribute.getMax() < out) {
@@ -309,6 +330,8 @@ public class PlayerData {
             }
         }
         return out;
+
+         */
     }
 
     public double getAttributeNotNf(String key) {
@@ -373,6 +396,16 @@ public class PlayerData {
                     }
                 }
             }
+            for (AttributeContainer container : attributePlayer.getAttributeContainerAt(
+                    attributeContainer -> !attributeContainer.getEnabledForAggregation()
+            )) {
+                if (containerFilter == null || containerFilter.test(container.getResourceLocation().toString())) {
+                    AttributeData data = container.get(attr);
+                    if (data != null && !data.getAttributeOption().isMultiplier()) {
+                        total += data.getComputeAttributeValue();
+                    }
+                }
+            }
         }
         AttributeManager.Attribute attribute = SkillAPI.getAttributeManager().getAttribute(attr);
         if (attribute != null) {
@@ -415,9 +448,22 @@ public class PlayerData {
                     }
                 }
             }
+
+            // 新容器
+            for (AttributeContainer container : attributePlayer.getAttributeContainerAt(
+                    attributeContainer -> !attributeContainer.getEnabledForAggregation()
+            )) {
+                if (containerFilter == null || containerFilter.test(container.getResourceLocation().toString())) {
+                    AttributeData data = container.get(attr);
+                    if (data != null && !data.getAttributeOption().isMultiplier()) {
+                        total += data.getComputeAttributeValue();
+                    }
+                }
+            }
         }
         double out;
-        if (scale) out = AttributeParseUtils.round(scaleAttrib(attr, total, true, containerFilter), 1);
+        if (scale)
+            out = AttributeParseUtils.round(scaleAttrib(attr, total, true, containerFilter), 1);
         else out = AttributeParseUtils.round(total, 1);
 
         AttributeManager.Attribute attribute = SkillAPI.getAttributeManager().getAttribute(attr);
@@ -441,13 +487,29 @@ public class PlayerData {
         if (applyNf) {
             AttributePlayer attributePlayer = me.neon.flash.attribute.AttributeManager.INSTANCE.getAttributePlayer().get(player.getUniqueId());
             if (attributePlayer != null) {
+                double scale = 0.0;
                 // 缩放
-                for (Map.Entry<String, Map<String, Double>> map : attributePlayer.getSourceOfScaleMap().entrySet()) {
-                    if (containerFilter == null || containerFilter.test(map.getKey())) {
-                        if (map.getValue().containsKey(attr)) {
-                            total += map.getValue().get(attr) * total;
+                for (Map.Entry<String, Map<String, Double>> entry : attributePlayer.getSourceOfScaleMap().entrySet()) {
+                    if (containerFilter == null || containerFilter.test(entry.getKey())) {
+                        if (entry.getValue().containsKey(attr)) {
+                            scale += entry.getValue().get(attr);
+                            //total += map.getValue().get(attr) * total;
                         }
                     }
+                }
+                // 或者在nf未启用聚合的属性容器
+                for (AttributeContainer container : attributePlayer.getAttributeContainerAt(
+                        attributeContainer -> !attributeContainer.getEnabledForAggregation()
+                )) {
+                    if (containerFilter == null || containerFilter.test(container.getResourceLocation().toString())) {
+                        AttributeData data = container.get(attr);
+                        if (data != null && data.getAttributeOption().isMultiplier()) {
+                            scale += data.getComputeAttributeValue();
+                        }
+                    }
+                }
+                if (scale > 0) {
+                    total += scale * total;
                 }
             }
         }
@@ -625,9 +687,10 @@ public class PlayerData {
      * @return modified value
      */
     public double scaleStat(final String stat, final double value) {
-      //  if (stat.equalsIgnoreCase(AttributeManager.MOVE_SPEED)) {
-         //   System.out.println("scaleStat value "+value);
-     //   }
+        return scaleStat(stat, value, 0);
+    }
+
+    public double scaleStat(final String stat, final double value, final double add) {
         final AttributeManager manager = SkillAPI.getAttributeManager();
         if (manager == null) { return value; }
 
@@ -637,20 +700,13 @@ public class PlayerData {
         double modified = value;
         for (final AttributeManager.Attribute attribute : matches) {
             double amount = getAttribute(attribute.getKey());
+            amount += add;
             if (amount > 0) {
                 modified = attribute.modifyStat(stat, modified, amount);
-               // System.out.println("attribute: "+ attribute.getKey());
-               // System.out.println("  modified "+modified);
             }
         }
-        //if (stat.equalsIgnoreCase(AttributeManager.MOVE_SPEED)) {
-           // System.out.println("scaleStat modified "+modified);
-       // }
         return modified;
     }
-
-
-
 
     /**
      * Opens the attribute menu for the player
@@ -1497,7 +1553,9 @@ public class PlayerData {
             if (mana < 0) {
                 mana = 0;
             }
-        } else { Logger.log(LogType.MANA, 2, getPlayerName() + " had their mana gain cancelled"); }
+        } else {
+            Logger.log(LogType.MANA, 2, getPlayerName() + " had their mana gain cancelled");
+        }
     }
 
     /**

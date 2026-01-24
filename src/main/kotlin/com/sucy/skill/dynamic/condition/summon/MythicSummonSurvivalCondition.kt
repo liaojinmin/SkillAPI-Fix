@@ -26,26 +26,22 @@ class MythicSummonSurvivalCondition : ConditionComponent() {
         return "mythic summon survival"
     }
 
-    override fun load(skill: DynamicSkill, config: DataSection) {
-        super.load(skill, config)
-        mythicType = settings.getString("mythicType")
-        minAmount = settings.getInt("minAmount")
-        maxAmount = settings.getInt("maxAmount")
-        range = settings.getDouble("range")
-    }
-
     override fun test(caster: LivingEntity, level: Int, target: LivingEntity): Boolean {
         val data= MythicManager.summonMap[target.uniqueId] ?: return false
+        mythicType = settings.getString("mythicType")
+        minAmount = parseValues(caster, "minAmount", level, 0.0).toInt()
+        maxAmount = parseValues(caster, "maxAmount", level, 1.0).toInt()
+        range = parseValues(caster, "range", level, 0.0)
         val now: Collection<Summon>
         if (range > 0.1) {
             val box = BoundingBox.of(target.location, range, range, range)
             now = data.getAllSummon {
-                (mythicType.isEmpty() || it.activeMob.type.entityType == mythicType)
+                (mythicType.isEmpty() || it.activeMob.mobType == mythicType)
                         && box.contains(it.activeMob.entity.bukkitEntity.location.toVector())
             }
         } else {
             now = data.getAllSummon {
-                (mythicType.isEmpty() || it.activeMob.type.entityType == mythicType)
+                (mythicType.isEmpty() || it.activeMob.mobType == mythicType)
             }
         }
         return now.size in minAmount..maxAmount

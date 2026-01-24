@@ -20,6 +20,8 @@ data class SummonData(
 
     val addQueue: ConcurrentLinkedQueue<Summon> = ConcurrentLinkedQueue()
 
+    private var amountCache: Map<String, Int> = emptyMap()
+
     fun getFirstTimer(): String {
         if (summon.isEmpty()) return "0"
         return max((summon.values.first().expireTimer - System.currentTimeMillis()) / 1000, 0).toString()
@@ -29,12 +31,31 @@ data class SummonData(
         return summon.values.filter(func)
     }
 
+    fun safeRemoveOf(type: String) {
+        if (summon.isEmpty()) return
+        summon.values.forEach {
+            if (it.activeMob.mobType == type) {
+                it.safeRemove()
+            }
+        }
+    }
+
     fun getSummon(livingEntity: LivingEntity): Summon? {
         return summon[livingEntity.uniqueId]
     }
 
     fun isSummon(livingEntity: LivingEntity): Boolean {
         return summon[livingEntity.uniqueId] != null
+    }
+
+    fun getAmount(type: String): Int {
+        return amountCache[type] ?: 0
+    }
+
+    fun updateAmountCache() {
+        amountCache = summon.values.groupBy {
+            it.activeMob.mobType
+        }.map { it.key to it.value.size }.associate { it }
     }
 
     fun cleanupAll() {

@@ -22,15 +22,12 @@ class AreaEntityCondition : ConditionComponent() {
         return "area entity"
     }
 
-    override fun load(skill: DynamicSkill, config: DataSection) {
-        super.load(skill, config)
-        type = settings.getString("type", "all")
-        minAmount = settings.getInt("minAmount", 0)
-        maxAmount = settings.getInt("maxAmount", 9999)
-        range = settings.getDouble("range", 0.0)
-    }
 
     override fun test(caster: LivingEntity, level: Int, target: LivingEntity): Boolean {
+        type = settings.getString("type", "all")
+        minAmount =  parseValues(caster, "minAmount", level, 0.0).toInt()
+        maxAmount = parseValues(caster, "maxAmount", level, 9999.0).toInt()
+        range = parseValues(caster, "range", level, 0.0)
         if (range <= 0.1) return false
         if (target.world.name.equals("world", true)
             || target.world.name.equals("spawn", true)) return false

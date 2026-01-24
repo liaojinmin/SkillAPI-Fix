@@ -11,10 +11,13 @@ import me.neon.libs.taboolib.nms.ai.SimpleAi
 import me.neon.libs.taboolib.nms.ai.controllerLookAt
 import me.neon.libs.taboolib.nms.ai.navigationMove
 import me.neon.libs.util.BoundingBox
+import me.neon.libs.util.setMeta
 import org.bukkit.Bukkit
+import org.bukkit.Location
 import org.bukkit.entity.Entity
 import org.bukkit.entity.LivingEntity
 import org.bukkit.entity.Player
+import org.bukkit.metadata.FixedMetadataValue
 import java.util.*
 import kotlin.collections.ArrayList
 
@@ -26,22 +29,26 @@ import kotlin.collections.ArrayList
  * @since 2025/11/19 23:01
  */
 class AttackAi2(
-    val owner: UUID,
+    val owner: LivingEntity,
     val summon: Summon,
 ) : SimpleAi() {
 
-    /** 配置常量 */
-    private val followRange = 26.0 * 26.0
-    private val ownerRange = 30.0 * 30.0
-    private val attackRange = 2.5 * 2.5
+    companion object {
 
-    /** 状态 */
-    private var target: LivingEntity? = null
+        /** 配置常量 */
+        const val followRange = 20.0 * 20.0
+
+        const val ownerRange = 26.0 * 26.0
+
+        const val attackDistance = 2.3
+
+        const val attackRange = (attackDistance + 0.5) * (attackDistance + 0.5)
+
+    }
+
+    private var cachedSummon: LivingEntity = summon.activeMob.entity.bukkitEntity as LivingEntity
+
     private var attackCooldown: Int = 0
-
-    /** 每 tick 缓存减少重复计算 */
-    private var cachedOwner: Player? = null
-    private var cachedSummon: LivingEntity? = null
 
     /**
      * shouldExecute:
@@ -49,18 +56,12 @@ class AttackAi2(
      * - 只判断是否需要进入攻击行为
      */
     override fun shouldExecute(): Boolean {
-        val ownerPlayer = Bukkit.getPlayer(owner) ?: return false
-        cachedOwner = ownerPlayer
-
-        val summonEntity = summon.activeMob.entity.bukkitEntity as? LivingEntity ?: return false
-        cachedSummon = summonEntity
-
+        if (summon.isWorldChange) return false
         // 优先检查现有目标是否还有效
-        if (!isTargetValid(target, ownerPlayer, summonEntity)) {
-            target = findNewTarget(ownerPlayer, summonEntity)
+        if (summon.targetEntity == null || !isTargetValid()) {
+            summon.targetEntity = findNewTarget()
         }
-
-        return target != null
+        return summon.targetEntity != null
     }
 
     /**
@@ -76,11 +77,8 @@ class AttackAi2(
      * - 不重复逻辑，只判断攻击是否应该持续
      */
     override fun continueExecute(): Boolean {
-        val t = target ?: return false
-        val ownerPlayer = cachedOwner ?: return false
-        val summonEntity = cachedSummon ?: return false
-
-        return isTargetValid(t, ownerPlayer, summonEntity)
+        if (summon.isWorldChange) return false
+        return isTargetValid()
     }
 
     /**
@@ -88,25 +86,22 @@ class AttackAi2(
      * - 真正的行为逻辑，每 Tick 执行一次
      */
     override fun updateTask() {
-        val summonEntity = cachedSummon ?: return
-        val t = target ?: return
+        val t = summon.targetEntity ?: return
 
-        summonEntity.controllerLookAt(t)
         // 攻击逻辑
-        val dist = summonEntity.location.distanceSquared(t.location)
-        if (dist <= attackRange) {
+        if (cachedSummon.location.distanceSquared(t.location) <= (attackRange + 0.3)) {
             if (attackCooldown == 20) {
-                //println("attackCooldown TriggeredSkill")
-                summon.activeMob.setTarget(BukkitEntity(t))
-                t.damage(1.0, summon.bukkitEntity)
+                cachedSummon.controllerLookAt(t)
+                t.damage(1.0, cachedSummon)
             } else if (attackCooldown == 0) {
                 attackCooldown = 20
                 return
             }
             attackCooldown--
         } else {
+            cachedSummon.controllerLookAt(t)
             // 移动
-            summonEntity.navigationMove(t.location, 1.3)
+            cachedSummon.navigationMove(refApproachLocation(t), 1.2)
         }
     }
 
@@ -115,30 +110,39 @@ class AttackAi2(
      * - 清理状态
      */
     override fun resetTask() {
-        summon.activeMob.resetTarget()
-        target = null
-        cachedOwner = null
-        cachedSummon = null
+        summon.targetEntity = null
+    }
+
+    private fun refApproachLocation(target: LivingEntity): Location {
+        val selfLoc = cachedSummon.location
+        val targetLoc = target.location
+
+        // 自己 → 目标 的方向
+        val dir = targetLoc.toVector().subtract(selfLoc.toVector()).normalize()
+
+        // 在距离目标 attackDistance 的点停止
+        // 即：目标位置 -（方向 * attackDistance）
+        return targetLoc.clone().subtract(dir.multiply(attackDistance))
     }
 
     /**
      * 判断目标是否有效
      */
-    private fun isTargetValid(t: LivingEntity?, owner: Player, summonEntity: LivingEntity): Boolean {
-        if (t == null) return false
+    private fun isTargetValid(): Boolean {
+        val t = summon.targetEntity ?: return false
         if (!t.isValid || t.isDead) return false
-
         if (t.uniqueId == owner.uniqueId) return false
-        if (t.uniqueId == summonEntity.uniqueId) return false
+        if (t.uniqueId == cachedSummon.uniqueId) return false
 
         // 世界匹配
-        if (t.world != summonEntity.world) return false
+        if (t.world.name != cachedSummon.world.name) return false
 
+        val loc = cachedSummon.location
         // 目标离召唤物太远
-        if (summonEntity.location.distanceSquared(t.location) > followRange) return false
+        if (loc.distanceSquared(t.location) > followRange) return false
 
         // 召唤物离主人太远
-        if (summonEntity.location.distanceSquared(owner.location) > ownerRange) return false
+        if (loc.distanceSquared(owner.location) > ownerRange) return false
 
         return true
     }
@@ -146,19 +150,19 @@ class AttackAi2(
     /**
      * 搜索附近可攻击目标 (你可以按需求扩展)
      */
-    private fun findNewTarget(owner: Player, summonEntity: LivingEntity): LivingEntity? {
-        val world = summonEntity.world
+    private fun findNewTarget(): LivingEntity? {
+        val world = cachedSummon.world
 
-        var livingEntity = findEntity(owner, summonEntity, world.getNearbyEntities(summonEntity.location, 16.0, 16.0, 16.0))
+        var livingEntity = findEntity(cachedSummon, world.getNearbyEntities(cachedSummon.location, 16.0, 16.0, 16.0))
         if (livingEntity == null) {
-            val box = BoundingBox.of(summonEntity.location, 16.0, 16.0, 16.0)
-            livingEntity = findEntity(owner, summonEntity, world.players.filter { box.contains(it.location.toVector()) })
+            val box = BoundingBox.of(cachedSummon.location, 16.0, 16.0, 16.0)
+            livingEntity = findEntity(cachedSummon, world.players.filter { box.contains(it.location.toVector()) })
         }
         return livingEntity
 
     }
 
-    private fun findEntity(owner: Player, summonEntity: LivingEntity, list: Collection<Entity>): LivingEntity? {
+    private fun findEntity(summonEntity: LivingEntity, list: Collection<Entity>): LivingEntity? {
         return list.filterIsInstance<LivingEntity>()
             .filter { it.isValid && !it.isDead && it.uniqueId != owner.uniqueId && it.uniqueId != summonEntity.uniqueId }
             .filter {

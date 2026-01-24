@@ -189,7 +189,10 @@ public abstract class TargetHelper {
 
         // Get the necessary vectors
         Vector facing = entity.getLocation().getDirection();
-        Vector relative = target.getLocation().clone().add(0, getHeight(entity) * 0.5, 0).subtract(entity.getLocation()).toVector();
+        Vector relative = target.getLocation()
+                .add(0, getHeight(entity) * 0.5, 0)
+                .subtract(entity.getLocation())
+                .toVector();
 
         // If the dot product is positive, the target is in front
         return facing.dot(relative) >= 0;

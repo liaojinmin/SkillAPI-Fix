@@ -54,7 +54,7 @@ public class FlagData {
 
         if (flags.containsKey(flag)) {
             long time = flags.get(flag);
-            if (time > ticks * 50 + System.currentTimeMillis())
+            if (time > ticks * 50L + System.currentTimeMillis())
                 return;
             else
             {
@@ -63,7 +63,7 @@ public class FlagData {
                     task.cancel();
             }
         }
-        flags.put(flag, System.currentTimeMillis() + ticks * 50);
+        flags.put(flag, System.currentTimeMillis() + ticks * 50L);
         tasks.put(flag, new FlagTask(flag).runTaskLater(plugin, ticks));
     }
 

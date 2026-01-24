@@ -55,6 +55,11 @@ public final class PlayerSkill
     private int         points;
 
     /**
+     * 可与冷却缩减属性进行增益
+     */
+    public double reduceAttribute = 0.0;
+
+    /**
      * Constructs a new PlayerSkill. You should not need to use
      * this constructor as it is provided by the API. Get instances
      * through the PlayerData object.
@@ -319,7 +324,7 @@ public final class PlayerSkill
      */
     public void startCooldown()
     {
-        long cd = (long)player.scaleStat(AttributeManager.COOLDOWN, skill.getCooldown(level) * 1000L);
+        long cd = (long)player.scaleStat(AttributeManager.COOLDOWN, skill.getCooldown(level) * 1000L, reduceAttribute);
         cooldown = System.currentTimeMillis() + cd;
     }
 

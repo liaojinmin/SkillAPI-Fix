@@ -54,30 +54,34 @@ class MythicSummonMechanic: MechanicComponent() {
                 .add(side.multiply(right))
             val mm = MythicManager.api.getMythicMob(type)
             if (mm != null) {
-                Summon(
-                    caster.uniqueId,
-                    mm.spawn(
-                        BukkitAdapter.adapt(loc),
-                        1.0,
-                        SpawnReason.OTHER,
-                        pre = {
-                            if (it is LivingEntity) {
-                                val mobAttributeData = MobAttributeData(attr, it)
-                                MobAttribute.data[it.uniqueId] = mobAttributeData
-                                MythicManager.summonAscription[it.uniqueId] = caster
-                            }
-                        }
-                    ) {
+                val am = mm.spawn(
+                    BukkitAdapter.adapt(loc),
+                    1.0,
+                    SpawnReason.OTHER,
+                    pre = {
                         if (it is LivingEntity) {
-                            it.maxHealth = health
-                            it.health = health
+                            val mobAttributeData = MobAttributeData(attr, it)
+                            MobAttribute.data[it.uniqueId] = mobAttributeData
+                            MythicManager.summonAscription[it.uniqueId] = caster
                         }
-                    }!!,
-                    System.currentTimeMillis() + duration.toLong()
-                ).also {
-                    if (useAi) {
-                        it.initAi()
                     }
+                ) {
+                    if (it is LivingEntity) {
+                        it.maxHealth = health
+                        it.health = health
+                    }
+                }
+                if (am != null) {
+                    Summon(
+                        caster, am, System.currentTimeMillis() + duration.toLong()
+                    ).also {
+                        if (useAi) {
+                            it.initAi()
+                        }
+                    }
+                } else {
+                    SkillAPI.singleton().logger.info("MythicSummonMechanic $type 被阻止生成")
+                    null
                 }
             } else {
                 println("type is null by MythicSummonMechanic $type")

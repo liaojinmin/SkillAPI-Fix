@@ -1,6 +1,9 @@
 package com.sucy.skill.api.event
 
-import com.sucy.skill.hook.mythic.Summon
+import com.sucy.skill.api.event.SkillLinkEvent.Companion
+import com.sucy.skill.trail.TrailEntity
+import com.sucy.skill.trail.TrailSegment
+import org.bukkit.entity.LivingEntity
 import org.bukkit.event.Event
 import org.bukkit.event.HandlerList
 
@@ -11,8 +14,10 @@ import org.bukkit.event.HandlerList
  * @author 老廖
  * @since 2025/11/23 03:59
  */
-class MythicSummonDeathEvent(
-    val summon: Summon
+class TrailHurtEvent(
+    val trailEntity: TrailEntity,
+    val trailSegment: TrailSegment,
+    val target: LivingEntity,
 ): Event() {
 
     override fun getHandlers(): HandlerList {

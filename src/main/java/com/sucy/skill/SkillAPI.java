@@ -27,6 +27,7 @@ import com.sucy.skill.task.ManaTask;
 import com.sucy.skill.task.MobAttributeTask;
 import com.sucy.skill.thread.MainThread;
 import com.sucy.skill.manager.*;
+import com.sucy.skill.trail.TrailManager;
 import com.sucy.skill.utils.EventCancelTracker;
 import me.neon.libs.NeonLibsLoader;
 import org.bukkit.Bukkit;
@@ -151,7 +152,9 @@ public class SkillAPI extends JavaPlugin {
             Bukkit.getLogger().info("ProSkillAPI hook into PlaceholderAPI: " + ChatColor.GREEN + "success.");
         }
         Bukkit.getPluginManager().registerEvents(MythicManager.INSTANCE, this);
+        Bukkit.getPluginManager().registerEvents(TrailManager.INSTANCE, this);
         MythicManager.INSTANCE.onStart();
+        TrailManager.INSTANCE.onStart();
     }
 
     private void listen(SkillAPIListener listener, boolean enabled) {
@@ -169,6 +172,7 @@ public class SkillAPI extends JavaPlugin {
             unloadPlayerData(player, false, true);
         }
         MythicManager.INSTANCE.onShutdown();
+        TrailManager.INSTANCE.onClose();
         playerDataMap.clear();
         EffectManager.cleanUp();
         ArmorStandManager.cleanUp();

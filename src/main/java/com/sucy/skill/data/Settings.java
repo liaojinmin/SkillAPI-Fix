@@ -249,6 +249,9 @@ public class Settings {
         }
 
         if (attacker instanceof Player) {
+            if (MythicManager.INSTANCE.isSummon(target.getUniqueId())
+                    && attacker.getWorld().getName().equalsIgnoreCase("spawn")) return false;
+
             if (MythicManager.INSTANCE.isOwner(attacker.getUniqueId(), target)) {
                 return false;
             }

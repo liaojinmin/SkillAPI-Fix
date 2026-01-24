@@ -32,16 +32,13 @@ class MythicSummonValueMechanic: MechanicComponent() {
         val key = settings.getString("key")
 
         targets.forEach { le ->
-            val data = MythicManager.summonMap[le.uniqueId]
-            if (data != null) {
-                val valueData = DynamicSkill.getCastData(le)
-                if (valueData != null) {
-                    val value = data.getAllSummon { it.activeMob.type.entityType == type }.size
-                    valueData[key] = value
-                    Bukkit.getPluginManager().callEvent(
-                        ValueMechanicChangeEvent(ValueMechanicChangeEvent.ValueAction.SET, caster, key, value.toDouble())
-                    )
-                }
+            val value = MythicManager.summonMap[le.uniqueId]?.getAmount(type) ?: 0
+            val valueData = DynamicSkill.getCastData(le)
+            if (valueData != null) {
+                valueData[key] = value.toDouble()
+                Bukkit.getPluginManager().callEvent(
+                    ValueMechanicChangeEvent(ValueMechanicChangeEvent.ValueAction.SET, caster, key, value.toDouble())
+                )
             }
         }
         return true

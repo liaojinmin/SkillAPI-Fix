@@ -67,8 +67,11 @@ class CombatTriggerListener: PluginModule<MythicMobs>(MythicMobs.inst()) {
                             }
 
                             if (am.faction != null && am2.faction != null && am.faction == am2.faction) {
-                                if (!am.entity.hasMetadata("MythicFactionMechanic") && !am2.entity.hasMetadata("MythicFactionMechanic"))
+                                if (!am.entity.hasMetadata("MythicFactionMechanic") && !am2.entity.hasMetadata("MythicFactionMechanic")) {
+                                    am2.resetTarget()
+                                    am.resetTarget()
                                     event.isCancelled = true
+                                }
                                 return
                             }
                         }

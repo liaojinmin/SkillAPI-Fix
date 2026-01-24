@@ -18,13 +18,9 @@ class HealthComparisonCondition : ConditionComponent() {
         return "health comparison"
     }
 
-    override fun load(skill: DynamicSkill, config: DataSection) {
-        super.load(skill, config)
-        direction = settings.getString("direction", "higher").lowercase()
-        scale = settings.getDouble("scale", 1.0)
-    }
-
     override fun test(caster: LivingEntity, level: Int, target: LivingEntity): Boolean {
+        direction = settings.getString("direction", "higher").lowercase()
+        scale = parseValues(caster,  "scale", level, 1.0)
         if (scale <= 0.0) return false
         if (caster.entityId == target.entityId) return false
         if (!caster.isValid || caster.isDead) return false
