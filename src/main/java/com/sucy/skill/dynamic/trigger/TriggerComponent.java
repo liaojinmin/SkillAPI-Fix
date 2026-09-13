@@ -27,7 +27,7 @@ public class TriggerComponent extends EffectComponent {
                 caster,
                 new SkillContext(),
                 level,
-                new ArrayList<>(Collections.singletonList(target))
+                Collections.singletonList(target)
         );
     }
 

@@ -29,6 +29,7 @@ public class AttributeAPI {
      * @return 属性值
      */
     public static double getAttribute(LivingEntity entity, String key) {
+        if (key == null) return 0.0;
         if (entity == null || entity.isDead()) {
             return 0.0;
         }

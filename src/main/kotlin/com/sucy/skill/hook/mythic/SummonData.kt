@@ -1,9 +1,11 @@
 package com.sucy.skill.hook.mythic
 
+import org.bukkit.Location
 import org.bukkit.entity.LivingEntity
 import java.util.UUID
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.ConcurrentLinkedQueue
+import java.util.concurrent.atomic.AtomicBoolean
 import kotlin.math.max
 
 /**
@@ -19,6 +21,8 @@ data class SummonData(
 ) {
 
     val addQueue: ConcurrentLinkedQueue<Summon> = ConcurrentLinkedQueue()
+
+    val lock: AtomicBoolean = AtomicBoolean(false)
 
     private var amountCache: Map<String, Int> = emptyMap()
 
@@ -58,10 +62,22 @@ data class SummonData(
         }.map { it.key to it.value.size }.associate { it }
     }
 
+    fun respawn(lco: Location, fi: (Summon) -> Boolean) {
+       // summon.values.forEach { it.safeRemove() }
+        summon.values.filter(fi).forEach {
+            //val oldId = it.unique
+            summon.remove(it.unique)
+            MythicManager.summonAscription.remove(it.unique)
+            it.safeRespawn(lco)
+            summon[it.unique] = it
+
+        }
+    }
+
     fun cleanupAll() {
-        summon.values.forEach { it.safeRemove() }
-        summon.clear()
         addQueue.forEach { it.safeRemove() }
         addQueue.clear()
+        summon.values.forEach { it.safeRemove() }
+        summon.clear()
     }
 }

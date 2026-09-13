@@ -1,8 +1,6 @@
-package com.sucy.skill.dynamic
+package com.sucy.skill.dynamic.mechanic
 
 import com.sucy.skill.api.skills.SkillContext
-import com.sucy.skill.dynamic.mechanic.MechanicComponent
-import com.sucy.skill.trail.TrailEntity
 import com.sucy.skill.trail.TrailManager
 import org.bukkit.entity.LivingEntity
 

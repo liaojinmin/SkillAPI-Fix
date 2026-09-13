@@ -5,6 +5,7 @@ plugins {
     id("java")
     id("com.github.johnrengelman.shadow") version "7.1.2"
     id("org.jetbrains.kotlin.jvm") version "1.9.0"
+    `maven-publish`
 }
 
 repositories {
@@ -24,6 +25,7 @@ repositories {
 
 apply<JavaPlugin>()
 apply(plugin = "org.jetbrains.kotlin.jvm")
+apply(plugin = "maven-publish")
 
 
 java {
@@ -67,12 +69,35 @@ dependencies {
     compileOnly("me.neon.libs:NeonLibs:1.0.1.6-local")
     compileOnly("me.neon.flash:NeonFlash:1.0.1-SNAPSHOT-local")
     compileOnly("ink.ptms.adyeshach:all:2.0.0-snapshot-1")
+    compileOnly("ink.ptms.chemdah:api:1.1.0")
 
     compileOnly(kotlin("stdlib"))
 
     // Libraries
     compileOnly(fileTree("lib"))
-   // compileOnly(fileTree("libs"))
+    compileOnly(fileTree("libs"))
 
+
+}
+
+publishing {
+    publications {
+        create<MavenPublication>("maven") {
+            artifactId = rootProject.name
+            groupId = "com.sucy.skill"
+            version = (if (project.hasProperty("build")) {
+                var build = project.findProperty("build").toString()
+                if (build.startsWith("task ")) {
+                    build = "local"
+                }
+                "${project.version}-$build"
+            } else {
+                "${project.version}"
+            })
+            artifact(tasks.jar)
+            //artifact(shadowJar)
+            println("> Apply \"$groupId:$artifactId:$version\"")
+        }
+    }
 }
 

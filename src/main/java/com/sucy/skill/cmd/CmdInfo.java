@@ -88,7 +88,7 @@ public class CmdInfo implements IFunction
             OfflinePlayer target = args.length == 0 ? (OfflinePlayer) sender : VersionManager.getOfflinePlayer(args[0], false);
             if (target == null) {
                 MobAttribute.getData(args[0]).forEach(it -> {
-                    parseOwner.set(it.owner);
+                    parseOwner.set(it.getOwner());
                     sender.sendMessage("怪物 "+it.getDisplay() + " UUID: "+it.getUuid());
                     sender.sendMessage(ChatColor.GOLD + "基本属性:");
                     for (Map.Entry<String, Double> a : it.map.entrySet()) {

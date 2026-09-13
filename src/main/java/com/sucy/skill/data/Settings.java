@@ -242,6 +242,8 @@ public class Settings {
     public boolean canAttack(LivingEntity attacker, LivingEntity target) {
         //if (attacker.getEntityId() == target.getEntityId()) return false;
 
+
+        if (attacker.getUniqueId() == target.getUniqueId()) return true;
         if (target instanceof Player) {
             if (((Player) target).getGameMode() == GameMode.CREATIVE) {
                 return false;
@@ -876,7 +878,6 @@ public class Settings {
 
     private List<String> titleMessages;
 
-    private boolean oldHealth;
     private boolean forceScaling;
     private String  levelBar;
     private String  foodBar;
@@ -892,14 +893,6 @@ public class Settings {
     private int     titleFadeIn;
     private int     titleFadeOut;
 
-    /**
-     * Checks whether or not old health bars (fixed 10 hearts) are enabled
-     *
-     * @return true if enabled, false otherwise
-     */
-    public boolean isOldHealth() {
-        return oldHealth;
-    }
 
     /**
      * @return true if forces the SkillAPI health scaling, false otherwise
@@ -1014,7 +1007,6 @@ public class Settings {
     }
 
     private void loadGUISettings() {
-        oldHealth = config.getBoolean(GUI_OLD);
         forceScaling = config.getBoolean(GUI_FORCE);
         levelBar = config.getString(GUI_LVLBAR);
         levelText = TextFormatter.colorString(config.getString(GUI_LVLTXT, "Level"));

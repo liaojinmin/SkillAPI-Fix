@@ -43,7 +43,6 @@ public class SkillCastMechanic extends MechanicComponent {
             return false;
         }
 
-
         for (LivingEntity livingEntity : targets) {
            // System.out.println("SkillCastMechanic >>> "+livingEntity.getName() + " skill: "+skillName);
             SkillCastAPI.cast(livingEntity, skill, level);

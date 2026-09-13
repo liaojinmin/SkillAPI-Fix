@@ -34,6 +34,7 @@ import com.sucy.skill.log.Logger;
 import com.sucy.skill.utils.target.TargetHelper;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
+import org.bukkit.World;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.event.Event;
@@ -105,7 +106,6 @@ public abstract class CustomProjectile extends BukkitRunnable implements Metadat
     private boolean ally = false;
     private boolean valid = true;
 
-
     public CustomProjectile(LivingEntity thrower) {
         this.thrower = thrower;
         runTaskTimer(Bukkit.getPluginManager().getPlugin("SkillAPI"), 1, 1);
@@ -162,7 +162,9 @@ public abstract class CustomProjectile extends BukkitRunnable implements Metadat
      */
     protected boolean isTraveling() {
         // Leaving a loaded chunk
-        if (!getLocation().getChunk().isLoaded()) {
+        Location location = getLocation();
+        World world = location.getWorld();
+        if (world == null || !location.isChunkLoaded()) {
             cancel();
             Bukkit.getPluginManager().callEvent(expire());
             return false;

@@ -49,7 +49,14 @@ var Trigger = {
     PLAYER_KILLER_ENTITY    : { name: 'Player Killer Entity',    container: true, construct: TriggerPlayerKillerEntity,  premium: true}, // 2025/11/30
     PLAYER_HEALTH_RESTORE  : { name: 'Player Health Restore',    container: true, construct: TriggerPlayerHealthRestore,  premium: true}, // 2025/11/30
     SKILL_LINK  : { name: 'Skill Link',                    container: true, construct: TriggerSkillLink,  premium: true}, // 2025/12/1
-    TRAIL_HURT  : { name: 'Trail Hurt',                    container: true, construct: TriggerTrailHurt,  premium: true} // 2026/01/19
+    TRAIL_HURT  : { name: 'Trail Hurt',                    container: true, construct: TriggerTrailHurt,  premium: true}, // 2026/01/19
+
+    COMBAT_ENTER  : { name: 'Combat Enter',                    container: true, construct: TriggerCombatEnter,  premium: true}, // 2026/01/28
+    COMBAT_LEAVE  : { name: 'Combat Leave',                    container: true, construct: TriggerCombatLeave,  premium: true},  // 2026/01/28
+    ATTRIBUTE_CHANGE  : { name: 'Attribute Change',                    container: true, construct: TriggerAttributeChange,  premium: true},  // 2026/02/1
+    KNEE : { name: "Knee",  container:  true, construct: TriggerKnee, premium: true }, // 2026/3/18
+    KNEE_END : { name: "Knee End",  container:  true, construct: TriggerEndKnee, premium: true }, // 2026/3/18
+    USE_CONSUME : { name: "Use Consume",  container:  true, construct: TriggerPlayerUseConsume, premium: true } // 2026/4/5
 };
 
 /**
@@ -60,13 +67,15 @@ var Target = {
     CONE     : { name: 'Cone',     container: true, construct: TargetCone     },
     LINEAR   : { name: 'Linear',   container: true, construct: TargetLinear   },
     LOCATION : { name: 'Location', container: true, construct: TargetLocation },
+    RANDOM_LOCATION : { name: 'Random Location', container: true, construct: TargetRandomLocation },
     NEAREST  : { name: 'Nearest',  container: true, construct: TargetNearest  },
     OFFSET   : { name: 'Offset',   container: true, construct: TargetOffset   },
     REMEMBER : { name: 'Remember', container: true, construct: TargetRemember },
     SELF     : { name: 'Self',     container: true, construct: TargetSelf     },
     SINGLE   : { name: 'Single',   container: true, construct: TargetSingle   },
     CONTEXT_ARMOR_STAND   : { name: 'ContextArmorStand',   container: true, construct: TargetContextArmorStand   },
-    SUMMON_OWNER     : { name: 'Summon Owner',     container: true, construct: TargetSummonOwner     }
+    SUMMON_OWNER     : { name: 'Summon Owner',     container: true, construct: TargetSummonOwner     },
+    TEAM_PLAYER     : { name: 'Team Player',     container: true, construct: TargetTeamPlayer    }
 };
 
 /**
@@ -142,12 +151,14 @@ var Mechanic = {
     EXPLOSION:           { name: 'Explosion',           container: false, construct: MechanicExplosion          },
     FIRE:                { name: 'Fire',                container: false, construct: MechanicFire               },
     FLAG:                { name: 'Flag',                container: false, construct: MechanicFlag               },
+    FLAG_REDUCE:         { name: 'Flag Reduce',         container: true,  construct: MechanicFlagReduce,        premium: true},
     FLAG_CLEAR:          { name: 'Flag Clear',          container: false, construct: MechanicFlagClear          },
     FLAG_TOGGLE:         { name: 'Flag Toggle',         container: false, construct: MechanicFlagToggle         },
     FOOD:                { name: 'Food',                container: false, construct: MechanicFood,              premium: true },
     FORGET_TARGETS:      { name: 'Forget Targets',      container: false, construct: MechanicForgetTargets,     premium: true },
     HEAL:                { name: 'Heal',                container: false, construct: MechanicHeal               },
     HEALTH_SET:          { name: 'Health Set',          container: false, construct: MechanicHealthSet,         premium: true },
+    HEALTH:          { name: 'Health',          container: false, construct: MechanicHealth,         premium: true },
     HELD_ITEM:           { name: 'Held Item',           container: false, construct: MechanicHeldItem,          premium: true },
     IMMUNITY:            { name: 'Immunity',            container: false, construct: MechanicImmunity           },
     INTERRUPT:           { name: 'Interrupt',           container: false, construct: MechanicInterrupt          },
@@ -221,7 +232,12 @@ var Mechanic = {
     BADGE_COOLDOWN_SCALE:{ name: 'Badge Cooldown Scale',container: true,  construct: MechanicBadgeCooldownScale,premium: true }, // 2025/12/25
 
     TRAIL_START:{ name: 'Trail Start',container: true,  construct: MechanicTrailStart,premium: true }, // 2026/01/19
-    TRAIL_END:{ name: 'Trail End',container: true,  construct: MechanicTrailEnd,premium: true } // 2026/01/19
+    TRAIL_END:{ name: 'Trail End',container: true,  construct: MechanicTrailEnd,premium: true }, // 2026/01/19
+    Runic_REDUCE:{ name: 'Runic Reduce',container: true,  construct: MechanicRunicReduce,premium: true},
+    REVIVE:{ name: 'Revive',container: true,  construct: MechanicRevive,premium: true},
+    NEONFLASH_ATTRIBUTE:{ name: 'Neonflash Attribute',container: true,  construct: MechanicNeonflashAttribute,premium: true},  // 2026/4/4
+    GRAVITY_FIELD:{ name: 'Gravity Field',container: true,  construct: MechanicGravityField,premium: true}  // 2026/4/4
+    // MechanicRunicReduce
 };
 
 var saveIndex;
@@ -861,6 +877,9 @@ function TriggerPlayerKillerEntity()
     this.data.push(new StringListValue('Classification', 'classification', [ '' ] )
         .setTooltip('伤害类型')
     );
+    this.data.push(new ListValue("Behind", "behind", ['True', 'False'], 'False')
+        .setTooltip('是否要求击杀者处于目标背部')
+    );
 }
 
 extend('TriggerPlayerHealthRestore', 'Component');
@@ -908,6 +927,83 @@ function TriggerTrailHurt()
     this.data.push(new StringValue('EffectName', 'effectName', '' )
         .setTooltip('匹配触发的特效名称')
     );
+
+}
+
+// TriggerCombatEnter
+extend('TriggerCombatEnter', 'Component');
+function TriggerCombatEnter()
+{
+    this.super('Combat Enter', Type.TRIGGER, true);
+
+    this.description = '参战状态开始';
+
+}
+
+extend('TriggerCombatLeave', 'Component');
+function TriggerCombatLeave()
+{
+    this.super('Combat Leave', Type.TRIGGER, true);
+
+    this.description = '参战状态结束';
+
+}
+
+extend('TriggerMagicPulse', 'Component');
+function TriggerMagicPulse()
+{
+    this.super('Magic Pulse', Type.TRIGGER, true);
+
+    this.description = '玩家使用魔法豆时';
+
+    this.data.push(new IntValue('Min Amount', 'minAmount', 1)
+        .setTooltip('要求的最小数量')
+    );
+
+    this.data.push(new IntValue('Max Amount', 'maxAmount', 999)
+        .setTooltip('要求的最大数量')
+    );
+}
+// TriggerAttributeChange
+extend('TriggerAttributeChange', 'Component');
+function TriggerAttributeChange()
+{
+    this.super('Attribute Change', Type.TRIGGER, true);
+
+    this.description = '属性修改切换触发';
+
+    this.data.push(new StringListValue('Container', 'container', [ '' ] )
+        .setTooltip('匹配触发属性修改的容器，用于排除非不要的属性切换通知')
+    );
+    this.data.push(new StringListValue('Attributes', 'attributes', [ '' ] )
+        .setTooltip('筛选属性名称、类型')
+    );
+}
+
+extend('TriggerKnee', 'Component');
+function TriggerKnee()
+{
+    this.super('Knee', Type.TRIGGER, true);
+
+    this.description = '副本倒地触发器';
+
+}
+// TriggerEndKnee
+extend('TriggerEndKnee', 'Component');
+function TriggerEndKnee()
+{
+    this.super('Knee End', Type.TRIGGER, true);
+
+    this.description = '副本倒地结束触发器';
+
+}
+// TriggerPlayerUseConsume
+extend('TriggerPlayerUseConsume', 'Component');
+function TriggerPlayerUseConsume()
+{
+    this.super('Use Consume', Type.TRIGGER, true);
+
+    this.description = '玩家使用消耗品时触发';
 
 }
 
@@ -1007,6 +1103,41 @@ function TargetLocation()
     );
 }
 
+// TargetRandomLocation
+extend('TargetRandomLocation', 'Component');
+function TargetRandomLocation()
+{
+    this.super('Random Location', Type.TARGET, true);
+
+    this.description = '随机位置目标';
+
+    this.data.push(new AttributeValue('最小范围', 'minRange', 1.0, 0)
+        .setTooltip('最小范围')
+    );
+    this.data.push(new AttributeValue('最大范围', 'maxRange', 5.0, 0)
+        .setTooltip('最大范围')
+    );
+
+    this.data.push(new IntValue('最小数量', 'minAmount', 1)
+        .setTooltip('最小数量')
+    );
+    this.data.push(new IntValue('最大数量', 'maxAmount', 1)
+        .setTooltip('最大数量')
+    );
+
+    this.data.push(new AttributeValue('最小距离', 'minDistance', 0.0, 0)
+        .setTooltip('最小距离')
+    );
+    this.data.push(new AttributeValue('最大距离', 'maxDistance', 5.0, 0)
+        .setTooltip('最大距离')
+    );
+
+    this.data.push(new ListValue('Ground Only', 'ground', [ 'True', 'False' ], 'True')
+        .setTooltip('Whether or not a player is only allowed to target the ground or other units')
+    );
+}
+
+
 extend('TargetNearest', 'Component');
 function TargetNearest()
 {
@@ -1075,6 +1206,14 @@ function TargetSummonOwner()
     this.super('Summon Owner', Type.TARGET, true);
 
     this.description = '获取施法者的主人，如果有的话';
+}
+// TargetTeamPlayer
+extend('TargetTeamPlayer', 'Component');
+function TargetTeamPlayer()
+{
+    this.super('Team Player', Type.TARGET, true);
+
+    this.description = '获取玩家的队友，包含自己';
 }
 
 extend('TargetSingle', 'Component');
@@ -2206,6 +2345,22 @@ function MechanicFlag()
     );
 }
 
+
+extend('MechanicFlagReduce', 'Component');
+function MechanicFlagReduce()
+{
+    this.super('Flag Reduce', Type.MECHANIC, false);
+
+    this.description = '设置特定flag的冷却缩减比例.';
+
+    this.data.push(new StringListValue('Key', 'key', [ 'Default' ])
+        .setTooltip('要进行缩减的 flag 名称')
+    );
+    this.data.push(new AttributeValue('Scale', 'scale', 0.5, 0.0)
+        .setTooltip('缩减比例 <0.0-1.0> 其中 0.5=50%')
+    );
+}
+
 extend('MechanicFlagClear', 'Component');
 function MechanicFlagClear()
 {
@@ -2281,6 +2436,30 @@ function MechanicHealthSet()
 
     this.data.push(new AttributeValue("Health", "health", 1, 0)
         .setTooltip('The health to set to')
+    );
+}
+
+// MechanicHealth
+extend('MechanicHealth', 'Component');
+function MechanicHealth()
+{
+    this.super('Health', Type.MECHANIC, false);
+
+    this.description = '根据参数修改生命值';
+
+    // 基准值输入（固定值、百分比基准、乘/除系数）
+    this.data.push(new AttributeValue("Health", "health", 1, 0)
+        .setTooltip('基准值。在 flat 模式下为固定生命值；在 percent 模式下为最大生命百分比；在 multiply/divide 模式下为乘/除系数')
+    );
+
+    // 操作动作下拉
+    this.data.push(new ListValue("动作", "action", [ "set", "add", "remove" ], "set")
+        .setTooltip('生命值操作类型。set：设置为指定值；add：增加指定值；remove：扣除指定值')
+    );
+
+    // 数值计算模式下拉
+    this.data.push(new ListValue("计算模式", "mode", [ "flat", "percent", "multiply", "divide" ], "flat")
+        .setTooltip('数值解析模式。flat：固定值；percent：最大生命值百分比；multiply：当前生命值乘以系数；divide：当前生命值除以系数')
     );
 }
 
@@ -3279,7 +3458,17 @@ function MechanicWarpTarget()
     this.super('Warp Target', Type.MECHANIC, false);
     
     this.description = 'Warps either the target or the caster to the other. This does nothing when the target is the caster.';
-    
+
+    this.data.push(new AttributeValue('Forward', 'forward', 0, 0)
+        .setTooltip('The offset from the target in the direction they are facing. Negative numbers go backwards.')
+    );
+    this.data.push(new AttributeValue('Upward', 'upward', 2, 0.5)
+        .setTooltip('The offset from the target upwards. Negative numbers go below them.')
+    );
+    this.data.push(new AttributeValue('Right', 'right', 0, 0)
+        .setTooltip('The offset from the target to their right. Negative numbers go to the left.')
+    );
+
     this.data.push(new ListValue('Type', 'type', [ 'Caster to Target', 'Target to Caster' ], 'Caster to Target')
         .setTooltip('The direction to warp the involved targets')
     );
@@ -3355,6 +3544,10 @@ function MechanicArmorStand() {
     );
     this.data.push(new ListValue('标记', 'marker', ['True', 'False'], 'True')
         .setTooltip('会移除盔甲架碰撞')
+    );
+    // randomDir
+    this.data.push(new ListValue('随机朝向', 'randomDir', ['True', 'False'], 'False')
+        .setTooltip('随机朝向')
     );
     this.data.push(new AttributeValue('前偏移', 'forward', 0, 0)
     );
@@ -3613,6 +3806,112 @@ function MechanicTrailEnd() {
     this.data.push(new StringValue('EffectName', 'effectName', "default")
         .setTooltip('萌芽特效名称')
     );
+}
+
+extend('MechanicRunicReduce', 'Component');
+function MechanicRunicReduce()
+{
+    this.super('Runic Reduce', Type.MECHANIC, false);
+
+    this.description = '设置特定runic的冷却缩减比例.';
+
+    this.data.push(new StringListValue('Key', 'key', [ 'Default' ])
+        .setTooltip('要进行缩减的 runic 名称')
+    );
+    this.data.push(new AttributeValue('Scale', 'scale', 0.5, 0.0)
+        .setTooltip('缩减比例 <0.0-1.0> 其中 0.5=50%')
+    );
+}
+// MechanicRevive
+extend('MechanicRevive', 'Component');
+function MechanicRevive()
+{
+    this.super('Revive', Type.MECHANIC, false);
+
+    this.description = '复活目标玩家，前提是目标处于倒地状态.';
+
+}
+// MechanicNeonflashAttribute
+extend('MechanicNeonflashAttribute', 'Component');
+function MechanicNeonflashAttribute()
+{
+    this.super('Neonflash Attribute', Type.MECHANIC, false);
+
+    this.description = '设置 NF 属性容器，支持调用SK的value容器值作为填充';
+
+    this.data.push(new StringValue('属性名称', 'key', "暴击概率")
+        .setTooltip('被修改的属性名称')
+    );
+
+    this.data.push(new ListValue('是否调用SK容器值', 'useValue', ['True', 'False'], 'True')
+        .setTooltip('调用SK的value容器值作为填充')
+    );
+
+    this.data.push(new StringValue('SK容器value', 'skKey', 'key name')
+        .requireValue('useValue', [ 'True' ])
+        .setTooltip('填写位于SK容器中的value key 用于获取值')
+    );
+
+    this.data.push(new DoubleValue('数量', 'amount', 0.0)
+        .requireValue('useValue', [ 'False' ])
+        .setTooltip('填写位于SK容器中的value key 用于获取值')
+    );
+
+    this.data.push(new AttributeValue('时长', 'seconds', -1.0, 0)
+        .requireValue('subtract', [ 'False' ])
+        .setTooltip('缩减比例')
+    );
+
+    this.data.push(new ListValue('是否减法容器', 'subtract', ['True', 'False'], 'False')
+        .setTooltip('这将导致对全局属性进行减法输出')
+    );
+
+    this.data.push(new StringListValue('属性容器名称', 'container', [ 'geekteamplus:runic', 'neonarena:runic'])
+        .requireValue('subtract', [ 'False' ])
+        .setTooltip('目标容器名称')
+    );
+
+    this.data.push(new ListValue('是否作为倍率属性', 'scale', ['True', 'False'], 'False')
+        .requireValue('subtract', [ 'False' ])
+        .setTooltip('该值会覆盖全局属性设置选项，修改该属性在本次容器是否承担倍率变更')
+    );
+
+    this.data.push(new ListValue('是否覆盖', 'stackable', ['True', 'False'], 'True')
+        .requireValue('subtract', [ 'False' ])
+        .setTooltip('没次变更覆盖上一次设置')
+    );
+
+}
+
+// MechanicGravityField
+extend('MechanicGravityField', 'Component');
+function MechanicGravityField()
+{
+    this.super('Gravity Field', Type.MECHANIC, false);
+
+    this.description = '引力场';
+
+    this.data.push(new AttributeValue('范围', 'radius', 5, 0)
+        .setTooltip('范围')
+    );
+
+    this.data.push(new AttributeValue('拉力', 'pullStrength', 0.15, 0)
+        .setTooltip('拉力')
+    );
+
+    this.data.push(new AttributeValue('时长', 'duration', 5, 0)
+        .setTooltip('整体存活时间')
+    );
+
+    this.data.push(new ListValue('模式', 'decayMode', [ 'CONSTANT', 'LINEAR_INVERSE', 'LINEAR_PROPORTIONAL'], 'CONSTANT')
+        .setTooltip('模式')
+    );
+
+    this.data.push(new ListValue('目标种类', 'targetType', [ 'all', 'ot', 'ally'], 'all')
+        .setTooltip('目标筛选')
+    );
+
+
 }
 
 // The active component being edited or added to

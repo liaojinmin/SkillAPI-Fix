@@ -35,7 +35,7 @@ import java.util.HashMap;
  */
 public class FlagManager
 {
-    private static final HashMap<Integer, FlagData> data = new HashMap<Integer, FlagData>();
+    private static final HashMap<Integer, FlagData> data = new HashMap<>();
 
     /**
      * Retrieves the flag data for an entity. This creates new data if
@@ -68,6 +68,13 @@ public class FlagManager
             data.put(entity.getEntityId(), new FlagData(entity));
         }
         return data.get(entity.getEntityId());
+    }
+
+    public static void addFlagReduce(LivingEntity entity, String flag, double scale) {
+        FlagData data = getFlagData(entity, true);
+        if (data != null) {
+            data.addReduce(flag, scale);
+        }
     }
 
     /**
@@ -124,21 +131,38 @@ public class FlagManager
         return data.containsKey(entity.getEntityId()) ? getFlagData(entity).getSecondsLeft(flag) : 0;
     }
 
+    public static void removeFlags(LivingEntity entity) {
+        if (entity == null) {
+            return;
+        }
+        FlagData result = data.remove(entity.getEntityId());
+        if (result != null) {
+            result.clear();
+        }
+    }
+
     /**
      * Clears the flags for an entity
      *
      * @param entity entity to clear the flags for
      */
-    public static void clearFlags(LivingEntity entity)
-    {
-        if (entity == null)
-        {
+    public static void clearFlags(LivingEntity entity) {
+        if (entity == null) {
             return;
         }
-        FlagData result = data.remove(entity.getEntityId());
-        if (result != null)
-        {
+        FlagData result = data.get(entity.getEntityId());
+        if (result != null) {
             result.clear();
+        }
+    }
+
+    public static void clearFlagReduces(LivingEntity entity) {
+        if (entity == null) {
+            return;
+        }
+        FlagData result = data.get(entity.getEntityId());
+        if (result != null) {
+            result.clearReduce();
         }
     }
 }

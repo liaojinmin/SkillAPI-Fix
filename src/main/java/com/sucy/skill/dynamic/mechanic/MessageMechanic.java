@@ -57,23 +57,31 @@ public class MessageMechanic extends MechanicComponent
     @Override
     public boolean execute(LivingEntity caster, SkillContext context, int level, List<LivingEntity> targets)
     {
-        if (targets.size() == 0 || !settings.has(MESSAGE))
+
+        if (targets.isEmpty() || !settings.has(MESSAGE)) {
+            System.out.println("message 目标 isEmpty()");
             return false;
+        }
 
         String message = TextFormatter.colorString(settings.getString(MESSAGE));
-        if (message == null) return false;
+        if (message == null || message.isEmpty()) return false;
 
-        // Display message
-        boolean worked = false;
-        for (LivingEntity target : targets)
-        {
-            if (target instanceof Player)
-            {
-                Player player = (Player) target;
-                player.sendMessage(filter(caster, target, message));
-                worked = true;
+        if (settings.getBool("useCaster", false)) {
+            if (caster instanceof Player) {
+                caster.sendMessage(filter(caster, targets.get(0), message));
             }
+            return true;
+        } else {
+            // Display message
+            boolean worked = false;
+            for (LivingEntity target : targets) {
+                if (target instanceof Player) {
+                    Player player = (Player) target;
+                    player.sendMessage(filter(caster, target, message));
+                    worked = true;
+                }
+            }
+            return worked;
         }
-        return worked;
     }
 }

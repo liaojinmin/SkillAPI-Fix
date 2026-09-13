@@ -10,7 +10,8 @@ import com.sucy.skill.api.player.PlayerData;
 import com.sucy.skill.log.LogType;
 import com.sucy.skill.log.Logger;
 import com.sucy.skill.manager.AttributeManager;
-import me.neon.flash.attribute.AttributePlayer;
+import me.neon.flash.api.event.PlayerAttributeLoaderBeforeEvent;
+import me.neon.libs.util.ResourceLocation;
 import org.bukkit.Bukkit;
 import org.bukkit.attribute.Attribute;
 import org.bukkit.attribute.AttributeInstance;
@@ -22,6 +23,7 @@ import org.bukkit.event.entity.EntityRegainHealthEvent;
 import org.bukkit.event.entity.FoodLevelChangeEvent;
 import org.bukkit.event.inventory.InventoryCloseEvent;
 import org.bukkit.event.player.*;
+import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.HashMap;
@@ -33,6 +35,7 @@ public class AttributeListener extends SkillAPIListener {
 
     public static final String PHYSICAL = "physical";
     private static final HashMap<String, Double> BONUSES = new HashMap<>();
+    public static final ResourceLocation SKILL_LOCATION = new ResourceLocation("skillapi", "attribute");
 
     @Override
     public void init() {
@@ -94,6 +97,14 @@ public class AttributeListener extends SkillAPIListener {
         updatePlayer(SkillAPI.getPlayerData(player));
     }
 
+    @EventHandler(priority = EventPriority.HIGH)
+    public void onLoad(PlayerAttributeLoaderBeforeEvent event) {
+        PlayerData data = SkillAPI.getPlayerData(event.getAttributePlayer().getPlayer().getUniqueId());
+        if (data != null) {
+            data.updateHealthAndMana(event.getAttributePlayer().getPlayer());
+        }
+    }
+
     /**
      * Updates attributes on respawn
      *
@@ -129,27 +140,15 @@ public class AttributeListener extends SkillAPIListener {
         updatePlayer(event.getPlayerData());
     }
 
-    /*
-    @EventHandler
-    public void onClose(InventoryCloseEvent event) {
-        updatePlayer(SkillAPI.getPlayerData(event.getPlayer().getUniqueId()));
-    }
-
-     */
-
     /**
      * Apply attributes to mana regen
      *
      * @param event event details
      */
     @EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
-    public void onManaRegen(PlayerManaGainEvent event)
-    {
-        // Bonus to regen from attributes
-        if (event.getSource() == ManaSource.REGEN)
-        {
+    public void onManaRegen(PlayerManaGainEvent event) {
+        if (event.getSource() == ManaSource.REGEN) {
             double newAmount = event.getPlayerData().scaleStat(AttributeManager.MANA_REGEN, event.getAmount());
-            Logger.log(LogType.MANA, 3, "Attributes scaled mana gain to " + newAmount);
             event.setAmount(newAmount);
         }
     }
@@ -255,19 +254,6 @@ public class AttributeListener extends SkillAPIListener {
         }
     }
 
-    @EventHandler(ignoreCancelled = true, priority = EventPriority.HIGHEST)
-    public void onHungerChange(final FoodLevelChangeEvent event) {
-        final Player player = (Player)event.getEntity();
-        if (event.getFoodLevel() < player.getFoodLevel()) {
-            final PlayerData data = SkillAPI.getPlayerData(player);
-            if (data == null) {
-                return;
-            }
-            final int lost = data.subtractHungerValue(player.getFoodLevel() - event.getFoodLevel());
-            event.setFoodLevel(player.getFoodLevel() - lost);
-        }
-    }
-
     @EventHandler(ignoreCancelled = true, priority = EventPriority.HIGH)
     public void onHungerHeal(final EntityRegainHealthEvent event) {
         if (event.getRegainReason() == EntityRegainHealthEvent.RegainReason.SATIATED
@@ -293,7 +279,6 @@ public class AttributeListener extends SkillAPIListener {
         } else  {
             Bukkit.getScheduler().runTask(SkillAPI.singleton(), () -> updatePlayer2(data));
         }
-
     }
 
     private static void updatePlayer2(@Nullable PlayerData data) {
@@ -304,20 +289,10 @@ public class AttributeListener extends SkillAPIListener {
         if (player != null && SkillAPI.getSettings().isWorldEnabled(player.getWorld())) {
 
             double change = updateStat(data, AttributeManager.HEALTH, player.getMaxHealth(), 0, Double.MAX_VALUE);
-
             data.addMaxHealth(change);
 
-            change = updateStat(data, AttributeManager.MANA, data.getMaxMana(),
-                    -data.getMaxMana(), Double.MAX_VALUE
-            );
-            //System.out.println("maxMana: " + data.getMaxMana() + " change: " + change);
-            data.addMaxMana(change);
-
             change = updateStat(data, AttributeManager.MOVE_SPEED, 0.2f, -2, 2);
-            // player.setWalkSpeed(player.getWalkSpeed() + (float) change);
             player.setWalkSpeed(Math.max(0.0f, 0.2f + (float) change));
-        //    System.out.println("change change "+change + " now: "+player.getWalkSpeed());
-           // player.setWalkSpeed((float) change);
 
             if (VersionManager.isVersionAtLeast(VersionManager.V1_9_0)) {
                 update(data, player, Attribute.GENERIC_ATTACK_SPEED, AttributeManager.ATTACK_SPEED, 0, 1024);
@@ -328,16 +303,6 @@ public class AttributeListener extends SkillAPIListener {
             if (VersionManager.isVersionAtLeast(110200)) {
                 update(data, player, Attribute.GENERIC_ARMOR_TOUGHNESS, AttributeManager.ARMOR_TOUGHNESS, 0, 20);
             }
-
-            /* // 无效
-            // 2025/8/28 更新nf
-            AttributePlayer attributePlayer = me.neon.flash.attribute.AttributeManager
-                    .INSTANCE.getAttributePlayer().get(player.getUniqueId());
-            if (attributePlayer != null) {
-                attributePlayer.update();
-            }
-
-             */
         }
     }
 
@@ -387,22 +352,9 @@ public class AttributeListener extends SkillAPIListener {
             String mapKey = player.getName() + ":" + key;
             double current;
             if (key.equalsIgnoreCase(AttributeManager.MOVE_SPEED)) {
-               // System.out.println("  value: "+ value +" min: " + min + " max: "+max);
                 current = 0;
             } else current = BONUSES.containsKey(mapKey) ? BONUSES.remove(mapKey) : 0;
-
-         //   double a = data.scaleStat(key, value - current);
-          //  if (key.equalsIgnoreCase(AttributeManager.MOVE_SPEED)) {
-          //      System.out.println("  a "+ a);
-        //    }
-      //      double b = Math.min(max, a - value + current);
-         //   if (key.equalsIgnoreCase(AttributeManager.MOVE_SPEED)) {
-            //    System.out.println("  b "+ b);
-         //   }
             double updated = Math.max(min, Math.min(max, data.scaleStat(key, value - current) - value + current));
-          //  if (key.equalsIgnoreCase(AttributeManager.MOVE_SPEED)) {
-                //System.out.println("  updated "+ updated);
-         //   }
             BONUSES.put(mapKey, updated);
             return updated - current;
         }

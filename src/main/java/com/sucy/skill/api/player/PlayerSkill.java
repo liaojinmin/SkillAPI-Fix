@@ -312,8 +312,7 @@ public final class PlayerSkill
      * Reverts the skill back to level 0, locking it from
      * casting and refunding invested skill points
      */
-    public void revert()
-    {
+    public void revert() {
         parent.givePoints(points);
         points = 0;
         level = 0;
@@ -322,18 +321,19 @@ public final class PlayerSkill
     /**
      * Starts the cooldown of the skill
      */
-    public void startCooldown()
-    {
-        long cd = (long)player.scaleStat(AttributeManager.COOLDOWN, skill.getCooldown(level) * 1000L, reduceAttribute);
-        cooldown = System.currentTimeMillis() + cd;
+    public void startCooldown() {
+        double cd = skill.getCooldown(level) * 1000L;
+        if (reduceAttribute != 0)
+            cd *= reduceAttribute;
+        long cd2 = (long) player.scaleStat(AttributeManager.COOLDOWN, cd);
+        cooldown = System.currentTimeMillis() + cd2;
     }
 
     /**
      * Refreshes the cooldown of the skill, allowing the
      * player to cast the skill again.
      */
-    public void refreshCooldown()
-    {
+    public void refreshCooldown() {
         cooldown = 0;
     }
 

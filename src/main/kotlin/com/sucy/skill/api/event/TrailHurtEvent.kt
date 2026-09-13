@@ -1,6 +1,5 @@
 package com.sucy.skill.api.event
 
-import com.sucy.skill.api.event.SkillLinkEvent.Companion
 import com.sucy.skill.trail.TrailEntity
 import com.sucy.skill.trail.TrailSegment
 import org.bukkit.entity.LivingEntity

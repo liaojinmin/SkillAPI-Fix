@@ -51,7 +51,7 @@ public class RemoveTask extends BukkitRunnable {
                 }
 
                 DynamicSkill.clearCastData((LivingEntity) entity);
-                FlagManager.clearFlags((LivingEntity) entity);
+                FlagManager.removeFlags((LivingEntity) entity);
                 BuffManager.clearData((LivingEntity) entity);
             }
 

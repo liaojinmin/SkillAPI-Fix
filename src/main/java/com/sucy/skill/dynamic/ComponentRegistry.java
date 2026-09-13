@@ -141,6 +141,8 @@ public class ComponentRegistry {
         register(new BlockPlaceTrigger());
         register(new CrouchTrigger());
         register(new DeathTrigger());
+        register(new KneeTrigger());
+        register(new KneeEndTrigger());
         register(new EnvironmentalTrigger());
         register(new KillTrigger());
         register(new LandTrigger());
@@ -149,6 +151,7 @@ public class ComponentRegistry {
         register(new PhysicalDealtTrigger());
         register(new PhysicalTakenTrigger());
         register(new SkillDealtTrigger());
+        register(new SkillDealtAgentTrigger());
         register(new SkillTakenTrigger());
         register(new MythicSummonDeathTrigger());
         register(new PlayerTeamStartTrigger());
@@ -159,11 +162,18 @@ public class ComponentRegistry {
         register(new SkillLinkTrigger());
         register(new TrailHurtTrigger());
 
+        register(new CombatEnterTrigger());
+        register(new CombatLeaveTrigger());
+        register(new MagicPulseTrigger());
+        register(new AttributeChangeTrigger());
+        register(new PlayerUseConsumeTrigger());
+
         // Targets
         register(new AreaTarget());
         register(new ConeTarget());
         register(new LinearTarget());
         register(new LocationTarget());
+        register(new RandomLocationTarget());
         register(new NearestTarget());
         register(new OffsetTarget());
         register(new RememberTarget());
@@ -171,6 +181,7 @@ public class ComponentRegistry {
         register(new SingleTarget());
         register(new ContextArmorStandTarget());
         register(new SummonOwnerTarget());
+        register(new TeamPlayerTarget());
 
 
         // Conditions
@@ -244,12 +255,14 @@ public class ComponentRegistry {
         register(new ExplosionMechanic());
         register(new FireMechanic());
         register(new FlagMechanic());
+        register(new FlagReduceMechanic());
         register(new FlagClearMechanic());
         register(new FlagToggleMechanic());
         register(new FoodMechanic());
         register(new ForgetTargetsMechanic());
         register(new HealMechanic());
         register(new HealthSetMechanic());
+        register(new HealthMechanic());
         register(new ImmunityMechanic());
         register(new InterruptMechanic());
         register(new ItemMechanic());
@@ -303,6 +316,7 @@ public class ComponentRegistry {
         register(new WolfMechanic());
         register(new MythicCastMechanic());
         register(new MythicCastTargetMechanic());
+        register(new RunicReduceMechanic());
 
         // armorStand
         register(new ArmorStandMechanic());
@@ -334,5 +348,11 @@ public class ComponentRegistry {
 
         register(new TrailStartMechanic());
         register(new TrailEndMechanic());
+
+        register(new ReviveMechanic());
+        register(new GravityFieldMechanic());
+
+        // nf
+        register(new NeonFlashAttributeMechanic());
     }
 }

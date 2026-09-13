@@ -37,6 +37,7 @@ import com.sucy.skill.api.util.ParticleHelper;
 import com.sucy.skill.dynamic.ArmorStandCarrier;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
+import org.bukkit.World;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.event.Event;
 import org.bukkit.util.Vector;
@@ -145,6 +146,15 @@ public class ParticleProjectile extends CustomProjectile {
     }
 
     protected void applySteps() {
+        // 尝试修复因为世界卸载，tick也就运行导致的问题。2026/8/15
+        World world = loc.getWorld();
+        if (world == null || Bukkit.getWorld(world.getUID()) == null) {
+            System.out.println("世界不存在，中断，任务ID: "+getTaskId());
+            cancel();
+            Bukkit.getPluginManager().callEvent(expire());
+            return;
+        }
+
         // Go through multiple steps to avoid tunneling
         for (int i = 0; i < steps; i++) {
             loc.add(vel);

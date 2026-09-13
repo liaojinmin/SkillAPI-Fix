@@ -10,6 +10,7 @@ import io.lumine.xikage.mythicmobs.skills.SkillMechanic;
 import io.lumine.xikage.mythicmobs.skills.SkillMetadata;
 import io.lumine.xikage.mythicmobs.skills.placeholders.parsers.PlaceholderInt;
 import io.lumine.xikage.mythicmobs.skills.placeholders.parsers.PlaceholderString;
+import org.bukkit.Bukkit;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.LivingEntity;
 
@@ -46,20 +47,32 @@ public class MythicSkillMechanic extends SkillMechanic implements ITargetedEntit
        // System.out.println("  cast: "+cast.getName());
        // System.out.println("  target: "+target.getName());
 
+
         Skill skill = SkillAPI.getSkill(name.get(data, cast));
         if (skill == null) {
             return false;
         }
         int level = this.level.get(data, cast);
 
-        if (saveTarget) {
-            SkillCastAPI.cast(
-                    (LivingEntity) cast.getBukkitEntity(),
-                    skill, level,
-                    (LivingEntity) target.getBukkitEntity()
-            );
+        if (Bukkit.isPrimaryThread()) {
+            if (saveTarget) {
+                SkillCastAPI.cast(
+                        (LivingEntity) cast.getBukkitEntity(),
+                        skill, level,
+                        (LivingEntity) target.getBukkitEntity()
+                );
+            } else {
+                SkillCastAPI.cast((LivingEntity) cast.getBukkitEntity(), skill, level);
+            }
         } else {
-            SkillCastAPI.cast((LivingEntity) cast.getBukkitEntity(), skill, level);
+            final LivingEntity castEntity = (LivingEntity) cast.getBukkitEntity();
+            Bukkit.getScheduler().runTask(SkillAPI.singleton(), () -> {
+                if (saveTarget) {
+                    SkillCastAPI.cast(castEntity, skill, level, (LivingEntity) target.getBukkitEntity());
+                } else {
+                    SkillCastAPI.cast(castEntity, skill, level);
+                }
+            });
         }
         return false;
     }

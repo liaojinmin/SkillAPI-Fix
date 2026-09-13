@@ -6,6 +6,7 @@ import com.sucy.skill.utils.referTo
 import me.neon.libs.taboolib.nms.ai.SimpleAi
 import me.neon.libs.taboolib.nms.ai.controllerLookAt
 import me.neon.libs.taboolib.nms.ai.navigationMove
+import me.neon.libs.taboolib.nms.ai.navigationReach
 import org.bukkit.Bukkit
 import org.bukkit.Location
 import org.bukkit.Material
@@ -26,7 +27,10 @@ class WalkAi(
     val summon: Summon
 ): SimpleAi() {
 
-    private val distance: Double = 10.0 * 10.0
+    private val distance: Double = 14.0 * 14.0
+
+    private val ownerRange = 26.0 * 26.0
+    private val ownerMaxRange = 32.0 * 32.0
 
     private val entity: LivingEntity = summon.activeMob.entity.bukkitEntity as LivingEntity
 
@@ -39,11 +43,9 @@ class WalkAi(
     /**
      * 检查，true执行startTask
      * Activation Range 生物在物观察者，超过激活范围，AI tick会被停止。
-     *
      */
     override fun shouldExecute(): Boolean {
       //  println("WalkAI shouldExecute")
-        summon.disableTickTeleport = true
         if (!owner.isValid) return false
         if (owner.world.name != entity.world.name) return true
         return entity.location.distanceSquared(owner.location) > distance
@@ -52,24 +54,21 @@ class WalkAi(
     /**
      * 执行任务
      */
-    override fun updateTask() {
+    override fun startTask() {
+        if (owner.world.name != entity.world.name) return
       //  println("WalkAI updateTask")
         val loc = owner.location.clone()
         summon.targetEntity = null
 
         // 脱离卡死
         if (isStuck112()) {
-            entity.teleport(
-                loc.add(0.0, 1.0, 0.0),
-                PlayerTeleportEvent.TeleportCause.PLUGIN
-            )
+            entity.teleport(loc.add(0.0, 1.0, 0.0), PlayerTeleportEvent.TeleportCause.PLUGIN)
             stuckTicks = 0
             return
         }
-
-        if (summon.isWorldChange
-            || loc.world.name != entity.world.name
-            || entity.location.distanceSquared(loc) > AttackAi2.ownerRange) {
+        val ds = entity.location.distanceSquared(loc)
+        if (loc.world.name != entity.world.name || (ds > ownerRange && ds < ownerMaxRange)) {
+            //entity.navigationReach()
             entity.teleport(loc.add(0.0, 1.0, 0.0), PlayerTeleportEvent.TeleportCause.PLUGIN)
         } else {
             entity.controllerLookAt(loc)
@@ -82,9 +81,9 @@ class WalkAi(
      * false，终止并执行resetTask
      * true执行updateTask
      */
-   //override fun continueExecute(): Boolean {
-      //  return false
-  //  }
+    override fun continueExecute(): Boolean {
+        return false
+    }
 
     private fun isStuck112(): Boolean {
         val current = entity.location

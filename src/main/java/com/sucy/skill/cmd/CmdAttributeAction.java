@@ -32,28 +32,34 @@ public class CmdAttributeAction implements IFunction {
             class attAction give <player> 勇斗:100
             class attAction clear <player>
          */
-        if (args.length >= 2) {
+        if (args.length == 2) {
             Player player = Bukkit.getPlayer(args[1]);
             if (player != null) {
-                Pair<String, Integer> pair = AttributeParseUtils.getAttribute(args[2]);
-                if (pair != null) {
-                    if (args[0].equalsIgnoreCase("give")) {
-                        AttributeAPI.setAttribute(player, ATTRIBUTE_NAME, pair.key, pair.value);
-                    } else if (args[0].equalsIgnoreCase("add")) {
-                        AttributeAPI.addAttribute(player, ATTRIBUTE_NAME, pair.key, pair.value);
-                    } else {
-                        AttributeAPI.clearSource(player, ATTRIBUTE_NAME);
-                    }
-                } else {
-                    sender.sendMessage("属性不存在 -> " + args[2]);
+                if (args[0].equalsIgnoreCase("clear")) {
+                    AttributeAPI.clearSource(player, ATTRIBUTE_NAME);
                 }
             } else {
                 sender.sendMessage("玩家不存在 -> " + args[1]);
             }
+        } else {
+            if (args.length == 3) {
+                Player player = Bukkit.getPlayer(args[1]);
+                if (player != null) {
+                    Pair<String, Integer> pair = AttributeParseUtils.getAttribute(args[2]);
+                    if (pair != null) {
+                        if (args[0].equalsIgnoreCase("give")) {
+                            AttributeAPI.setAttribute(player, ATTRIBUTE_NAME, pair.key, pair.value);
+                        } else if (args[0].equalsIgnoreCase("add")) {
+                            AttributeAPI.addAttribute(player, ATTRIBUTE_NAME, pair.key, pair.value);
+                        }
+                    } else {
+                        sender.sendMessage("属性不存在 -> " + args[2]);
+                    }
+                } else {
+                    sender.sendMessage("玩家不存在 -> " + args[1]);
+                }
+            } else CommandManager.displayUsage(command, sender, 1);
         }
 
-        // Invalid arguments
-        else
-            CommandManager.displayUsage(command, sender, 1);
     }
 }

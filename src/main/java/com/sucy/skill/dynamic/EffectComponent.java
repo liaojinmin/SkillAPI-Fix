@@ -137,6 +137,7 @@ public abstract class EffectComponent {
      */
     protected double parseValues(LivingEntity caster, String key, int level, double fallback) {
         double base = getNum(caster, key + "-base", fallback);
+        if (base < 0) return base;
         double scale = getNum(caster, key + "-scale", 0);
         double value = base + (level - 1) * scale;
 
@@ -210,9 +211,14 @@ public abstract class EffectComponent {
 
         boolean worked = false;
         for (EffectComponent child : children) {
-            boolean counts = !child.settings.getString(COUNTS_KEY, "true").equalsIgnoreCase("false");
-            passed = child.execute(caster, context, level, targets);
-            worked = (passed && counts) || worked;
+            try {
+                boolean counts = !child.settings.getString(COUNTS_KEY, "true").equalsIgnoreCase("false");
+                passed = child.execute(caster, context, level, targets);
+                worked = (passed && counts) || worked;
+            } catch (Exception e) {
+                Logger.invalid("执行子组件发生异常 "+e.getMessage());
+                e.printStackTrace();
+            }
         }
         return worked;
     }
@@ -362,7 +368,7 @@ public abstract class EffectComponent {
                     }
                 } catch (Exception ex) {
                     // Failed to create the component, just don't add it
-                    Logger.bug("Failed to create " + type + " component: " + key);
+                    Logger.bug("Failed to create " + type + " component: " + key + " by "+skill.getName());
                 }
             }
         }

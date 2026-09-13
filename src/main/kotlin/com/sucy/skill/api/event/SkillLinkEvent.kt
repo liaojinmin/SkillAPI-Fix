@@ -18,7 +18,8 @@ import org.bukkit.event.player.PlayerEvent
 class SkillLinkEvent(
     player: Player,
     val target: LivingEntity,
-    val link: DynamicSkillHandler.Link
+    val link: DynamicSkillHandler.Link,
+    val intervalMillis: Long  // 距上次同一 key 触发的毫秒数，首次为 -1
 ): PlayerEvent(player) {
 
     var isTrigger: Boolean = false

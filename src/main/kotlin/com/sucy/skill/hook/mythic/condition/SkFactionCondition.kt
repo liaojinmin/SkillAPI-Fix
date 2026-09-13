@@ -46,14 +46,17 @@ class SkFactionCondition(
     }
 
     override fun check(target: AbstractEntity): Boolean {
-        val faction = f ?: return false
-        val factions = faction[target].split("|")
+        val f2 = f ?: return false
+        val faction = f2[target]
         if (target.isPlayer) {
             val maybeFaction = getPlugin().playerManager.factionProvider.getFaction(target.asPlayer())
-            return !maybeFaction.isPresent || !factions.contains(maybeFaction.get())
+           // println(" 条件: ${!maybeFaction.isPresent || !faction.contains(maybeFaction.get())}")
+            return !maybeFaction.isPresent || !faction.contains(maybeFaction.get())
         } else {
+            //println(" 准备非玩家")
             val am = MythicManager.api.getMythicMobInstance(target) ?: return true
-            return !am.hasFaction() || !factions.contains(am.faction)
+           // println(" 条件: ${!am.hasFaction() || !faction.contains(am.faction)} 目标派系: ${am.faction}")
+            return !am.hasFaction() || !faction.contains(am.faction)
         }
     }
 

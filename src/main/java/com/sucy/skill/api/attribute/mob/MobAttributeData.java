@@ -4,9 +4,11 @@ import com.sucy.skill.SkillAPI;
 import com.sucy.skill.api.attribute.AttributeAPI;
 import com.sucy.skill.api.event.AttributeEntityAddEvent;
 import com.sucy.skill.api.player.PlayerData;
+import com.sucy.skill.hook.mythic.MythicManager;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.LivingEntity;
+import org.jetbrains.annotations.Nullable;
 
 import java.util.HashMap;
 import java.util.UUID;
@@ -14,7 +16,7 @@ import java.util.concurrent.ConcurrentHashMap;
 
 public class MobAttributeData {
 
-    public final PlayerData owner;
+    private PlayerData owner = null;
 
     private final Entity entity;
 
@@ -22,16 +24,21 @@ public class MobAttributeData {
 
     public final ConcurrentHashMap<String,  Double> timerMap = new ConcurrentHashMap<>();
 
-    public final HashMap<String, HashMap<String, Double>> temp = new HashMap<>();
+    public final ConcurrentHashMap<String, HashMap<String, Double>> temp = new ConcurrentHashMap<>();
 
     public MobAttributeData(LivingEntity entity) {
-        owner = null;
         this.entity = entity;
     }
 
-    public MobAttributeData(PlayerData owner, Entity entity) {
-        this.owner = owner;
-        this.entity = entity;
+    @Nullable
+    public PlayerData getOwner() {
+        if (owner == null) {
+            LivingEntity ow = MythicManager.INSTANCE.getSummonAscription().get(entity.getUniqueId());
+            if (ow != null) {
+                owner = SkillAPI.getPlayerData(ow.getUniqueId());
+            }
+        }
+        return owner;
     }
 
     public LivingEntity getEntity() {
@@ -86,6 +93,7 @@ public class MobAttributeData {
      * @return 返回的存储的数值
      */
     public double getAttribute(String attribute) {
+        if (attribute == null) return 0.0;
         double temps = 0.0;
         for (HashMap<String, Double> value : temp.values()) {
             temps += value.getOrDefault(attribute, 0.0);
@@ -93,9 +101,10 @@ public class MobAttributeData {
         temps += timerMap.getOrDefault(attribute, 0.0);
         temps += map.getOrDefault(attribute, 0.0);
         // owner = 召唤它的玩家，可直接取得该玩家的属性容器
-        if (owner != null) {
+        PlayerData ow = getOwner();
+        if (ow != null) {
            // System.out.println("owner != null old: "+temps + " attribute: "+attribute);
-            temps += owner.getGlobalAttribute(attribute, null);
+            temps += ow.getGlobalAttribute(attribute, null);
            // System.out.println("  addValue: "+temps);
         }
         return temps;

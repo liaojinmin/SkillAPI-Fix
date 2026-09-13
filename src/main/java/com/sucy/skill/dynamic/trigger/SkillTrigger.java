@@ -12,21 +12,27 @@ import java.util.List;
  * SkillAPI © 2018
  * com.sucy.trigger.dynamic.skill.BlockBreakTrigger
  */
-public abstract class SkillTrigger implements Trigger<SkillDamageEvent> {
+public abstract class SkillTrigger<T extends SkillDamageEvent> implements Trigger<T> {
 
     private static final String PLAYER = "PLAYER";
     private static final String ENTITY = "ENTITY";
     private static final String ALL = "ALL";
 
-    /** {@inheritDoc} */
-    @Override
-    public Class<SkillDamageEvent> getEvent() {
-        return SkillDamageEvent.class;
+    private final Class<T> eventClass;
+
+    protected SkillTrigger(Class<T> eventClass) {
+        this.eventClass = eventClass;
     }
 
     /** {@inheritDoc} */
     @Override
-    public boolean shouldTrigger(final SkillDamageEvent event, final int level, final Settings settings) {
+    public Class<T> getEvent() {
+        return eventClass;
+    }
+
+    /** {@inheritDoc} */
+    @Override
+    public boolean shouldTrigger(final T event, final int level, final Settings settings) {
         if (event.isCancelled()) return false;
         final double damage = event.getDamage();
         final double min = settings.getDouble("dmg-min");
@@ -59,7 +65,7 @@ public abstract class SkillTrigger implements Trigger<SkillDamageEvent> {
      * @param skill skill to resolve
      */
     @Override
-    public void postProcess(final SkillDamageEvent event, final DynamicSkill skill) {
+    public void postProcess(final T event, final DynamicSkill skill) {
         final double damage = skill.applyImmediateBuff(event.getDamage());
         event.setDamage(damage);
     }

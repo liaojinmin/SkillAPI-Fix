@@ -193,8 +193,7 @@ public class PlayerClass {
      *
      * @return mana provided for the player by this class
      */
-    public double getMana()
-    {
+    public double getMana() {
         return classData.getMana(level);
     }
 

@@ -38,7 +38,9 @@ class CombatTriggerListener: PluginModule<MythicMobs>(MythicMobs.inst()) {
     }
 
     fun onCombatTrigger(event: EntityDamageByEntityEvent) {
-        if (event.isCancelled) return
+        if (event.isCancelled) {
+            return
+        }
 
         if (event.entity is LivingEntity) {
             val damager: AbstractEntity? = when (val d = event.damager) {

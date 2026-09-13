@@ -7,6 +7,7 @@ import me.neon.libs.carrier.minecraft.meta.ArmorStandMeta;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.Material;
+import org.bukkit.World;
 import org.bukkit.entity.EntityType;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
@@ -86,6 +87,15 @@ public class CarrierProjectile extends ParticleProjectile {
 
     @Override
     public void run() {
+        // 尝试修复因为世界卸载，tick也就运行导致的问题。2026/8/15
+        World world = loc.getWorld();
+        if (world == null || Bukkit.getWorld(world.getUID()) == null) {
+            System.out.println("世界不存在，中断，任务ID: "+getTaskId());
+            cancel();
+            Bukkit.getPluginManager().callEvent(expire());
+            return;
+        }
+
         applySteps();
 
         // Particle along path

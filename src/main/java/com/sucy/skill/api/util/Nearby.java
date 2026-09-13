@@ -79,7 +79,7 @@ public class Nearby
     }
 
     private static List<LivingEntity> getLivingNearby(Entity source, Location loc, double radius) {
-        List<LivingEntity> result = new ArrayList<LivingEntity>();
+        List<LivingEntity> result = new ArrayList<>();
 
         int minX = (int) (loc.getX() - radius) >> 4;
         int maxX = (int) (loc.getX() + radius) >> 4;
@@ -98,6 +98,64 @@ public class Nearby
                         result.add((LivingEntity) entity);
 
         return result;
+    }
+
+    public static List<LivingEntity> getLivingNearAABBby(Location loc, double radius) {
+        return getLivingNearAABBby(null, loc, radius);
+    }
+
+    private static List<LivingEntity> getLivingNearAABBby(Entity source, Location loc, double radius) {
+        List<LivingEntity> result = new ArrayList<>();
+
+        int minX = (int) (loc.getX() - radius) >> 4;
+        int maxX = (int) (loc.getX() + radius) >> 4;
+        int minZ = (int) (loc.getZ() - radius) >> 4;
+        int maxZ = (int) (loc.getZ() + radius) >> 4;
+
+        double radiusSq = radius * radius;  // 半径的平方，用于距离比较
+
+        for (int i = minX; i <= maxX; i++) {
+            for (int j = minZ; j <= maxZ; j++) {
+                for (Entity entity : loc.getWorld().getChunkAt(i, j).getEntities()) {
+                    if (entity == source || !(entity instanceof LivingEntity) || entity.getWorld() != loc.getWorld()) {
+                        continue;
+                    }
+
+                    LivingEntity living = (LivingEntity) entity;
+                    Location eLoc = living.getLocation();
+                    double halfWidth = living.getWidth() / 2.0;
+                    double height = living.getHeight();
+
+                    // 构建实体的碰撞箱 AABB
+                    double minXEntity = eLoc.getX() - halfWidth;
+                    double maxXEntity = eLoc.getX() + halfWidth;
+                    double minYEntity = eLoc.getY();
+                    double maxYEntity = eLoc.getY() + height;
+                    double minZEntity = eLoc.getZ() - halfWidth;
+                    double maxZEntity = eLoc.getZ() + halfWidth;
+
+                    // 计算球心到 AABB 的最近点
+                    double closestX = clamp(loc.getX(), minXEntity, maxXEntity);
+                    double closestY = clamp(loc.getY(), minYEntity, maxYEntity);
+                    double closestZ = clamp(loc.getZ(), minZEntity, maxZEntity);
+
+                    // 最近点与球心的距离平方
+                    double dx = closestX - loc.getX();
+                    double dy = closestY - loc.getY();
+                    double dz = closestZ - loc.getZ();
+                    if ((dx * dx + dy * dy + dz * dz) < radiusSq) {
+                        result.add(living);
+                    }
+                }
+            }
+        }
+
+        return result;
+    }
+
+    // 辅助方法：将 value 限制在 [min, max] 范围内
+    private static double clamp(double value, double min, double max) {
+        return Math.max(min, Math.min(value, max));
     }
 
     /**

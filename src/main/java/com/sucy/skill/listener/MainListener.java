@@ -13,8 +13,12 @@ import com.sucy.skill.data.Permissions;
 import com.sucy.skill.dynamic.DynamicSkill;
 import com.sucy.skill.dynamic.mechanic.ImmunityMechanic;
 import com.sucy.skill.dynamic.mechanic.ReturnMechanic;
+import me.neon.core.event.PlayerKneeEvent;
+import me.neon.core.revive.DungeonData;
+import me.neon.core.revive.ReviveManager;
 import org.bukkit.Bukkit;
 import org.bukkit.OfflinePlayer;
+import org.bukkit.World;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
@@ -125,7 +129,11 @@ public class MainListener extends SkillAPIListener {
         ReturnMechanic.quitPlayer(event.getPlayer());
     }
 
-
+    @EventHandler(priority = EventPriority.MONITOR)
+    public void onChangedWorld(PlayerChangedWorldEvent event) {
+        // 切换世界则清理缩减，适配副本
+        FlagManager.clearFlagReduces(event.getPlayer());
+    }
 
     /**
      * Stops passives an applies death penalties when a player dies.
@@ -135,18 +143,33 @@ public class MainListener extends SkillAPIListener {
     @EventHandler(priority = EventPriority.MONITOR)
     public void onDeath(PlayerDeathEvent event) {
         if (event.isCancelled()) return;
-        FlagManager.clearFlags(event.getEntity());
-        BuffManager.clearData(event.getEntity());
-        DynamicSkill.clearCastData(event.getEntity());
+        if (event.getEntity().hasMetadata("NPC")) return;
 
-        if (event.getEntity().hasMetadata("NPC"))
+        World world = event.getEntity().getWorld();
+        DungeonData data = ReviveManager.INSTANCE.getDungeonCache().get(world.getName());
+        if (data != null && !ReviveManager.INSTANCE.getDisableDungeon().contains(data.getDungeon().getDungeonName())) {
+            // 不进行清理
             return;
+        }
+        deathPlayer(event.getEntity());
+    }
 
-        PlayerData data = SkillAPI.getPlayerData(event.getEntity().getUniqueId());
+    @EventHandler(priority = EventPriority.MONITOR)
+    public void onKnee(PlayerKneeEvent event) {
+        deathPlayer(event.getPlayer());
+    }
+
+    private void deathPlayer(Player player) {
+        // 此处不删除flag容器，而是清理flag,要保护冷却缩减功能
+        FlagManager.clearFlags(player);
+        BuffManager.clearData(player);
+        DynamicSkill.clearCastData(player);
+
+        PlayerData data = SkillAPI.getPlayerData(player.getUniqueId());
         if (data == null) return;
-        if (data.hasClass() && SkillAPI.getSettings().isWorldEnabled(event.getEntity().getWorld())) {
-            data.stopPassives(event.getEntity());
-            if (!SkillAPI.getSettings().shouldIgnoreExpLoss(event.getEntity().getWorld())) {
+        if (data.hasClass() && SkillAPI.getSettings().isWorldEnabled(player.getWorld())) {
+            data.stopPassives(player);
+            if (!SkillAPI.getSettings().shouldIgnoreExpLoss(player.getWorld())) {
                 data.loseExp();
             }
         }
@@ -155,7 +178,7 @@ public class MainListener extends SkillAPIListener {
     @EventHandler(priority = EventPriority.MONITOR)
     public void onDeath(final EntityDeathEvent event) {
         DynamicSkill.clearCastData(event.getEntity());
-        FlagManager.clearFlags(event.getEntity());
+        FlagManager.removeFlags(event.getEntity());
         BuffManager.clearData(event.getEntity());
     }
 
@@ -165,7 +188,7 @@ public class MainListener extends SkillAPIListener {
             if (entity instanceof LivingEntity && !(entity instanceof Player)) {
                 final LivingEntity livingEntity = (LivingEntity) entity;
                 DynamicSkill.clearCastData(livingEntity);
-                FlagManager.clearFlags(livingEntity);
+                FlagManager.removeFlags(livingEntity);
                 BuffManager.clearData(livingEntity);
             }
         }
@@ -390,8 +413,8 @@ public class MainListener extends SkillAPIListener {
             if (data == null) return;
             data.clearBonuses();
             data.stopPassives(event.getPlayer());
-            event.getPlayer().setMaxHealth(SkillAPI.getSettings().getDefaultHealth());
-            event.getPlayer().setHealth(SkillAPI.getSettings().getDefaultHealth());
+            //.getPlayer().setMaxHealth(SkillAPI.getSettings().getDefaultHealth());
+            //event.getPlayer().setHealth(SkillAPI.getSettings().getDefaultHealth());
             if (!SkillAPI.getSettings().getLevelBar().equalsIgnoreCase("none")) {
                 event.getPlayer().setLevel(0);
                 event.getPlayer().setExp(0);

@@ -61,7 +61,8 @@ public class AddonListener extends SkillAPIListener {
      */
     @EventHandler
     public void onChangeWorld(PlayerChangedWorldEvent e) {
-        startIgnoring(e.getPlayer());
+        // 2026/5/16 暂时拿掉切换世界禁止
+        //startIgnoring(e.getPlayer());
     }
 
     /**

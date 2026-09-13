@@ -85,8 +85,6 @@ public abstract class IOManager {
             System.out.println("玩家 "+player.getName()+" 的数据为空, 正在返回默认值...");
             return playerData;
         }
-        playerData.setLastHealth(json.getDouble(HEALTH));
-        playerData.setMana(json.getDouble(MANA));
         // 加载职业
         JSONObject classes = account.getJSONObject(CLASSES);
         if (classes != null) {
@@ -122,8 +120,6 @@ public abstract class IOManager {
                 playerData.getAttributeData().put(key, attribs.getIntValue(key));
             }
         }
-        // 加载 HUNGER
-        playerData.setHungerValue(account.getDoubleValue(HUNGER));
         playerData.endInit();
         return playerData;
     }
@@ -132,13 +128,7 @@ public abstract class IOManager {
     public JSONObject saveOfJson(PlayerData playerData) {
         try {
             JSONObject json = new JSONObject();
-            json.put(IOManager.HEALTH, playerData.getLastHealth());
-            json.put(IOManager.MANA, playerData.getMana());
-
             JSONObject account = new JSONObject();
-
-            // save HUNGER
-            account.put(IOManager.HUNGER, playerData.getHungerValue());
 
             // 保存职业
             account.put(IOManager.CLASSES, new JSONObject() {{

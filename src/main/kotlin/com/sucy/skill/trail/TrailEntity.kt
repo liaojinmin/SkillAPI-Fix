@@ -30,7 +30,7 @@ class TrailEntity(
     val effectName: String,
 
     /**
-     * 但链路伤害范围
+     * 链路伤害范围
      */
     val radius: Double,
 
@@ -90,7 +90,9 @@ class TrailEntity(
         trailSegments.removeIf { it.isTimerOut(current) }
         if (hitTick >= hitDuration) {
             hitTick = 0
+            //println("尝试唤起命中")
             if (trailSegments.isEmpty()) return
+
             livingEntity.world.livingEntities.forEach(::hit)
         } else {
             hitTick++
@@ -104,14 +106,25 @@ class TrailEntity(
     }
 
     fun hit(entity: LivingEntity) {
-        if (trailSegments.isEmpty()) return
-        if (!validCheck()) return
+      //  println("  判断: ${entity.name}")
+        if (trailSegments.isEmpty()) {
+          //  println("  中断 A1")
+            return
+        }
+        if (!validCheck()) {
+           // println("  中断 A2")
+            return
+        }
 
-        if (entity.entityId == livingEntity.entityId || !SkillAPI.getSettings().canAttack(livingEntity, entity)) return
+        if (entity.entityId == livingEntity.entityId || !SkillAPI.getSettings().canAttack(livingEntity, entity)) {
+           // println("  中断 A3")
+            return
+        }
         //if (!Bukkit.isPrimaryThread()) error("此方法必须在主线程")
         val pos = entity.location.toNeonLibsVector()
         for (seg in trailSegments) {
             if (seg.hit(pos, entity.width / 2, entity.height / 2)) {
+              //  println("  即将发起命中事件 owner: ${livingEntity.name} target: ${entity.name}")
                 if (Bukkit.isPrimaryThread()) {
                     TrailHurtEvent(this, seg, entity).callEvent()
                     //entity.damage(1.0)

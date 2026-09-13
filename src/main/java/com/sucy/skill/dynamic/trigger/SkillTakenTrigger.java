@@ -10,7 +10,12 @@ import java.util.Map;
  * SkillAPI © 2018
  * com.sucy.trigger.dynamic.skill.BlockBreakTrigger
  */
-public class SkillTakenTrigger extends SkillTrigger {
+public class SkillTakenTrigger extends SkillTrigger<SkillDamageEvent> {
+
+    public SkillTakenTrigger() {
+
+        super(SkillDamageEvent.class);
+    }
 
     /** {@inheritDoc} */
     @Override

@@ -42,8 +42,18 @@ public class MythicDamageMechanic extends SkillMechanic implements ITargetedEnti
         //System.out.println("trueDamage "+trueDamage);
     }
 
+
     @Override
     public boolean castAtEntity(SkillMetadata data, AbstractEntity t) {
+        if (Bukkit.isPrimaryThread()) {
+            return sync(data, t);
+        } else {
+            return false;
+        }
+    }
+
+    private boolean sync(SkillMetadata data, AbstractEntity t) {
+
         if (value < 0) {
             return false;
         }

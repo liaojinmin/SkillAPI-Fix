@@ -1,15 +1,24 @@
 package com.sucy.skill.hook.mythic
 
 import com.sucy.skill.SkillAPI
+import com.sucy.skill.api.attribute.mob.MobAttribute
+import com.sucy.skill.api.attribute.mob.MobAttributeData
 import com.sucy.skill.api.event.MythicSummonDeathEvent
+import com.sucy.skill.api.player.PlayerData
+import com.sucy.skill.hook.mythic.MythicManager.spawn
 import com.sucy.skill.hook.mythic.ai.AttackAi2
 import com.sucy.skill.hook.mythic.ai.WalkAi
+import io.lumine.xikage.mythicmobs.adapters.bukkit.BukkitAdapter
 import io.lumine.xikage.mythicmobs.adapters.bukkit.BukkitEntity
 import io.lumine.xikage.mythicmobs.mobs.ActiveMob
+import io.lumine.xikage.mythicmobs.mobs.MythicMob
+import io.lumine.xikage.mythicmobs.mobs.entities.SpawnReason
 import me.neon.libs.taboolib.nms.ai.addGoalAi
 import me.neon.libs.taboolib.nms.ai.clearGoalAi
 import me.neon.libs.taboolib.nms.ai.clearTargetAi
+import me.neon.libs.util.setMeta
 import org.bukkit.Bukkit
+import org.bukkit.Location
 import org.bukkit.entity.LivingEntity
 import org.bukkit.event.player.PlayerTeleportEvent
 import java.util.UUID
@@ -23,17 +32,28 @@ import java.util.UUID
  */
 data class Summon(
     val owner: LivingEntity,
-    val activeMob: ActiveMob,
-    val expireTimer: Long
+    private var location: Location,
+    private val mythicMob: MythicMob,
+    private val useAI: Boolean,
+    private val health: Double,
+    private val duration: Double
 ) {
-
-    val unique: UUID = activeMob.uniqueId
 
     val spawnTimer: Long = System.currentTimeMillis()
 
-    val ownerEntity: LivingEntity? = owner
+    val expireTimer: Long = spawnTimer + duration.toLong()
 
-    val bukkitEntity: LivingEntity = activeMob.entity.bukkitEntity as LivingEntity
+    lateinit var activeMob: ActiveMob
+
+    val unique: UUID
+        get() {
+            return activeMob.uniqueId
+        }
+
+    val bukkitEntity: LivingEntity
+        get() {
+            return activeMob.entity.bukkitEntity as LivingEntity
+        }
 
     var targetEntity: LivingEntity? = null
         set(value) {
@@ -57,41 +77,33 @@ data class Summon(
             field = true
         }
 
-    var isWorldChange: Boolean = false
+    private var isInit: Boolean = false
 
-    var disableTickTeleport: Boolean = true
+    @Volatile
+    private var lock: Boolean = false
 
-    private var worldChangeTick: Int = 0
-
-    fun initAi() {
-        bukkitEntity.clearGoalAi()
-        bukkitEntity.clearTargetAi()
-        bukkitEntity.addGoalAi(WalkAi(owner, this), 2)
-        bukkitEntity.addGoalAi(AttackAi2(owner, this), 1)
+    init {
+        spawn()
+        bukkitEntity.setMeta("SUMMON_OWNER", owner)
+        isInit = true
     }
 
     fun tick() {
-        if (!disableTickTeleport) {
-            val loc = owner.location.clone()
-            if (isWorldChange
-                || loc.world.name != bukkitEntity.world.name
-                || bukkitEntity.location.distanceSquared(loc) > AttackAi2.ownerRange
-            ) {
-                bukkitEntity.teleport(loc.add(0.0, 1.0, 0.0), PlayerTeleportEvent.TeleportCause.PLUGIN)
+        if (!isInit || lock) return
+        if (!bukkitEntity.hasAI()) {
+            if (!activeMob.mobType.contains("火焰喷射器")) {
+                val loc = owner.location.clone()
+                if (loc.world.name != bukkitEntity.world.name
+                    || bukkitEntity.location.distanceSquared(loc) > 1024
+                ) {
+                    bukkitEntity.teleport(loc.add(0.0, 1.0, 0.0), PlayerTeleportEvent.TeleportCause.PLUGIN)
+                }
             }
         }
-        // 世界切换延迟移除
-        if (isWorldChange) {
-            if (worldChangeTick >= 5) {
-                safeRemove()
-            } else {
-                worldChangeTick++
-            }
-        } else worldChangeTick = 0
-        disableTickTeleport = false
     }
 
     fun checkTimerOut(): Boolean {
+        if (!isInit && !lock) return true
         if (bukkitEntity.isDead || !bukkitEntity.isValid) {
             isDeath = true
             return true
@@ -104,11 +116,57 @@ data class Summon(
     }
 
     fun safeRemove() {
+        if (!isInit) return
         if (!activeMob.entity.isDead && activeMob.entity.isValid) {
             isDeath = true
             if (Bukkit.isPrimaryThread()) activeMob.entity.remove()
             else Bukkit.getScheduler().runTask(SkillAPI.singleton()) { activeMob.entity.remove() }
         }
+    }
+
+    fun safeRespawn(loc: Location) {
+        if (!isInit) return
+        val func = {
+            if (!activeMob.entity.isDead && activeMob.entity.isValid) {
+                activeMob.entity.remove()
+            }
+            location = loc.clone()
+            spawn()
+        }
+
+        if (Bukkit.isPrimaryThread()) func.invoke()
+        else Bukkit.getScheduler().runTask(SkillAPI.singleton()) { func.invoke() }
+
+    }
+
+    private fun spawn() {
+
+        lock = true
+        mythicMob.spawn(
+            BukkitAdapter.adapt(location),
+            1.0,
+            SpawnReason.OTHER,
+            pre = {
+                if (it is LivingEntity) {
+                    MythicManager.summonAscription[it.uniqueId] = owner
+                }
+            },
+            apply = {
+                if (it is LivingEntity) {
+                    it.maxHealth = health
+                    it.health = health
+                }
+            }
+        )?.let {
+            activeMob = it
+            bukkitEntity.clearGoalAi()
+            bukkitEntity.clearTargetAi()
+            if (useAI) {
+                bukkitEntity.addGoalAi(WalkAi(owner, this), 2)
+                bukkitEntity.addGoalAi(AttackAi2(owner, this), 1)
+            }
+        }
+        lock = false
     }
 
     override fun equals(other: Any?): Boolean {

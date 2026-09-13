@@ -60,7 +60,6 @@ public class ManaTask extends AbstractRepeatThread
     public void run() {
 
         Player[] players = VersionManager.getOnlinePlayers();
-        Logger.log(LogType.MANA, 1, "Applying mana regen for " + players.length + " players");
         for (Player player : players) {
             PlayerData data = SkillAPI.getPlayerData(player.getUniqueId());
             if (data != null) {

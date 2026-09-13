@@ -110,9 +110,9 @@ public class SkillDamageEvent extends Event implements Cancellable {
     @Override
     public void setCancelled(boolean cancelled) {
         this.cancelled = cancelled;
-        if (cancelled) {
-            this.cancelStack = new Throwable("SkillDamageEvent 被取消的位置");
-        }
+        //if (cancelled) {
+          //  this.cancelStack = new Throwable("SkillDamageEvent 被取消的位置");
+        //}
     }
 
     /**

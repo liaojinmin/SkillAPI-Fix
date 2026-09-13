@@ -96,7 +96,7 @@ public class StatusListener extends SkillAPIListener {
      */
     @EventHandler(priority = EventPriority.MONITOR)
     public void onQuit(PlayerQuitEvent event) {
-        FlagManager.clearFlags(event.getPlayer());
+        FlagManager.removeFlags(event.getPlayer());
         DataSkills.delMetaStack(event.getPlayer().getUniqueId());
     }
 

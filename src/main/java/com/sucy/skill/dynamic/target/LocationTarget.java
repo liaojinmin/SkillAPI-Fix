@@ -111,7 +111,7 @@ public class LocationTarget extends TargetComponent {
         return (Math.floor(val + offset) - val) / dir;
     }
 
-    private static final Set<Material> AIR_BLOCKS = new HashSet<Material>();
+    public static final Set<Material> AIR_BLOCKS = new HashSet<Material>();
 
     static {
         for (Material material : Material.values()) {

@@ -36,11 +36,8 @@ object TrailManager: Listener {
                 abs(z - other.z) <= eps
     }
 
-
     fun register(trail: TrailEntity) {
-
         if (trailEntityMap.containsKey(trail.livingEntity.entityId)) return
-    //    println("注册 ${trail.livingEntity.name}")
         trailEntityMap[trail.livingEntity.entityId] = trail
     }
 
@@ -79,11 +76,9 @@ object TrailManager: Listener {
             val trailEntity = entry.value
             trailEntity.tick()
             if (!trailEntity.validCheck(false)) {
-             //   println("过期")
                 iterator.remove()
             }
         }
-        //trailEntity.values.forEach(TrailEntity::tick)
     }
 
 }

@@ -227,7 +227,7 @@ public abstract class TargetHelper {
      * @return true if the target is behind the entity
      */
     public static boolean isBehind(Entity entity, Entity target) {
-        return !isInFront(entity, target);
+        return isInFront(entity, target);
     }
 
     /**

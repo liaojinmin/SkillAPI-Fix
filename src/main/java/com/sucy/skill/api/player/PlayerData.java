@@ -23,13 +23,15 @@ import com.sucy.skill.screen.AttributeGermScreen;
 import com.sucy.skill.screen.AttributeScreenKt;
 import com.sucy.skill.utils.AttributeParseUtils;
 import com.sucy.skill.utils.ExpiringMap;
+import me.neon.flash.attribute.Attribute;
 import me.neon.flash.attribute.AttributePlayer;
 import me.neon.flash.attribute.comp.AttributeContainer;
 import me.neon.flash.attribute.comp.AttributeData;
+import me.neon.flash.attribute.comp.AttributeOption;
 import me.neon.flash.attribute.comp.SuitData;
+import me.neon.libs.util.ResourceLocation;
 import org.bukkit.Bukkit;
 import org.bukkit.OfflinePlayer;
-import org.bukkit.attribute.Attribute;
 import org.bukkit.attribute.AttributeInstance;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
@@ -61,38 +63,43 @@ public class PlayerData {
      * key=属性
      * value=加点等级
      **/
+    @Deprecated
     private final HashMap<String, Integer> points = new HashMap<>();
 
+    @Deprecated
     public final ExpiringMap<String, Double> expiring = new ExpiringMap<>();
 
     /**
      * 无源临时数据
      */
+    @Deprecated
     public final HashMap<String, Double> bonusAttrib = new HashMap<>();
 
     /**
      * 有源临时属性
      */
+    @Deprecated
     public final ConcurrentHashMap<String, ConcurrentHashMap<String, Integer>> addAttrib = new ConcurrentHashMap<>();
 
     /**
      * 有源临时后计算属性属性
      **/
+    @Deprecated
     public final ConcurrentHashMap<String, ConcurrentHashMap<String, Double>> scaleAttrib = new ConcurrentHashMap<>();
 
     private final AtomicLong manaRestoreTick = new AtomicLong(0);
+
     private final OfflinePlayer  player;
+
     private int            keyTimer;
+
     private double         mana;
     private double         maxMana;
     private double         bonusHealth;
-    private double         bonusMana;
-    private double         lastHealth;
-    private double         hunger;
     private boolean        passive;
     private int            attribPoints;
-    private boolean init = false;
 
+    private boolean init = false;
 
     /**
      * Initializes a new account data representation for a player.
@@ -101,7 +108,6 @@ public class PlayerData {
      */
     public PlayerData(OfflinePlayer player) {
         this.player = player;
-        this.hunger = 1;
         for (String group : SkillAPI.getGroups()) {
             GroupSettings settings = SkillAPI.getSettings().getGroupSettings(group);
             RPGClass rpgClass = settings.getDefault();
@@ -155,49 +161,6 @@ public class PlayerData {
 
 
     /**
-     * @return health during last logout
-     */
-    public double getLastHealth() {
-        return lastHealth;
-    }
-
-    /**
-     * Used by the API for restoring health - do not use this.
-     *
-     * @param health health logged off with
-     */
-    public void setLastHealth(double health) {
-        lastHealth = health;
-    }
-
-    /**
-     * The hunger value here is not representative of the player's total hunger,
-     * rather the amount left of the next hunger point. This is manipulated by
-     * attributes were if an attribute says a player has twice as much "hunger"
-     * as normal, this will go down by decimals to slow the decay of hunger.
-     *
-     * @return amount of the next hunger point the player has
-     */
-    public double getHungerValue() {
-        return hunger;
-    }
-
-    /**
-     * @param hungerValue new hunger value
-     * @see PlayerData#getHungerValue
-     */
-    public void setHungerValue(final double hungerValue) {
-        this.hunger = hungerValue;
-    }
-
-    public int subtractHungerValue(final double amount) {
-        final double scaled = amount / scaleStat(AttributeManager.HUNGER, amount);
-        final int lost = scaled >= hunger ? (int) (scaled - hunger) + 1 : 0;
-        this.hunger += lost - amount;
-        return lost;
-    }
-
-    /**
      * Ends the initialization flag for the data. Used by the
      * API to avoid async issues. Do not use this in other
      * plugins.
@@ -213,80 +176,94 @@ public class PlayerData {
     //                                                   //
     ///////////////////////////////////////////////////////
 
-    private static final List<String> pluginAddAttribute = new ArrayList<String>() {{
-        add("GeekTeamPlus");
-        add("NeonArena");
+    private static final List<ResourceLocation> RESOURCE_LOCATION = new ArrayList<ResourceLocation>() {{
+        add(new ResourceLocation("GeekTeamPlus".toLowerCase(), "runic"));
+        add(new ResourceLocation("NeonArena".toLowerCase(), "runic"));
+        add(new ResourceLocation("NeonECore".toLowerCase(), "attribute"));
+        add(new ResourceLocation("SkillApi".toLowerCase(), "buff"));
     }};
 
+
     public String getAddFormatAttribute(String attr, boolean hasInt) {
+        if (attr.equalsIgnoreCase("最大生命值")) return getAddFormatHealth(attr, hasInt);
+
         AttributePlayer attributePlayer = me.neon.flash.attribute.AttributeManager.INSTANCE
                 .getAttributePlayer().get(player.getUniqueId());
-
         double base = 0;            // 所有非插件来源属性
         double pluginBase = 0;      // 插件来源普通属性
         double scale = 0;           // 插件百分比加成
         if (attributePlayer != null) {
-            if (attr.equals("最大生命值")) {
-                // 未包含直接增加的值，这个只是生命值被放大后的值，需要把基数增加
-                base += attributePlayer.getAddScaleHealth();
-            }
-            base += attributePlayer.getBaseAttribute(attr);
-            for (SuitData suitData : attributePlayer.getSuitDataMap().values()) {
-                Map<String, Double> entry = suitData.getAttribute();
-                if (entry.containsKey(attr)) {
-                    base += entry.get(attr);
+            Attribute attribute = AttributeContainer.Companion.useCacheAttribute(attr);
+            pluginBase = attributePlayer.getBaseAttribute(attr);
+
+            if (attr.equalsIgnoreCase("体力")) {
+                AttributeData attributeData = attributePlayer.getNormalAttributeContainerOrCreate(AttributeListener.SKILL_LOCATION).get(
+                        attribute, AttributeContainer.Companion.useCacheDefaultOption(attr)
+                );
+                if (attributeData != null) {
+                    pluginBase += attributeData.getComputeAttributeValue();
                 }
             }
-            for (String plugin : pluginAddAttribute) {
-                pluginBase += attributePlayer.getSourceOrCreate(plugin).getOrDefault(attr, 0.0);
-            }
-            for (String plugin : pluginAddAttribute) {
-                scale += attributePlayer.getSourceOrCreateOfScale(plugin).getOrDefault(attr, 0.0);
+
+            for (ResourceLocation plugin : RESOURCE_LOCATION) {
+                AttributeContainer attributeContainer = attributePlayer.getNormalAttributeContainer(plugin);
+                if (attributeContainer != null) {
+                    for (AttributeData attributeData : attributeContainer.getAllWhileData(attribute)) {
+                        if (attributeData.getAttributeOption().isMultiplier()) {
+                            scale += attributeData.getComputeAttributeValue();
+                        } else {
+                            base += attributeData.getComputeAttributeValue();
+                        }
+                    }
+                }
             }
         }
-        base += points.getOrDefault(attr, 0);
-        base += bonusAttrib.getOrDefault(attr, 0.0);
-        base += expiring.getOrDefault(attr, 0.0);
 
-        // 自身容器
-        for (String plugin : pluginAddAttribute) {
-            Map<String, Integer> map0 = addAttrib.get(plugin);
-            if (map0 != null) {
-                pluginBase += map0.getOrDefault(attr, 0);
-            }
+        base += (pluginBase * scale);
 
-            Map<String, Double> map = scaleAttrib.get(plugin);
-            if (map != null) {
-                scale += map.getOrDefault(attr, 0.0);
+        return formatAttributeText(attr, base, hasInt);
+    }
+
+    public String getAddFormatHealth(String attr, boolean hasInt) {
+        AttributePlayer attributePlayer = me.neon.flash.attribute.AttributeManager.INSTANCE
+                .getAttributePlayer().get(player.getUniqueId());
+
+        double base = 0;
+        if (attributePlayer != null) {
+            base += attributePlayer.getAddScaleHealth();
+            Attribute attribute = AttributeContainer.Companion.useCacheAttribute(attr);
+            for (ResourceLocation plugin : RESOURCE_LOCATION) {
+                AttributeContainer attributeContainer = attributePlayer.getNormalAttributeContainer(plugin);
+                if (attributeContainer != null) {
+                    for (AttributeData attributeData : attributeContainer.getAllWhileData(attribute)) {
+                        //
+                        if (!attributeData.getAttributeOption().isMultiplier()) {
+                            base += attributeData.getComputeAttributeValue();
+                        }
+                    }
+                }
             }
         }
-        double all = base + pluginBase;
-        if (scale > 0 && !"最大生命值".equals(attr)) {
-            pluginBase += (all * scale);
-        }
+        return formatAttributeText(attr, base, hasInt);
+    }
 
-        if (pluginBase <= 0 || (hasInt && (int) pluginBase == 0)) {
+    private String formatAttributeText(String attr, double value, boolean hasInt) {
+        if (value <= 0 || (hasInt && (int) value == 0)) {
             return "";
         }
-
         // ===== SkillAPI 属性最大值限制处理 =====
         AttributeManager.Attribute attribute = SkillAPI.getAttributeManager().getAttribute(attr);
         if (attribute != null) {
             double max = attribute.getMax();
-            if (max > 0 && all > max) {
-                StringBuilder stringBuilder = new StringBuilder("§7(§a");
-                stringBuilder.append("Max");
-                stringBuilder.append("§7)");
-                return stringBuilder.toString();
+            if (max > 0 && value > max) {
+                return "§7(§aMax§7)";
             }
         }
-
         StringBuilder stringBuilder = new StringBuilder("§7(§a+");
-
         if (hasInt) {
-            stringBuilder.append((int) pluginBase);
+            stringBuilder.append((int) value);
         } else {
-            stringBuilder.append(pluginBase);
+            stringBuilder.append(value);
         }
         stringBuilder.append("§7)");
         return stringBuilder.toString();
@@ -294,44 +271,6 @@ public class PlayerData {
 
     public double getAttribute(String key) {
         return getGlobalAttribute(key, null);
-        /*
-        double total = getAttributeNotNf(key);
-        // nf start
-        AttributePlayer attributePlayer = me.neon.flash.attribute.AttributeManager.INSTANCE.getAttributePlayer().get(player.getUniqueId());
-        if (attributePlayer != null) {
-            Double value = attributePlayer.getAttributes().get(key);
-            if (value != null) {
-                total += value;
-            }
-            for (AttributeContainer container : attributePlayer.getAttributeContainerAt(
-                    attributeContainer -> !attributeContainer.getEnabledForAggregation()
-            )) {
-               // System.out.println("key: "+key);
-                AttributeData data = container.get(key);
-              //  if (data != null) {
-                  //  System.out.println("isMultiplier: "+data.getAttributeOption().isMultiplier());
-                 //   System.out.println("value: "+data.getAttributeValue());
-              //  }
-                if (data != null && !data.getAttributeOption().isMultiplier()) {
-                    total += data.getComputeAttributeValue();
-                }
-            }
-        }
-        // nf end
-
-        // 此处选择 applyNf 是因为考虑 attributePlayer.getAttributes().get(key) 返回的是前台值，包含缩放
-        double out = AttributeParseUtils.round(scaleAttrib(key, total, false, null), 1);
-
-        // 最大值限制
-        AttributeManager.Attribute attribute = SkillAPI.getAttributeManager().getAttribute(key);
-        if (attribute != null) {
-            if (attribute.getMax() > 0 && attribute.getMax() < out) {
-                return attribute.getMax();
-            }
-        }
-        return out;
-
-         */
     }
 
     public double getAttributeNotNf(String key) {
@@ -373,56 +312,13 @@ public class PlayerData {
         return total;
     }
 
-    public double getAttributeNoSk(@NotNull String attr, @Nullable Predicate<String> containerFilter) {
-        double total = 0;
-        AttributePlayer attributePlayer = me.neon.flash.attribute.AttributeManager.INSTANCE.getAttributePlayer().get(player.getUniqueId());
-        if (attributePlayer != null) {
-            if (containerFilter == null || containerFilter.test("base")) {
-                // 基本
-                total += attributePlayer.getBaseAttribute(attr);
-            }
-            // 套装
-            for (SuitData suitData : attributePlayer.getSuitDataMap().values()) {
-                Map<String, Double> entry = suitData.getAttribute();
-                if (entry.containsKey(attr)) {
-                    total += entry.get(attr);
-                }
-            }
-            // 源属性
-            for (Map.Entry<String, Map<String, Double>> map : attributePlayer.getSourceMap().entrySet()) {
-                if (containerFilter == null || containerFilter.test(map.getKey())) {
-                    if (map.getValue().containsKey(attr)) {
-                        total += map.getValue().get(attr);
-                    }
-                }
-            }
-            for (AttributeContainer container : attributePlayer.getAttributeContainerAt(
-                    attributeContainer -> !attributeContainer.getEnabledForAggregation()
-            )) {
-                if (containerFilter == null || containerFilter.test(container.getResourceLocation().toString())) {
-                    AttributeData data = container.get(attr);
-                    if (data != null && !data.getAttributeOption().isMultiplier()) {
-                        total += data.getComputeAttributeValue();
-                    }
-                }
-            }
-        }
-        AttributeManager.Attribute attribute = SkillAPI.getAttributeManager().getAttribute(attr);
-        if (attribute != null) {
-            if (attribute.getMax() > 0 && attribute.getMax() < total) {
-                return attribute.getMax();
-            }
-        }
-        return total;
-    }
-
     public double getGlobalAttribute(@NotNull String attr, @Nullable Predicate<String> containerFilter) {
         return getGlobalAttribute(attr, true, containerFilter);
     }
 
     public double getGlobalAttribute(@NotNull String attr, @NotNull Boolean scale, @Nullable Predicate<String> containerFilter){
         double total = getAttributeNotNf(attr, containerFilter);
-
+        //  System.out.println("getAttributeNotNf: "+attr + " value: "+total);
         // nf start
         AttributePlayer attributePlayer = me.neon.flash.attribute.AttributeManager.INSTANCE.getAttributePlayer().get(player.getUniqueId());
         if (attributePlayer != null) {
@@ -430,14 +326,7 @@ public class PlayerData {
             if (containerFilter == null || containerFilter.test("base")) {
                 // 基本
                 total += attributePlayer.getBaseAttribute(attr);
-            }
-
-            // 套装
-            for (SuitData suitData : attributePlayer.getSuitDataMap().values()) {
-                Map<String, Double> entry = suitData.getAttribute();
-                if (entry.containsKey(attr)) {
-                    total += entry.get(attr);
-                }
+                //     System.out.println("basevalue: "+attributePlayer.getBaseAttribute(attr));
             }
 
             // 源属性
@@ -451,16 +340,19 @@ public class PlayerData {
 
             // 新容器
             for (AttributeContainer container : attributePlayer.getAttributeContainerAt(
-                    attributeContainer -> !attributeContainer.getEnabledForAggregation()
+                    attributeContainer -> true
             )) {
                 if (containerFilter == null || containerFilter.test(container.getResourceLocation().toString())) {
-                    AttributeData data = container.get(attr);
-                    if (data != null && !data.getAttributeOption().isMultiplier()) {
-                        total += data.getComputeAttributeValue();
+                    List<AttributeData> data = container.getAllWhileData(AttributeContainer.Companion.useCacheAttribute(attr));
+                    for (AttributeData attributeData : data) {
+                        if (!attributeData.getAttributeOption().isMultiplier()) {
+                            total += attributeData.getComputeAttributeValue();
+                        }
                     }
                 }
             }
         }
+    //    System.out.println("key "+attr + " total: "+total);
         double out;
         if (scale)
             out = AttributeParseUtils.round(scaleAttrib(attr, total, true, containerFilter), 1);
@@ -488,23 +380,14 @@ public class PlayerData {
             AttributePlayer attributePlayer = me.neon.flash.attribute.AttributeManager.INSTANCE.getAttributePlayer().get(player.getUniqueId());
             if (attributePlayer != null) {
                 double scale = 0.0;
-                // 缩放
-                for (Map.Entry<String, Map<String, Double>> entry : attributePlayer.getSourceOfScaleMap().entrySet()) {
-                    if (containerFilter == null || containerFilter.test(entry.getKey())) {
-                        if (entry.getValue().containsKey(attr)) {
-                            scale += entry.getValue().get(attr);
-                            //total += map.getValue().get(attr) * total;
-                        }
-                    }
-                }
-                // 或者在nf未启用聚合的属性容器
                 for (AttributeContainer container : attributePlayer.getAttributeContainerAt(
-                        attributeContainer -> !attributeContainer.getEnabledForAggregation()
+                        attributeContainer -> true
                 )) {
                     if (containerFilter == null || containerFilter.test(container.getResourceLocation().toString())) {
-                        AttributeData data = container.get(attr);
-                        if (data != null && data.getAttributeOption().isMultiplier()) {
-                            scale += data.getComputeAttributeValue();
+                        for (AttributeData attributeData : container.getAllMultiplier()) {
+                            if (attributeData.getAttribute().getAttributeName().equalsIgnoreCase(attr)) {
+                                scale += attributeData.getComputeAttributeValue();
+                            }
                         }
                     }
                 }
@@ -591,30 +474,6 @@ public class PlayerData {
         AttributeListener.updatePlayer(this);
     }
 
-    /**
-     * Refunds an attribute point from the given attribute
-     * if there are any points invested in it. If there are
-     * none, this will do nothing.
-     *
-     * @param key attribute key
-     */
-    public boolean refundAttribute(String key) {
-        key = key.toLowerCase();
-        int current = getInvestedAttribute(key);
-        if (current > 0) {
-            PlayerRefundAttributeEvent event = new PlayerRefundAttributeEvent(this, key);
-            Bukkit.getPluginManager().callEvent(event);
-            if (event.isCancelled()) { return false; }
-
-            attribPoints += 1;
-            points.put(key, current - 1);
-            if (current - 1 <= 0) { points.remove(key); }
-            AttributeListener.updatePlayer(this);
-
-            return true;
-        }
-        return false;
-    }
 
     /**
      * Refunds all spent attribute points for a specific attribute
@@ -1385,42 +1244,38 @@ public class PlayerData {
      * @param player player to update the health and mana for
      */
     public void updateHealthAndMana(Player player) {
-        if (player == null) {
-            return;
-        }
+        if (player == null) return;
 
-        // Update maxes
+        double mMana = 0;
         double health = bonusHealth;
-        maxMana = bonusMana;
+
         for (PlayerClass c : classes.values()) {
             health += c.getHealth();
-            maxMana += c.getMana();
+            mMana += c.getMana();
         }
+
         if (health == bonusHealth) {
             health += SkillAPI.getSettings().getDefaultHealth();
         }
+
         if (health <= 0) {
             health = SkillAPI.getSettings().getDefaultHealth();
         }
-      //  System.out.println("生命值 "+health);
-        health += getAttribute("最大生命值");
-        if (SkillAPI.getSettings().isModifyHealth()) {
-        //    System.out.println("设置生命值 "+health);
-            player.getAttribute(Attribute.GENERIC_MAX_HEALTH).setBaseValue(health);
-           // player.setMaxHealth(health);
+
+        AttributePlayer attributePlayer = me.neon.flash.attribute.AttributeManager.INSTANCE.getAttributePlayer().get(player.getUniqueId());
+        if (attributePlayer != null) {
+            AttributeContainer container = attributePlayer.getNormalAttributeContainerOrCreate(AttributeListener.SKILL_LOCATION);
+            if (SkillAPI.getSettings().isModifyHealth()) {
+                me.neon.flash.attribute.Attribute attribute = AttributeContainer.Companion.useCacheAttribute("最大生命值");
+                AttributeOption option = AttributeContainer.Companion.useCacheOption("最大生命值");
+                container.put(new AttributeData(attribute, option, health, -1));
+            }
+            me.neon.flash.attribute.Attribute attribute = AttributeContainer.Companion.useCacheAttribute("体力");
+            AttributeOption option = AttributeContainer.Companion.useCacheOption("体力");
+            container.put(new AttributeData(attribute, option, mMana, -1));
         }
-
-        mana = Math.min(mana, maxMana);
-
-       // System.out.println("updateHealthAndMana "+mana);
-
-        // Health scaling is available starting with 1.6.2
-        if (SkillAPI.getSettings().isOldHealth()) {
-            player.setHealthScaled(true);
-            player.setHealthScale(20);
-        } else {
-            player.setHealthScaled(false);
-        }
+        player.setHealthScaled(true);
+        player.setHealthScale(20);
     }
 
     /**
@@ -1432,11 +1287,6 @@ public class PlayerData {
      */
     public void addMaxHealth(double amount) {
         bonusHealth += amount;
-        final Player player = getPlayer();
-        if (player != null) {
-            final AttributeInstance attribute = player.getAttribute(Attribute.GENERIC_MAX_HEALTH);
-            attribute.setBaseValue(attribute.getBaseValue() + amount);
-        }
     }
 
     /**
@@ -1447,13 +1297,9 @@ public class PlayerData {
      * @param amount amount of bonus mana to give
      */
     public void addMaxMana(double amount) {
-       // System.out.println("addMaxMana "+amount);
-        bonusMana += amount;
+        if (Math.abs(amount) < 1e-3) return;
         maxMana += amount;
-        mana += amount;
     }
-
-
 
     /**
      * Retrieves the amount of mana the player currently has.
@@ -1465,14 +1311,12 @@ public class PlayerData {
     }
 
     /**
-     * Checks whether or not the player has at least the specified amount of mana
+     * Sets the player's amount of mana without launching events
      *
-     * @param amount required mana amount
-     *
-     * @return true if has the amount of mana, false otherwise
+     * @param amount current mana
      */
-    public boolean hasMana(double amount) {
-        return mana >= amount;
+    public void setMana(double amount) {
+        mana = Math.min(amount, maxMana);
     }
 
     /**
@@ -1484,48 +1328,29 @@ public class PlayerData {
         return maxMana;
     }
 
+    public void setMaxMana(double amount) {
+        maxMana = amount;
+        mana = amount;
+    }
+
     /**
      * Regenerates mana for the player based on the regen amounts of professed classes
      */
     public void regenMana() {
         if (this.getManaRestoreTick() > 0) {
-           // System.out.println("已停止恢复Mana... tick "+this.getManaRestoreTick());
             return;
         }
-      //  if (!ShieldCondition.checkBlocking(player.getPlayer())) {
-            double amount = 0;
-            for (PlayerClass c : classes.values()) {
-                if (c.getData().hasManaRegen()) {
-                    amount += c.getData().getManaRegen();
-                }
+        double amount = 0;
+        for (PlayerClass c : classes.values()) {
+            if (c.getData().hasManaRegen()) {
+                amount += c.getData().getManaRegen();
             }
-            if (amount > 0) {
-                // System.out.println("已恢复Mana... "+amount);
-                giveMana(amount, ManaSource.REGEN);
-            }
-      //  }
-    }
+        }
+        if (amount > 0) {
+            //System.out.println("已恢复Mana... "+amount);
+            giveMana(amount, ManaSource.REGEN);
+        }
 
-    /**
-     * Sets the player's amount of mana without launching events
-     *
-     * @param amount current mana
-     */
-    public void setMana(double amount) {
-       // System.out.println("setMana "+amount);
-        this.mana = amount;
-    }
-
-
-    /**
-     * Gives mana to the player from an unknown source. This will not
-     * cause the player's mana to go above their max amount.
-     *
-     * @param amount amount of mana to give
-     */
-    public void giveMana(double amount) {
-       // System.out.println("giveMana "+amount);
-        giveMana(amount, ManaSource.SPECIAL);
     }
 
     /**
@@ -1536,25 +1361,17 @@ public class PlayerData {
      * @param source source of the mana
      */
     public void giveMana(double amount, ManaSource source) {
-      //  System.out.println("giveMana "+amount + " source "+source.name());
+        if (mana >= maxMana && amount >= 0) {
+            setMana(maxMana);
+            return;
+        }
         PlayerManaGainEvent event = new PlayerManaGainEvent(this, amount, source);
         Bukkit.getPluginManager().callEvent(event);
-
         if (!event.isCancelled()) {
-            Logger.log(
-                    LogType.MANA,
-                    2,
-                    getPlayerName() + " gained " + amount + " mana due to " + event.getSource().name());
-
-            mana += event.getAmount();
-            if (mana > maxMana) {
-                mana = maxMana;
-            }
-            if (mana < 0) {
-                mana = 0;
-            }
-        } else {
-            Logger.log(LogType.MANA, 2, getPlayerName() + " had their mana gain cancelled");
+            double out = getMana() + event.getAmount();
+            if (out > maxMana) out = maxMana;
+            if (out < 0) out = 0;
+            setMana(out);
         }
     }
 
@@ -1580,15 +1397,7 @@ public class PlayerData {
         Bukkit.getPluginManager().callEvent(event);
 
         if (!event.isCancelled()) {
-            Logger.log(
-                    LogType.MANA,
-                    2,
-                    getPlayerName() + " used " + amount + " mana due to " + event.getSource().name());
-
-            mana -= event.getAmount();
-            if (mana < 0) {
-                mana = 0;
-            }
+            setMana(Math.max(getMana() - event.getAmount(), 0));
         }
     }
 
@@ -1645,7 +1454,6 @@ public class PlayerData {
      * Clears bonus health/mana
      */
     public void clearBonuses() {
-        bonusMana = 0;
         bonusHealth = 0;
         bonusAttrib.clear();
     }
@@ -1656,15 +1464,6 @@ public class PlayerData {
     //                     Functions                     //
     //                                                   //
     ///////////////////////////////////////////////////////
-
-    /**
-     * Records any data to save with class data
-     *
-     * @param player player to record for
-     */
-    public void record(Player player) {
-        this.lastHealth = player.getHealth();
-    }
 
     /**
      * Starts passive abilities for the player if they are online. This is
@@ -1735,12 +1534,6 @@ public class PlayerData {
      */
     public boolean cast(String skillName) {
         return cast(skills.get(skillName.toLowerCase()));
-    }
-
-    private void debug(String message, String skill) {
-        if (skill.equalsIgnoreCase("恶趣味")) {
-            System.out.println(message);
-        }
     }
 
     /**
@@ -1863,9 +1656,6 @@ public class PlayerData {
 
     private boolean applyUse(final Player player, final PlayerSkill skill, final double manaCost) {
         skill.startCooldown();
-        if (SkillAPI.getSettings().isShowSkillMessages()) {
-            skill.getData().sendMessage(player, SkillAPI.getSettings().getMessageRadius());
-        }
         if (SkillAPI.getSettings().isManaEnabled()) {
             useMana(manaCost, ManaCost.SKILL_CAST);
         }
@@ -1932,8 +1722,10 @@ public class PlayerData {
         AttributeListener.updatePlayer(this);
         this.updateHealthAndMana(player);
         this.startPassives(player);
+        /*
         if (this.getLastHealth() > 0 && !player.isDead()) {
             player.setHealth(Math.min(this.getLastHealth(), player.getMaxHealth()));
         }
+         */
     }
 }

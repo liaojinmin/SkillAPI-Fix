@@ -69,9 +69,6 @@ public class RegistrationManager {
 
     private final SkillAPI api;
 
-    private CommentedConfig skillConfig;
-    private CommentedConfig classConfig;
-
     private Mode mode = Mode.STARTUP;
 
     /**
@@ -82,8 +79,6 @@ public class RegistrationManager {
      */
     public RegistrationManager(SkillAPI api) {
         this.api = api;
-        skillConfig = new CommentedConfig(api, "dynamic" + File.separator + "skills");
-        classConfig = new CommentedConfig(api, "dynamic" + File.separator + "classes");
         new File(api.getDataFolder()
                 .getAbsolutePath() + File.separator + "dynamic" + File.separator + "skill").mkdirs();
         new File(api.getDataFolder()
@@ -95,14 +90,6 @@ public class RegistrationManager {
      * configuration files and other plugins.
      */
     public void initialize() {
-
-        // Make sure dynamic files are created
-        if (!skillConfig.getConfigFile().exists()) {
-            skillConfig.save();
-        }
-        if (!classConfig.getConfigFile().exists()) {
-            classConfig.save();
-        }
 
         Logger.log(LogType.REGISTRATION, 1, "Loading components...");
 
@@ -136,43 +123,7 @@ public class RegistrationManager {
             }
         }
 
-        // Load dynamic skills from skills.yml
         mode = Mode.DYNAMIC;
-        if (!skillConfig.getConfig().getBoolean("loaded", false)) {
-            Logger.log(LogType.REGISTRATION, 1, "Loading dynamic skills from skills.yml...");
-            skillConfig.getConfig().set("loaded", true);
-            for (String key : skillConfig.getConfig().keys()) {
-                if (!skillConfig.getConfig().isSection(key)) {
-                    Logger.log(
-                            LogType.REGISTRATION,
-                            3,
-                            "Skipping \"" + key + "\" because it isn't a configuration section");
-                    continue;
-                }
-                try {
-                    DynamicSkill skill = new DynamicSkill(key);
-                    skill.load(skillConfig.getConfig().getSection(key));
-                    if (!SkillAPI.isSkillRegistered(skill.getName())) {
-                        api.addDynamicSkill(skill);
-                        skill.registerEvents(api);
-                        CommentedConfig sConfig = new CommentedConfig(api, SKILL_DIR + key);
-                        sConfig.clear();
-                        skill.save(sConfig.getConfig().createSection(key));
-                        skill.save(skillConfig.getConfig().createSection(key));
-                        sConfig.save();
-                        Logger.log(LogType.REGISTRATION, 2, "Loaded the dynamic skill: " + key);
-                    } else {
-                        Logger.invalid("Duplicate skill detected: " + key);
-                    }
-                } catch (Exception ex) {
-                    Logger.invalid("Failed to load skill: " + key + " - " + ex.getMessage());
-                    ex.printStackTrace();
-                }
-            }
-        } else {
-            Logger.log(LogType.REGISTRATION, 1, "skills.yml doesn't have any changes, skipping it");
-        }
-
         // Load individual dynamic skills
         Logger.log(LogType.REGISTRATION, 1, "Loading individual dynamic skill files...");
         File skillRoot = new File(api.getDataFolder().getPath() + File.separator + SKILL_FOLDER);
@@ -186,13 +137,15 @@ public class RegistrationManager {
                         CommentedConfig sConfig = new CommentedConfig(api, SKILL_DIR + name);
                         DynamicSkill skill = new DynamicSkill(name);
                         skill.load(sConfig.getConfig().getSection(name));
+
                         if (!SkillAPI.isSkillRegistered(skill.getName())) {
                             api.addDynamicSkill(skill);
                             skill.registerEvents(api);
-                            sConfig.clear();
-                            skill.save(sConfig.getConfig().createSection(name));
-                            skill.save(skillConfig.getConfig().createSection(name));
-                            sConfig.save();
+                            // 草泥马的什么脑瘫设计，有问题的情况下不提示，给覆盖，脑瘫
+                            //sConfig.clear();
+                            //skill.save(sConfig.getConfig().createSection(name));
+                            //skill.save(skillConfig.getConfig().createSection(name));
+                            //sConfig.save();
                             Logger.log(LogType.REGISTRATION, 2, "Loaded the dynamic skill: " + name);
                         } else if (SkillAPI.getSkill(name) instanceof DynamicSkill) {
                             Logger.log(LogType.REGISTRATION, 3, name + " is already loaded, skipping it");
@@ -223,37 +176,6 @@ public class RegistrationManager {
             }
         }
 
-        // Load dynamic classes from classes.yml
-        if (!classConfig.getConfig().getBoolean("loaded", false)) {
-            Logger.log(LogType.REGISTRATION, 1, "Loading dynamic classes from classes.yml...");
-            classConfig.getConfig().set("loaded", true);
-            for (String key : classConfig.getConfig().keys()) {
-                if (key.equals("loaded")) {
-                    continue;
-                }
-                try {
-                    DynamicClass tree = new DynamicClass(api, key);
-                    tree.load(classConfig.getConfig().getSection(key));
-                    if (!SkillAPI.isClassRegistered(tree.getName())) {
-                        api.addDynamicClass(tree);
-                        CommentedConfig cConfig = new CommentedConfig(api, CLASS_DIR + key);
-                        cConfig.clear();
-                        tree.save(cConfig.getConfig().createSection(key));
-                        tree.save(classConfig.getConfig().createSection(key));
-                        cConfig.save();
-                        Logger.log(LogType.REGISTRATION, 2, "Loaded the dynamic class: " + key);
-                    } else {
-                        Logger.invalid("Duplicate class detected: " + key);
-                    }
-                } catch (Exception ex) {
-                    Logger.invalid("Failed to load class \"" + key + "\"");
-                    ex.printStackTrace();
-                }
-            }
-        } else {
-            Logger.log(LogType.REGISTRATION, 1, "classes.yml doesn't have any changes, skipping it");
-        }
-
         // Load individual dynamic classes
         Logger.log(LogType.REGISTRATION, 1, "Loading individual dynamic class files...");
         File classRoot = new File(api.getDataFolder().getPath() + File.separator + CLASS_FOLDER);
@@ -269,10 +191,9 @@ public class RegistrationManager {
                         tree.load(cConfig.getConfig().getSection(name));
                         if (!SkillAPI.isClassRegistered(tree.getName())) {
                             api.addDynamicClass(tree);
-                            cConfig.clear();
-                            tree.save(cConfig.getConfig().createSection(name));
-                            tree.save(classConfig.getConfig().createSection(name));
-                            cConfig.save();
+                            //cConfig.clear();
+                            //tree.save(cConfig.getConfig().createSection(name));
+                            //cConfig.save();
                             Logger.log(LogType.REGISTRATION, 2, "Loaded the dynamic class: " + name);
                         } else if (SkillAPI.getClass(name) instanceof DynamicClass) {
                             Logger.log(LogType.REGISTRATION, 3, name + " is already loaded, skipping it");
@@ -285,12 +206,7 @@ public class RegistrationManager {
                 }
             }
         }
-
-        skillConfig.save();
-        classConfig.save();
-
         mode = Mode.DONE;
-
         Logger.log(LogType.REGISTRATION, 0, "Registration complete");
         Logger.log(LogType.REGISTRATION, 0, " - " + SkillAPI.getSkills().size() + " skills");
         Logger.log(LogType.REGISTRATION, 0, " - " + SkillAPI.getClasses().size() + " classes");

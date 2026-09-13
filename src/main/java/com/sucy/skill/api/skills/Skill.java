@@ -20,6 +20,7 @@ import com.sucy.skill.cast.IIndicator;
 import com.sucy.skill.data.Permissions;
 import com.sucy.skill.dynamic.TempEntity;
 import com.sucy.skill.gui.IconHolder;
+import com.sucy.skill.hook.mythic.MythicManager;
 import com.sucy.skill.language.NotificationNodes;
 import com.sucy.skill.language.RPGFilter;
 import com.sucy.skill.language.SkillNodes;
@@ -695,6 +696,8 @@ public abstract class Skill implements IconHolder
         SkillDamageEvent event = new SkillDamageEvent(this, source, target, damage, classification, range);
         Bukkit.getPluginManager().callEvent(event);
         if (!event.isCancelled()) {
+            // 如果是召唤物，
+            MythicManager.INSTANCE.trigger(event);
             skillDamage = true;
             int ticks = target.getNoDamageTicks();
             target.setNoDamageTicks(0);

@@ -56,7 +56,7 @@ class AttackAi2(
      * - 只判断是否需要进入攻击行为
      */
     override fun shouldExecute(): Boolean {
-        if (summon.isWorldChange) return false
+        if (owner.world.name != cachedSummon.world.name) return false
         // 优先检查现有目标是否还有效
         if (summon.targetEntity == null || !isTargetValid()) {
             summon.targetEntity = findNewTarget()
@@ -77,7 +77,7 @@ class AttackAi2(
      * - 不重复逻辑，只判断攻击是否应该持续
      */
     override fun continueExecute(): Boolean {
-        if (summon.isWorldChange) return false
+        if (owner.world.name != cachedSummon.world.name) return false
         return isTargetValid()
     }
 
@@ -136,10 +136,12 @@ class AttackAi2(
 
         // 世界匹配
         if (t.world.name != cachedSummon.world.name) return false
+        if (owner.world.name != cachedSummon.world.name) return false
 
         val loc = cachedSummon.location
         // 目标离召唤物太远
         if (loc.distanceSquared(t.location) > followRange) return false
+
 
         // 召唤物离主人太远
         if (loc.distanceSquared(owner.location) > ownerRange) return false

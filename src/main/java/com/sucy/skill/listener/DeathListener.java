@@ -27,18 +27,21 @@
 package com.sucy.skill.listener;
 
 import com.sucy.skill.SkillAPI;
+import com.sucy.skill.api.event.EntitySkillKillEvent;
 import com.sucy.skill.api.event.SkillDamageEvent;
 import com.sucy.skill.api.event.TrueDamageEvent;
 import com.sucy.skill.api.particle.EffectManager;
+import com.sucy.skill.api.skills.Skill;
 import com.sucy.skill.dynamic.data.DataSkills;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.entity.EntityDeathEvent;
+import org.bukkit.inventory.ItemStack;
 
-public class DeathListener extends SkillAPIListener
-{
+public class DeathListener extends SkillAPIListener {
+
     private final String KILLER = "sapiKiller";
 
     /**
@@ -48,7 +51,7 @@ public class DeathListener extends SkillAPIListener
      */
     @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
     public void onSpell(SkillDamageEvent event) {
-        handle(event.getTarget(), event.getDamager(), event.getDamage());
+        handle(event.getTarget(), event.getDamager(), event.getSkill(), event.getClassification());
     }
 
     /**
@@ -58,29 +61,45 @@ public class DeathListener extends SkillAPIListener
      */
     @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
     public void onTrue(TrueDamageEvent event) {
-        handle(event.getTarget(), event.getDamager(), event.getDamage());
+        handle(event.getTarget(), event.getDamager(), event.getSkill(), "default");
     }
 
-    private void handle(final LivingEntity entity, final LivingEntity damager, final double damage) {
-        SkillAPI.setMeta(entity, KILLER, damager);
+    private void handle(final LivingEntity entity, final LivingEntity damager, final Skill skill, final String clazz) {
+        ItemStack itemStack = null;
+        if (damager instanceof Player) {
+            itemStack = ((Player) damager).getInventory().getItemInMainHand();
+        }
+        EntitySkillKillEvent event = new EntitySkillKillEvent(
+                damager,
+                itemStack,
+                entity,
+                skill,
+                clazz,
+                System.currentTimeMillis()
+        );
+       // System.out.println("setMeta "+entity.getName());
+        SkillAPI.setMeta(entity, KILLER, event);
     }
 
     @EventHandler(priority = EventPriority.LOWEST)
     public void onDeath(EntityDeathEvent event) {
+       // System.out.println("EntityDeathEvent "+event.getEntity().getName());
         EffectManager.clear(event.getEntity());
         if (!(event.getEntity() instanceof Player)) {
             DataSkills.delMetaStack(event.getEntity().getUniqueId());
         }
-        Object killer = SkillAPI.getMeta(event.getEntity(), KILLER);
-        if (killer != null && event.getEntity().getKiller() == null) {
-            applyDeath(event.getEntity(), (LivingEntity)killer, event.getDroppedExp());
+        Object killEvent = SkillAPI.getMeta(event.getEntity(), KILLER);
+        if (killEvent != null) {
+         //   System.out.println("EntityDeathEvent killEvent != null");
+            EntitySkillKillEvent killEvent1 = (EntitySkillKillEvent) killEvent;
+            if ((System.currentTimeMillis() - killEvent1.getTagTime()) <= 1000) {
+                killEvent1.callEvent();
+            }
         }
+
     }
 
-    private void applyDeath(LivingEntity entity, LivingEntity damager, int exp) {
-        if (!entity.isDead() || entity.getKiller() != null || !(damager instanceof Player))
-            return;
 
-        KillListener.giveExp(entity, (Player)damager, exp);
-    }
+
+
 }

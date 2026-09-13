@@ -38,6 +38,8 @@ public class Logger
 {
     private static final HashMap<String, Integer> LEVELS = new HashMap<String, Integer>();
 
+    private static final java.util.logging.Logger LOGGER = java.util.logging.Logger.getLogger("SkillAPI");
+
     /**
      * Loads all logging level settings from the config data
      *
@@ -71,7 +73,7 @@ public class Logger
     public static void log(String key, int level, String message)
     {
         if (LEVELS.containsKey(key) && LEVELS.get(key) >= level)
-            Bukkit.getLogger().info(message);
+            LOGGER.info(message);
     }
 
     /**
@@ -94,7 +96,7 @@ public class Logger
      */
     public static void invalid(String message)
     {
-        Bukkit.getLogger().severe(message);
+        LOGGER.severe(message);
     }
 
     /**
@@ -104,7 +106,7 @@ public class Logger
      */
     public static void bug(String message)
     {
-        Bukkit.getLogger().severe(message);
+        LOGGER.severe(message);
     }
 
     /**
@@ -114,6 +116,6 @@ public class Logger
      */
     public static void log(String message)
     {
-        Bukkit.getLogger().info(message);
+        LOGGER.info(message);
     }
 }

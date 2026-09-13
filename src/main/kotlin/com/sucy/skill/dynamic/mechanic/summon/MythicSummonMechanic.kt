@@ -12,6 +12,8 @@ import com.sucy.skill.hook.mythic.Summon
 import com.sucy.skill.hook.mythic.SummonData
 import io.lumine.xikage.mythicmobs.adapters.bukkit.BukkitAdapter
 import io.lumine.xikage.mythicmobs.mobs.entities.SpawnReason
+import me.neon.libs.taboolib.nms.ai.clearGoalAi
+import me.neon.libs.taboolib.nms.ai.clearTargetAi
 import org.bukkit.entity.LivingEntity
 
 
@@ -43,7 +45,7 @@ class MythicSummonMechanic: MechanicComponent() {
         val upward = parseValues(caster, "upward", level, 0.0)
         val right = parseValues(caster, "right", level, 0.0)
 
-        val attr: PlayerData? = SkillAPI.getPlayerData(caster.uniqueId)
+        ///val attr: PlayerData = SkillAPI.getPlayerData(caster.uniqueId) ?: return false
 
         val entity = targets.mapNotNull { target ->
             val loc = target.location
@@ -54,42 +56,16 @@ class MythicSummonMechanic: MechanicComponent() {
                 .add(side.multiply(right))
             val mm = MythicManager.api.getMythicMob(type)
             if (mm != null) {
-                val am = mm.spawn(
-                    BukkitAdapter.adapt(loc),
-                    1.0,
-                    SpawnReason.OTHER,
-                    pre = {
-                        if (it is LivingEntity) {
-                            val mobAttributeData = MobAttributeData(attr, it)
-                            MobAttribute.data[it.uniqueId] = mobAttributeData
-                            MythicManager.summonAscription[it.uniqueId] = caster
-                        }
-                    }
-                ) {
-                    if (it is LivingEntity) {
-                        it.maxHealth = health
-                        it.health = health
-                    }
-                }
-                if (am != null) {
-                    Summon(
-                        caster, am, System.currentTimeMillis() + duration.toLong()
-                    ).also {
-                        if (useAi) {
-                            it.initAi()
-                        }
-                    }
-                } else {
-                    SkillAPI.singleton().logger.info("MythicSummonMechanic $type 被阻止生成")
-                    null
-                }
+                Summon(caster, loc, mm, useAi, health, duration)
             } else {
                 println("type is null by MythicSummonMechanic $type")
                 null
             }
         }
         val data = MythicManager.summonMap.computeIfAbsent(caster.uniqueId) { SummonData(caster) }
+        data.lock.set(true)
         data.addQueue.addAll(entity)
+        data.lock.set(false)
         return true
     }
 

@@ -83,7 +83,10 @@ public class ArmorStandMechanic extends MechanicComponent {
             Vector dir = loc.getDirection().setY(0).normalize();
             Vector side = dir.clone().crossProduct(UP);
             loc.add(dir.multiply(forward)).add(0, upward, 0).add(side.multiply(right));
-
+            if (settings.getBool("randomDir")) {
+                loc.setYaw((float) (Math.random() * 360));
+                loc.setPitch((float) (Math.random() * 180 - 90));
+            }
             ArmorStandCarrier armorStandCarrier = new ArmorStandCarrier(
                     loc,
                     EntityType.ARMOR_STAND,

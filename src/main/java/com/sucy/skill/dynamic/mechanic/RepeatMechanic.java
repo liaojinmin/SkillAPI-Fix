@@ -57,10 +57,12 @@ public class RepeatMechanic extends MechanicComponent {
         skillContext = context;
        // System.out.println("RepeatMechanic");
         if (!targets.isEmpty()) {
-            final int count = (int) parseValues(caster, REPETITIONS, level, 3.0);
+            int count = (int) parseValues(caster, REPETITIONS, level, 3.0);
             if (count <= 0) {
                 return false;
             }
+            // 限制 100 次
+            count = Math.min(count, 100);
            // System.out.println("  cast: "+caster.getName() + " target: "+targets.stream().map(CommandSender::getName).collect(Collectors.joining()));
 
             final int delay = (int) (settings.getDouble(DELAY, 0.0) * 20);
@@ -122,8 +124,10 @@ public class RepeatMechanic extends MechanicComponent {
         @Override
         public void run() {
             try {
+                //System.out.println("执行次数 "+count);
                 for (int i = 0; i < targets.size(); i++) {
-                    if (targets.get(i).isDead() || !targets.get(i).isValid()) {
+                    LivingEntity target = targets.get(i);
+                    if (target.isDead() || !target.isValid() || !target.getWorld().getName().equalsIgnoreCase(caster.getWorld().getName())) {
                         targets.remove(i);
                     }
                 }

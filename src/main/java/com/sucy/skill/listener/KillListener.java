@@ -84,7 +84,7 @@ public class KillListener extends SkillAPIListener
     @EventHandler(priority = EventPriority.MONITOR)
     public void onKill(EntityDeathEvent event)
     {
-        FlagManager.clearFlags(event.getEntity());
+        FlagManager.removeFlags(event.getEntity());
         BuffManager.clearData(event.getEntity());
 
         giveExp(event.getEntity(), event.getEntity().getKiller(), event.getDroppedExp());

@@ -18,6 +18,9 @@ import com.sucy.skill.data.io.IOManager;
 import com.sucy.skill.data.io.SQLImpl;
 import com.sucy.skill.dynamic.DynamicClass;
 import com.sucy.skill.dynamic.DynamicSkill;
+import com.sucy.skill.hook.chemdah.EntitySkillKillObjective;
+import com.sucy.skill.hook.chemdah.MythicMobsKillerObjective;
+
 import com.sucy.skill.hook.mythic.MythicManager;
 import com.sucy.skill.hook.PlaceholderAPIHook;
 import com.sucy.skill.hook.mythic.MythicListener;
@@ -28,7 +31,9 @@ import com.sucy.skill.task.MobAttributeTask;
 import com.sucy.skill.thread.MainThread;
 import com.sucy.skill.manager.*;
 import com.sucy.skill.trail.TrailManager;
-import com.sucy.skill.utils.EventCancelTracker;
+
+import ink.ptms.chemdah.core.quest.QuestLoader;
+import me.neon.flash.attribute.AttributePlayer;
 import me.neon.libs.NeonLibsLoader;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
@@ -36,7 +41,7 @@ import org.bukkit.OfflinePlayer;
 import org.bukkit.attribute.Attribute;
 import org.bukkit.entity.Player;
 import org.bukkit.event.HandlerList;
-import org.bukkit.event.entity.EntityDamageByEntityEvent;
+
 import org.bukkit.metadata.FixedMetadataValue;
 import org.bukkit.metadata.MetadataValue;
 import org.bukkit.metadata.Metadatable;
@@ -86,7 +91,6 @@ public class SkillAPI extends JavaPlugin {
     @Override
     public void onEnable() {
        // EventCancelTracker.hookEventHandlers(EntityDamageByEntityEvent.class);
-        singleton = this;
         mainThread = new MainThread();
         Particle.init();
         EffectManager.init();
@@ -119,12 +123,13 @@ public class SkillAPI extends JavaPlugin {
         listen(new AddonListener(), true);
         listen(new ItemListener(), settings.isCheckLore());
         listen(new AttributeListener(), true);
-        listen(new DeathListener(), !VersionManager.isVersionAtLeast(11000));
+        listen(new DeathListener(), true);
         listen(new LingeringPotionListener(), true);
         listen(new ExperienceListener(), settings.yieldsEnabled());
         // MM 事件
         listen(new MobListener(), settings.isAttributeMobEnabled());
         listen(new MythicListener(), true);
+
 
         MainThread.register(new MobAttributeTask());
         // Set up tasks
@@ -153,8 +158,17 @@ public class SkillAPI extends JavaPlugin {
         }
         Bukkit.getPluginManager().registerEvents(MythicManager.INSTANCE, this);
         Bukkit.getPluginManager().registerEvents(TrailManager.INSTANCE, this);
+        Bukkit.getPluginManager().registerEvents(DynamicSkillHandler.INSTANCE, this);
+        Bukkit.getPluginManager().registerEvents(CombatManager.INSTANCE, this);
         MythicManager.INSTANCE.onStart();
         TrailManager.INSTANCE.onStart();
+        CombatManager.INSTANCE.start();
+        QuestLoader.INSTANCE.register(EntitySkillKillObjective.INSTANCE);
+        QuestLoader.INSTANCE.register(MythicMobsKillerObjective.INSTANCE);
+       // QuestLoader.INSTANCE.register(MythicMobsSelfKillerObjective.INSTANCE);
+        Bukkit.getScheduler().runTaskLater(this, () -> {
+            me.neon.flash.attribute.AttributeManager.INSTANCE.getAttributePlayer().values().forEach(AttributePlayer::updateAttribute);
+        }, 20);
     }
 
     private void listen(SkillAPIListener listener, boolean enabled) {
@@ -173,6 +187,7 @@ public class SkillAPI extends JavaPlugin {
         }
         MythicManager.INSTANCE.onShutdown();
         TrailManager.INSTANCE.onClose();
+        CombatManager.INSTANCE.close();
         playerDataMap.clear();
         EffectManager.cleanUp();
         ArmorStandManager.cleanUp();
@@ -194,7 +209,6 @@ public class SkillAPI extends JavaPlugin {
         classes.clear();
         HandlerList.unregisterAll(this);
         cmd.clear();
-        singleton = null;
     }
 
 
@@ -369,10 +383,9 @@ public class SkillAPI extends JavaPlugin {
         }
         if (clear && playerData != null) {
             if (SkillAPI.getSettings().isWorldEnabled(player.getWorld())) {
-                playerData.record(player);
                 playerData.stopPassives(player);
             }
-            FlagManager.clearFlags(player);
+            FlagManager.removeFlags(player);
             BuffManager.clearData(player);
             Combat.clearData(player);
             DynamicSkill.clearCastData(player);
