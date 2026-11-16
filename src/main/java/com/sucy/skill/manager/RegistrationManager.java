@@ -1,35 +1,8 @@
-/**
- * SkillAPI
- * com.sucy.manager.skill.RegistrationManager
- *
- * The MIT License (MIT)
- *
- * Copyright (c) 2014 Steven Sucy
- *
- * Permission is hereby granted, free of charge, to any person obtaining a copy
- * of this software and associated documentation files (the "Software") to deal
- * in the Software without restriction, including without limitation the rights
- * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
- * copies of the Software, and to permit persons to whom the Software is
- * furnished to do so, subject to the following conditions:
- *
- * The above copyright notice and this permission notice shall be included in
- * all copies or substantial portions of the Software.
- *
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
- * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
- * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
- * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
- * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
- * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
- * THE SOFTWARE.
- */
 package com.sucy.skill.manager;
 
 import com.rit.sucy.config.CommentedConfig;
 import com.rit.sucy.config.parse.DataSection;
 import com.sucy.skill.SkillAPI;
-import com.sucy.skill.api.SkillPlugin;
 import com.sucy.skill.api.classes.RPGClass;
 import com.sucy.skill.api.skills.Skill;
 import com.sucy.skill.dynamic.ComponentRegistry;
@@ -50,17 +23,6 @@ import java.io.File;
  * added.</p>
  */
 public class RegistrationManager {
-    /**
-     * The registration modes used by the manager. These values are used to check
-     * what can be registered at any given time.
-     */
-    public enum Mode {
-        STARTUP,
-        SKILL,
-        CLASS,
-        DYNAMIC,
-        DONE
-    }
 
     private static final String SKILL_FOLDER = "dynamic" + File.separator + "skill";
     private static final String CLASS_FOLDER = "dynamic" + File.separator + "class";
@@ -68,8 +30,6 @@ public class RegistrationManager {
     private static final String CLASS_DIR    = CLASS_FOLDER + File.separator;
 
     private final SkillAPI api;
-
-    private Mode mode = Mode.STARTUP;
 
     /**
      * <p>Creates a new Registration Manager for handling registering new
@@ -90,40 +50,6 @@ public class RegistrationManager {
      * configuration files and other plugins.
      */
     public void initialize() {
-
-        Logger.log(LogType.REGISTRATION, 1, "Loading components...");
-
-        for (Plugin plugin : api.getServer().getPluginManager().getPlugins()) {
-            if (plugin instanceof SkillPlugin) {
-                try {
-                    Logger.log(LogType.REGISTRATION, 2, " - " + plugin.getName());
-                    ((SkillPlugin) plugin).getTriggers().forEach(ComponentRegistry::register);
-                    ((SkillPlugin) plugin).getComponents().forEach(ComponentRegistry::register);
-                } catch (Throwable t) {
-                    Logger.invalid("Plugin \"" + plugin.getName() + "\" failed to register skills. Error details:");
-                    t.printStackTrace();
-                }
-            }
-        }
-        ComponentRegistry.save();
-
-        Logger.log(LogType.REGISTRATION, 1, "Loading skills...");
-
-        // Request plugin skills
-        mode = Mode.SKILL;
-        for (Plugin plugin : api.getServer().getPluginManager().getPlugins()) {
-            if (plugin instanceof SkillPlugin) {
-                try {
-                    Logger.log(LogType.REGISTRATION, 2, " - " + plugin.getName());
-                    ((SkillPlugin) plugin).registerSkills(api);
-                } catch (Throwable t) {
-                    Logger.invalid("Plugin \"" + plugin.getName() + "\" failed to register skills. Error details:");
-                    t.printStackTrace();
-                }
-            }
-        }
-
-        mode = Mode.DYNAMIC;
         // Load individual dynamic skills
         Logger.log(LogType.REGISTRATION, 1, "Loading individual dynamic skill files...");
         File skillRoot = new File(api.getDataFolder().getPath() + File.separator + SKILL_FOLDER);
@@ -141,11 +67,6 @@ public class RegistrationManager {
                         if (!SkillAPI.isSkillRegistered(skill.getName())) {
                             api.addDynamicSkill(skill);
                             skill.registerEvents(api);
-                            // 草泥马的什么脑瘫设计，有问题的情况下不提示，给覆盖，脑瘫
-                            //sConfig.clear();
-                            //skill.save(sConfig.getConfig().createSection(name));
-                            //skill.save(skillConfig.getConfig().createSection(name));
-                            //sConfig.save();
                             Logger.log(LogType.REGISTRATION, 2, "Loaded the dynamic skill: " + name);
                         } else if (SkillAPI.getSkill(name) instanceof DynamicSkill) {
                             Logger.log(LogType.REGISTRATION, 3, name + " is already loaded, skipping it");
@@ -156,22 +77,6 @@ public class RegistrationManager {
                         Logger.invalid("Failed to load skill: " + name + " - " + ex.getMessage());
                         ex.printStackTrace();
                     }
-                }
-            }
-        }
-
-        Logger.log(LogType.REGISTRATION, 1, "Loading classes...");
-
-        // Request plugin classes
-        mode = Mode.CLASS;
-        for (Plugin plugin : api.getServer().getPluginManager().getPlugins()) {
-            if (plugin instanceof SkillPlugin) {
-                Logger.log(LogType.REGISTRATION, 2, " - " + plugin.getName());
-                try {
-                    ((SkillPlugin) plugin).registerClasses(api);
-                } catch (Throwable t) {
-                    Logger.invalid("Plugin \"" + plugin.getName() + "\" failed to register classes. Error details:");
-                    t.printStackTrace();
                 }
             }
         }
@@ -206,129 +111,9 @@ public class RegistrationManager {
                 }
             }
         }
-        mode = Mode.DONE;
         Logger.log(LogType.REGISTRATION, 0, "Registration complete");
         Logger.log(LogType.REGISTRATION, 0, " - " + SkillAPI.getSkills().size() + " skills");
         Logger.log(LogType.REGISTRATION, 0, " - " + SkillAPI.getClasses().size() + " classes");
     }
 
-    /**
-     * <p>Validates a skill, making sure it is being registered during the
-     * appropriate time, it isn't null, and it doesn't conflict with other
-     * registered skills.</p>
-     *
-     * @param skill skill to validate
-     *
-     * @return the class if valid, null otherwise
-     */
-    public Skill validate(Skill skill) {
-
-        // Cannot register outside the allotted time
-        if (mode != Mode.SKILL) {
-            throw new IllegalStateException("Skills cannot be added outside the provided SkillPlugin method");
-        }
-
-        // Cannot be null
-        else if (skill == null) {
-            throw new IllegalArgumentException("Cannot register a null skill");
-        }
-
-        // Cannot have multiple skills with the same name
-        else if (SkillAPI.isSkillRegistered(skill.getName())) {
-            Logger.invalid("Duplicate skill name: \"" + skill.getName() + "\" - skipping the duplicate");
-        }
-
-        // Save new data to config
-        else {
-
-            CommentedConfig singleFile = new CommentedConfig(api, "skill" + File.separator + skill.getName());
-            DataSection config = singleFile.getConfig();
-
-            try {
-                // Soft save to ensure optional data starts off in the config
-                skill.softSave(config);
-
-                // Load the config data to apply any previous data
-                skill.load(config);
-
-                // Finally, do a full save to make sure the config is up to date
-                skill.save(config);
-                singleFile.save();
-
-                if (skill instanceof Listener) {
-                    Bukkit.getServer().getPluginManager().registerEvents((Listener) skill, api);
-                }
-
-                // Skill is ready to be registered
-                return skill;
-            } catch (Exception ex) {
-                Logger.bug("Failed to save skill data to config for \"" + skill.getName() + "\" - skipping registration");
-                ex.printStackTrace();
-            }
-        }
-
-        return null;
-    }
-
-    /**
-     * <p>Validates a class, making sure it is being registered during the
-     * appropriate time, it isn't null, and it doesn't conflict with other
-     * registered classes.</p>
-     *
-     * @param rpgClass class to validate
-     *
-     * @return the class if valid, null otherwise
-     */
-    public RPGClass validate(RPGClass rpgClass) {
-
-        // Cannot register outside the allotted time
-        if (mode != Mode.CLASS) {
-            throw new IllegalStateException("Classes cannot be added outside the provided SkillPlugin method");
-        }
-
-        // Cannot be null
-        else if (rpgClass == null) {
-            throw new IllegalArgumentException("Cannot register a null class");
-        }
-
-        // Cannot have multiple skills with the same name
-        else if (SkillAPI.isClassRegistered(rpgClass.getName())) {
-            Logger.invalid("Duplicate class name: \"" + rpgClass.getName() + "\" - skipping the duplicate");
-        }
-
-        // Save new data to config
-        else {
-
-            CommentedConfig singleFile = new CommentedConfig(api, "class" + File.separator + rpgClass.getName());
-            DataSection config = singleFile.getConfig();
-
-            try {
-
-                // Soft save to ensure optional data starts off in the config
-                rpgClass.softSave(config);
-
-                // Load the config data to apply any previous data
-                rpgClass.load(config);
-
-                // Finally, do a full save to make sure the config is up to date
-                rpgClass.save(config);
-                singleFile.save();
-
-                // Skill is ready to be registered
-                return rpgClass;
-            } catch (Exception ex) {
-                Logger.bug("Failed to save class data to config for \"" + rpgClass.getName() + "\" - skipping registration");
-                ex.printStackTrace();
-            }
-        }
-
-        return null;
-    }
-
-    /**
-     * @return true if registering dynamic skills, false otherwise
-     */
-    public boolean isAddingDynamicSkills() {
-        return mode == Mode.DYNAMIC;
-    }
 }

@@ -172,6 +172,9 @@ object MythicManager: Listener {
         if (event.mechanicName.equals("SkSummonLock", true)) {
             event.register(SummonLookMechanic(event.container.configLine, event.config))
         }
+        if (event.mechanicName.equals("SkCrack")) {
+            event.register(CrackMechanic(event.container.configLine, event.config))
+        }
     }
 
     @EventHandler

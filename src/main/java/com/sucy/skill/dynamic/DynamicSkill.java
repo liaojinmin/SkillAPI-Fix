@@ -32,6 +32,7 @@ import com.rit.sucy.text.TextFormatter;
 import com.sucy.skill.SkillAPI;
 import com.sucy.skill.api.skills.PassiveSkill;
 import com.sucy.skill.api.skills.Skill;
+import com.sucy.skill.api.skills.SkillContext;
 import com.sucy.skill.api.skills.SkillShot;
 import com.sucy.skill.cast.IIndicator;
 import com.sucy.skill.dynamic.trigger.TriggerComponent;
@@ -74,15 +75,6 @@ public class DynamicSkill extends Skill implements SkillShot, PassiveSkill, List
      */
     public DynamicSkill(final String name) {
         super(name, "Dynamic", Material.JACK_O_LANTERN, 1);
-    }
-
-    /**
-     * Checks whether or not the dynamic skill can be cast
-     *
-     * @return true if can cast, false otherwise
-     */
-    public boolean canCast() {
-        return castTrigger != null;
     }
 
     /**
@@ -253,43 +245,13 @@ public class DynamicSkill extends Skill implements SkillShot, PassiveSkill, List
      * @return true if casted successfully, false if conditions weren't met or no effects are using the cast trigger
      */
     @Override
-    public boolean cast(final LivingEntity user, final int level) {
-        return trigger(user, user, level, castTrigger);
+    public boolean cast(final LivingEntity user, int level) {
+        return cast(user, level, null);
     }
 
     @Override
-    public boolean cast(final LivingEntity user, final int level, @Nullable LivingEntity target) {
-        if (target == null) {
-            return cast(user, level);
-        }
-        return trigger(user, target, level, castTrigger);
-    }
-
-    /**
-     * Initializes the indicators for a skill.
-     *
-     * @param list   list to store indicators in
-     * @param player player to base location on
-     * @param level  the level of the skill to create for
-     */
-    @Override
-    public void createPreview(final List<IIndicator> list, final Player player, final int level) {
-        list.clear();
-        if (castTrigger != null) {
-            castTrigger.makeIndicators(list, player, ImmutableList.of(player), level);
-        }
-    }
-
-    /**
-     * Updates the positions of indicators for a skill.
-     *
-     * @param list   list to store indicators in
-     * @param player player to base location on
-     * @param level  the level of the skill to create for
-     */
-    @Override
-    public void updateIndicators(final List<IIndicator> list, final Player player, final int level) {
-        createPreview(list, player, level);
+    public boolean cast(final LivingEntity user, int level, @Nullable LivingEntity target) {
+        return trigger(user, target == null ? user : target, level, castTrigger);
     }
 
     /**
@@ -334,12 +296,8 @@ public class DynamicSkill extends Skill implements SkillShot, PassiveSkill, List
         else { return super.getAttr(caster, key, level); }
     }
 
-    private boolean trigger(
-            final LivingEntity user,
-            final LivingEntity target,
-            final int level,
-            final TriggerComponent component) {
-        return component != null && component.trigger(user, target, level);
+    private boolean trigger(final LivingEntity user, final LivingEntity target, final int level, final TriggerComponent component) {
+        return component != null && component.trigger(new SkillContext(), user, target, level);
     }
 
     /**
@@ -381,26 +339,4 @@ public class DynamicSkill extends Skill implements SkillShot, PassiveSkill, List
         return component;
     }
 
-    /**
-     * Saves the skill back to the config, appending component data
-     * on top of the normal skill data
-     *
-     * @param config config to save to
-     */
-    @Override
-    public void save(final DataSection config) {
-        super.save(config);
-        final DataSection triggers = config.createSection("components");
-        for (final TriggerHandler triggerHandler : this.triggers) {
-            triggerHandler.getComponent()
-                    .save(triggers.createSection(TextFormatter.format(triggerHandler.getKey())));
-        }
-        save(triggers, castTrigger, "Cast");
-        save(triggers, initializeTrigger, "Initialize");
-        save(triggers, cleanupTrigger, "Cleanup");
-    }
-
-    private void save(final DataSection triggers, final TriggerComponent component, final String key) {
-        if (component != null) component.save(triggers.createSection(TextFormatter.format(key)));
-    }
 }

@@ -146,15 +146,6 @@ public abstract class EffectComponent {
         return value;
     }
 
-    protected String getString(LivingEntity caster, String key, String fallback) {
-        String val = settings.getString(key);
-        if (val == null) return fallback;
-        final Map<String, Object> map = DynamicSkill.getCastData(caster);
-        if (map.containsKey(val)) {
-            return map.get(val).toString();
-        } else return fallback;
-    }
-
     /**
      * Retrieves a numerical value while using non-numerical values as
      * keys for the cast data. If the value doesn't exist, this will
@@ -204,7 +195,7 @@ public abstract class EffectComponent {
     }
 
 
-    protected boolean executeChildren(LivingEntity caster, SkillContext context, int level, List<LivingEntity> targets) {
+    protected boolean executeChildren(final SkillContext context, LivingEntity caster, int level, List<LivingEntity> targets) {
         if (targets.isEmpty()) {
             return false;
         }
@@ -213,7 +204,7 @@ public abstract class EffectComponent {
         for (EffectComponent child : children) {
             try {
                 boolean counts = !child.settings.getString(COUNTS_KEY, "true").equalsIgnoreCase("false");
-                passed = child.execute(caster, context, level, targets);
+                passed = child.execute(context, caster, level, targets);
                 worked = (passed && counts) || worked;
             } catch (Exception e) {
                 Logger.invalid("执行子组件发生异常 "+e.getMessage());
@@ -252,6 +243,10 @@ public abstract class EffectComponent {
     }
 
     protected static String parseVars(LivingEntity caster, LivingEntity target, String text) {
+        return parseVars(caster, target, text, false);
+    }
+
+    protected static String parseVars(LivingEntity caster, LivingEntity target, String text, boolean toInt) {
         // Grab values
         int i = text.indexOf('{');
         if (i < 0) { return text; }
@@ -267,8 +262,12 @@ public abstract class EffectComponent {
             String key = text.substring(i + 1, j);
             if (data.containsKey(key)) {
                 Object obj = data.get(key);
-                if (obj instanceof Player) { obj = ((Player) obj).getName(); } else if (obj instanceof LivingEntity) {
+                if (obj instanceof Player) {
+                    obj = ((Player) obj).getName();
+                } else if (obj instanceof LivingEntity) {
                     obj = MobManager.getName((LivingEntity) obj);
+                } else if (obj instanceof Number && toInt) {
+                    obj = ((Number) obj).intValue();
                 }
                 builder.append(text.substring(k, i));
                 builder.append(obj);
@@ -297,7 +296,7 @@ public abstract class EffectComponent {
         return builder.toString();
     }
 
-    public abstract boolean execute(LivingEntity caster, SkillContext context, int level, List<LivingEntity> targets);
+    public abstract boolean execute(final SkillContext context, LivingEntity caster, int level, List<LivingEntity> targets);
 
     /**
      * Creates the list of indicators for the skill
@@ -307,29 +306,14 @@ public abstract class EffectComponent {
      * @param targets location to base location on
      * @param level   the level of the skill to create for
      */
-    public void makeIndicators(List<IIndicator> list, Player caster, List<LivingEntity> targets, int level) {
+    public void makeIndicators(final SkillContext context, List<IIndicator> list, Player caster, List<LivingEntity> targets, int level) {
         if (hasEffect) {
-            for (EffectComponent component : children) { component.makeIndicators(list, caster, targets, level); }
+            for (EffectComponent component : children) { component.makeIndicators(context, list, caster, targets, level); }
         }
     }
 
     private static final String TYPE      = "type";
     private static final String INDICATOR = "indicator";
-
-    /**
-     * Saves the component and its children to the config
-     *
-     * @param config config to save to
-     */
-    public void save(DataSection config) {
-        config.set(TYPE, getType().name().toLowerCase());
-        config.set(INDICATOR, indicatorType.getKey());
-        settings.save(config.createSection("data"));
-        DataSection children = config.createSection("children");
-        for (EffectComponent child : this.children) {
-            child.save(children.createSection(child.instanceKey));
-        }
-    }
 
     /**
      * Loads component data from the configuration

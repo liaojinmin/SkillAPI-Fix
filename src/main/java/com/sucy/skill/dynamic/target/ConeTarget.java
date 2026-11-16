@@ -27,6 +27,7 @@
 package com.sucy.skill.dynamic.target;
 
 import com.rit.sucy.player.TargetHelper;
+import com.sucy.skill.api.skills.SkillContext;
 import com.sucy.skill.cast.IIndicator;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
@@ -43,18 +44,18 @@ public class ConeTarget extends TargetComponent {
 
     /** {@inheritDoc} */
     @Override
-    void makeIndicators(List<IIndicator> list, Player caster, LivingEntity target, int level) {
+    void makeIndicators(final SkillContext context, List<IIndicator> list, Player caster, LivingEntity target, int level) {
         double range = parseValues(caster, RANGE, level, 3.0);
         double angle = parseValues(caster, ANGLE, level, 90.0);
-        makeConeIndicator(list, target, range, angle);
+        makeConeIndicator(context, list, target, range, angle);
     }
 
     /** {@inheritDoc} */
     @Override
-    List<LivingEntity> getTargets(LivingEntity caster, int level, List<LivingEntity> targets) {
+    List<LivingEntity> getTargets(final SkillContext context, LivingEntity caster, int level, List<LivingEntity> targets) {
         double range = parseValues(caster, RANGE, level, 3.0);
         double angle = parseValues(caster, ANGLE, level, 90.0);
-        return determineTargets(caster, level, targets, t -> TargetHelper.getConeTargets(t, angle, range));
+        return determineTargets(context, caster, level, targets, t -> TargetHelper.getConeTargets(t, angle, range));
     }
 
     @Override

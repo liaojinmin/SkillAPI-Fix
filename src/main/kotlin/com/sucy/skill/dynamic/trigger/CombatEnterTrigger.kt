@@ -2,6 +2,7 @@ package com.sucy.skill.dynamic.trigger
 
 import com.sucy.skill.CombatManager
 import com.sucy.skill.api.Settings
+import com.sucy.skill.api.skills.SkillContext
 import org.bukkit.entity.LivingEntity
 
 /**
@@ -29,7 +30,7 @@ class CombatEnterTrigger: Trigger<CombatManager.PlayerEnterCombatEvent> {
         return event.player
     }
 
-    override fun setValues(event: CombatManager.PlayerEnterCombatEvent, data: MutableMap<String, Any>) {
+    override fun setValues(event: CombatManager.PlayerEnterCombatEvent, data: SkillContext) {
     }
 
     override fun shouldTrigger(event: CombatManager.PlayerEnterCombatEvent, level: Int, settings: Settings): Boolean {

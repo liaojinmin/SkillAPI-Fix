@@ -1,6 +1,7 @@
 package com.sucy.skill.dynamic.trigger
 
 import com.sucy.skill.api.Settings
+import com.sucy.skill.api.skills.SkillContext
 import me.neon.core.event.MagicPulseUseEvent
 import me.neon.core.event.PlayerUseConsumeEvent
 import org.bukkit.entity.LivingEntity
@@ -30,7 +31,7 @@ class PlayerUseConsumeTrigger: Trigger<PlayerUseConsumeEvent> {
         return event.player
     }
 
-    override fun setValues(event: PlayerUseConsumeEvent, data: MutableMap<String, Any>) {
+    override fun setValues(event: PlayerUseConsumeEvent, data: SkillContext) {
         data["consume_name"] = event.itemStack.itemMeta.displayName
     }
 

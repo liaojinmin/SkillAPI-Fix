@@ -2,6 +2,7 @@ package com.sucy.skill.dynamic.trigger
 
 import com.sucy.skill.api.Settings
 import com.sucy.skill.api.event.PlayerKillerEntityEvent
+import com.sucy.skill.api.skills.SkillContext
 import me.neon.core.event.HealthRestoreEvent
 import org.bukkit.entity.LivingEntity
 
@@ -30,7 +31,7 @@ class PlayerKillerEntityTrigger: Trigger<PlayerKillerEntityEvent> {
         return event.player
     }
 
-    override fun setValues(event: PlayerKillerEntityEvent, data: MutableMap<String, Any>) {
+    override fun setValues(event: PlayerKillerEntityEvent, data: SkillContext) {
         data[key + "_classification"] = event.class_
         data[key + "_skill"] = event.skill
         data[key + "_isBehind"] = event.isBehind

@@ -236,7 +236,12 @@ var Mechanic = {
     Runic_REDUCE:{ name: 'Runic Reduce',container: true,  construct: MechanicRunicReduce,premium: true},
     REVIVE:{ name: 'Revive',container: true,  construct: MechanicRevive,premium: true},
     NEONFLASH_ATTRIBUTE:{ name: 'Neonflash Attribute',container: true,  construct: MechanicNeonflashAttribute,premium: true},  // 2026/4/4
-    GRAVITY_FIELD:{ name: 'Gravity Field',container: true,  construct: MechanicGravityField,premium: true}  // 2026/4/4
+    GRAVITY_FIELD:{ name: 'Gravity Field',container: true,  construct: MechanicGravityField,premium: true},  // 2026/4/4
+
+    BUFF_HUD:{ name: 'Buff Hud',container: true,  construct: MechanicBuffHud,premium: true},  // 2026/11/9
+    GERM_DOS:{ name: 'Germ Dos',container: true,  construct: MechanicGermDos,premium: true},  // 2026/11/9
+    CRACK:{ name: 'Crack',container: true,  construct: MechanicCrak,premium: true},  // 2026/11/9
+    INTERRUPT_PARRY:{ name: 'Interrupt Parry',container: true,  construct: MechanicInterruptParry,premium: true}  // 2026/11/13
     // MechanicRunicReduce
 };
 
@@ -3911,6 +3916,95 @@ function MechanicGravityField()
         .setTooltip('目标筛选')
     );
 
+
+}
+
+extend('MechanicBuffHud', 'Component');
+function MechanicBuffHud()
+{
+    this.super('Buff Hud', Type.MECHANIC, false);
+
+    this.description = 'buffHud操作';
+
+    this.data.push(new ListValue('动作类型', 'action', [ 'insert', 'delete', 'marge'], 'insert')
+        .setTooltip('insert(插入)、delete(删除)、marge(合并)')
+    );
+
+    this.data.push(new StringValue('键', 'key', 'DEFAULT')
+        .setTooltip('该hud组件的唯一识别键')
+    );
+
+    this.data.push(new StringValue('纹理图标', 'texture', 'local<->textures/hud/zd.png')
+        .setTooltip('hud显示的图标')
+    );
+
+    this.data.push(new StringListValue('文本', 'texts', [ '1'])
+        .setTooltip('hud图标处显示的文本，如果显示叠层的那种数字，直接写 1、2、3，可以多行')
+    );
+
+    this.data.push(new AttributeValue('时长', 'time', -1.0, 0)
+        .setTooltip('-1.0视为永不过期，可以通过合并和重新插入一样的key重置时间')
+    );
+
+}
+
+extend('MechanicGermDos', 'Component');
+function MechanicGermDos()
+{
+    this.super('Germ dos', Type.MECHANIC, false);
+
+    this.description = '执行萌芽dos';
+
+    this.data.push(new StringValue('Dos', 'dos', 'DEFULT')
+        .setTooltip('要执行的萌芽dos')
+    );
+
+}
+
+extend('MechanicCrak', 'Component');
+function MechanicCrak()
+{
+    this.super('Crack', Type.MECHANIC, false);
+
+    this.description = '地面（地裂）特效';
+
+    this.data.push(new ListValue('效果类型', 'type', [ 'WAVE', 'EXPLODE', 'SQUEEZE', 'SPIN_FLY'], 'WAVE')
+        .setTooltip('效果类型')
+    );
+
+    this.data.push(new AttributeValue('索引', 'index', 1, 0)
+        .setTooltip('特效id，尽量别重复')
+    );
+
+    this.data.push(new AttributeValue('范围', 'radius', 3.0, 0)
+        .setTooltip('单点特效范围')
+    );
+
+    this.data.push(new AttributeValue('力度', 'strength', 1.0, 0)
+        .setTooltip('方块受力力度')
+    );
+
+    this.data.push(new AttributeValue('时长', 'duration', 40.0, 0)
+        .setTooltip('特效存留时长')
+    );
+
+    this.data.push(new AttributeValue('点长度', 'length', 1.0, 0)
+        .setTooltip('生成几个点')
+    );
+
+    this.data.push(new AttributeValue('可见范围', 'range', 64.0, 0)
+        .setTooltip('控制当前世界内可见的玩家范围')
+    );
+
+}
+
+// MechanicInterruptParry
+extend('MechanicInterruptParry', 'Component');
+function MechanicInterruptParry()
+{
+    this.super('Interrupt Parry', Type.MECHANIC, false);
+
+    this.description = '中断等待中的格挡姿态';
 
 }
 

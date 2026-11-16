@@ -27,6 +27,7 @@
 package com.sucy.skill.dynamic.target;
 
 import com.rit.sucy.player.TargetHelper;
+import com.sucy.skill.api.skills.SkillContext;
 import com.sucy.skill.cast.IIndicator;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
@@ -44,15 +45,20 @@ public class LinearTarget extends TargetComponent {
     /** {@inheritDoc} */
     @Override
     List<LivingEntity> getTargets(
-            final LivingEntity caster, final int level, final List<LivingEntity> targets) {
+            final SkillContext context,
+            final LivingEntity caster,
+            final int level,
+            final List<LivingEntity> targets
+    ) {
         final double tolerance = parseValues(caster, TOLERANCE, level, 4.0);
         final double range = parseValues(caster, RANGE, level, 5.0);
-        return determineTargets(caster, level, targets, t -> TargetHelper.getLivingTargets(t, range, tolerance));
+        return determineTargets(context, caster, level, targets, t -> TargetHelper.getLivingTargets(t, range, tolerance));
     }
 
     /** {@inheritDoc} */
     @Override
     void makeIndicators(
+            final SkillContext context,
             final List<IIndicator> list, final Player caster, final LivingEntity target, final int level) {
         // TODO - add indicators for linear targeting
     }

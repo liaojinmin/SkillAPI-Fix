@@ -4,6 +4,7 @@ import com.sucy.skill.SkillAPI;
 import com.sucy.skill.api.enums.ManaCost;
 import com.sucy.skill.api.player.PlayerData;
 import com.sucy.skill.api.player.PlayerSkill;
+import com.sucy.skill.api.skills.SkillContext;
 import com.sucy.skill.dynamic.mechanic.ReturnMechanic;
 import com.sucy.skill.dynamic.trigger.Trigger;
 import com.sucy.skill.dynamic.trigger.TriggerComponent;
@@ -74,16 +75,12 @@ public class TriggerHandler implements Listener {
     }
 
     public void cleanup(final LivingEntity entity) {
-      //  if (skill.getName().equalsIgnoreCase("打刀平A1")) {
-          //  System.out.println("- 移除生物ID: "+entity.getEntityId()+" 名称: "+entity.getName() + " by 打刀平A1");
-       // }
         active.remove(entity.getEntityId());
         component.cleanUp(entity);
     }
 
     public void register() {
         try {
-
             Bukkit.getPluginManager().registerEvent(
                     trigger.getEvent(),
                     this,
@@ -103,20 +100,6 @@ public class TriggerHandler implements Listener {
         final int level = active.get(caster.getEntityId());
         final Runnable c = cleanup.remove(caster.getEntityId());
 
-        /*
-        // 如果标记被移除则中断 2025/9/22
-        if (markCallback != null) {
-            if (!ReturnMechanic.hasMark(caster, markCallback.nextIndex)) {
-                if (c != null) {
-                    c.run();
-                }
-                System.out.println("  已被阻断 TriggerHandler 执行 当前标记 >>> "+markCallback.mark);
-                return;
-            }
-        }
-
-
-         */
         if (!trigger.shouldTrigger(event, level, component.settings)) {
             // 被动删除，如果有的话
             if (c != null) {
@@ -125,20 +108,24 @@ public class TriggerHandler implements Listener {
             return;
         }
 
-        final LivingEntity target = trigger.getTarget(event, component.settings);
-        trigger.setValues(event, DynamicSkill.getCastData(caster));
-        trigger(caster, target, level);
+        try (SkillContext skillContext = new SkillContext()) {
+            final LivingEntity target = trigger.getTarget(event, component.settings);
+            trigger.setValues(event, skillContext);
+            trigger(skillContext, caster, target, level);
 
-        if (event instanceof Cancellable) { skill.applyCancelled((Cancellable) event); }
-        trigger.postProcess(event, skill);
+            if (event instanceof Cancellable) {
+                skill.applyCancelled((Cancellable) event);
+            }
+            trigger.postProcess(event, skill);
 
-        // 被动删除，如果有的话
-        if (c != null) {
-            c.run();
+            // 被动删除，如果有的话
+            if (c != null) {
+                c.run();
+            }
         }
     }
 
-    void trigger(final LivingEntity user, final LivingEntity target, final int level) {
+    void trigger(final SkillContext skillContext, final LivingEntity user, final LivingEntity target, final int level) {
         if (user == null || target == null || component.isRunning() || !SkillAPI.getSettings().isValidTarget(target)) {
             return;
         }
@@ -154,13 +141,19 @@ public class TriggerHandler implements Listener {
 
             if ((cd || mana) && !data.check(skill, cd, mana)) { return; }
 
-            if (component.trigger(user, target, level)) {
+            if (component.trigger(skillContext, user, target, level)) {
                 if (cd) { skill.startCooldown(); }
-                if (mana) { data.useMana(skill.getManaCost(), ManaCost.SKILL_CAST); }
+                if (mana) {
+                    double manaValue = skill.getManaCost();
+                    if (skill.getManaRatioCost() > 0) {
+                        manaValue += data.getMaxMana() * skill.getManaRatioCost();
+                    }
+                    data.useMana(manaValue, ManaCost.SKILL_CAST);
+                }
 
             }
         } else {
-            component.trigger(user, target, level);
+            component.trigger(skillContext, user, target, level);
         }
     }
 }

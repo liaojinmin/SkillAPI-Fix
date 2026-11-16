@@ -92,8 +92,7 @@ public final class PlayerSkill
      *
      * @return skill template data
      */
-    public Skill getData()
-    {
+    public Skill getData() {
         return skill;
     }
 
@@ -181,6 +180,10 @@ public final class PlayerSkill
         return skill.getManaCost(level);
     }
 
+    public double getManaRatioCost() {
+        return skill.getManaRatioCost(level);
+    }
+
     public long getManaTick() {
         return skill.getManaTick(level);
     }
@@ -247,8 +250,12 @@ public final class PlayerSkill
         }
 
         // If mana is enabled, check to see if the player has enough
+        double costMana = skill.getManaCost(level);
+        if (skill.getManaRatioCost(level) > 0) {
+            costMana += player.getMaxMana() * skill.getManaRatioCost(level);
+        }
         if (SkillAPI.getSettings().isManaEnabled()
-            && player.getMana() < skill.getManaCost(level))
+            && player.getMana() < costMana)
         {
 
             return SkillStatus.MISSING_MANA;
@@ -306,8 +313,6 @@ public final class PlayerSkill
         this.points += amount;
     }
 
-
-
     /**
      * Reverts the skill back to level 0, locking it from
      * casting and refunding invested skill points
@@ -362,42 +367,4 @@ public final class PlayerSkill
             cooldown = System.currentTimeMillis() + (int) (seconds * 1000);
     }
 
-    /**
-     * Initializes the indicators for the skill
-     *
-     * @param player player to base location off of
-     */
-    public void initIndicators(Player player)
-    {
-        indicators.clear();
-        skill.createPreview(indicators, player, level);
-    }
-
-    /**
-     * Updates the preview indicators each interval
-     *
-     * @param player player to base location off of
-     */
-    public void updateIndicators(Player player)
-    {
-        skill.updateIndicators(indicators, player, level);
-    }
-
-    /**
-     * Makes the packets for active indicators
-     *
-     * @param step animation step
-     *
-     * @return packet list
-     *
-     * @throws Exception
-     */
-    public List<Object> makePackets(int step)
-        throws Exception
-    {
-        List<Object> packets = new ArrayList<Object>();
-        for (IIndicator indicator : indicators)
-            indicator.makePackets(packets, IndicatorSettings.particle, step);
-        return packets;
-    }
 }

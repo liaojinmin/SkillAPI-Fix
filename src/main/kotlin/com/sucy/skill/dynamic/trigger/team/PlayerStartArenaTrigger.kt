@@ -2,6 +2,7 @@ package com.sucy.skill.dynamic.trigger.team
 
 import com.sucy.skill.api.Settings
 import com.sucy.skill.api.event.MythicSummonDeathEvent
+import com.sucy.skill.api.skills.SkillContext
 import com.sucy.skill.dynamic.trigger.Trigger
 import me.geek.team.api.event.PlayerStartGameEvent
 import me.neon.arena.api.event.PlayerStartArenaEvent
@@ -32,7 +33,7 @@ class PlayerStartArenaTrigger: Trigger<PlayerStartArenaEvent> {
         return event.player
     }
 
-    override fun setValues(event: PlayerStartArenaEvent, data: MutableMap<String, Any>) {
+    override fun setValues(event: PlayerStartArenaEvent, data: SkillContext) {
     }
 
     override fun shouldTrigger(event: PlayerStartArenaEvent, level: Int, settings: Settings): Boolean {

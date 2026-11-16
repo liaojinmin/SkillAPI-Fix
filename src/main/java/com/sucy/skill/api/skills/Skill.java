@@ -52,8 +52,7 @@ import java.util.function.Function;
  * Represents a template for a skill used in the RPG system. This is
  * the class to extend when creating your own custom skills.
  */
-public abstract class Skill implements IconHolder
-{
+public abstract class Skill implements IconHolder {
     private static final DecimalFormat FORMAT = new DecimalFormat("#########0.0#");
 
     private final ArrayList<String> description = new ArrayList<>();
@@ -337,6 +336,10 @@ public abstract class Skill implements IconHolder
         return settings.getAttr(SkillAttribute.MANA, level);
     }
 
+    public double getManaRatioCost(int level) {
+        return settings.getAttr(SkillAttribute.MANA_RATIO, level);
+    }
+
     public long getManaTick(int level) {
         return settings.getManaTick(level, 0);
     }
@@ -389,37 +392,6 @@ public abstract class Skill implements IconHolder
     public ReadOnlySettings getSettings()
     {
         return readOnlySettings;
-    }
-
-    /**
-     * Checks whether or not this skill can be cast by players
-     *
-     * @return true if can be cast, false otherwise
-     */
-    public boolean canCast()
-    {
-        return this instanceof SkillShot || this instanceof TargetSkill;
-    }
-
-    /**
-     * Gets the indicator for the skill for the GUI tools
-     *
-     * @return GUI tool indicator
-     */
-    public ItemStack getToolIndicator()
-    {
-        ItemStack item = indicator.clone();
-        ItemMeta meta = item.getItemMeta();
-        meta.setDisplayName(name);
-
-        ArrayList<String> lore = new ArrayList<>();
-        lore.add("Level: " + getLevelReq(0));
-        lore.add("Cost: " + getCost(0));
-        meta.setLore(lore);
-
-        item.setItemMeta(meta);
-
-        return item;
     }
 
     /**
@@ -692,10 +664,10 @@ public abstract class Skill implements IconHolder
         }
         MetaKt.setMeta(target, "SkillAPI-skill", this);
         MetaKt.setMeta(target, "SkillAPI-classification", classification);
-       // System.out.println("  --START");
         SkillDamageEvent event = new SkillDamageEvent(this, source, target, damage, classification, range);
         Bukkit.getPluginManager().callEvent(event);
         if (!event.isCancelled()) {
+
             // 如果是召唤物，
             MythicManager.INSTANCE.trigger(event);
             skillDamage = true;
@@ -724,12 +696,14 @@ public abstract class Skill implements IconHolder
                     Bukkit.getPluginManager().callEvent(entityEvent);
                 }
             }
-        } //else {
+        } else {
+            MetaKt.removeMeta(target, "SkillAPI-skill");
+            MetaKt.removeMeta(target, "SkillAPI-classification");
+        }
            // System.out.println("SkillDamageEvent isCancelled");
            // if (event.cancelStack != null) {
              //   event.cancelStack.printStackTrace();
            // }
-      //  }
     }
 
     /**
@@ -771,25 +745,6 @@ public abstract class Skill implements IconHolder
         }
     }
 
-    /**
-     * Initializes the indicators for a skill.
-     * This should be implemented by each skill.
-     *
-     * @param list   list to store indicators in
-     * @param player player to base location on
-     * @param level  the level of the skill to create for
-     */
-    public void createPreview(List<IIndicator> list, Player player, int level) { }
-
-    /**
-     * Updates the positions of indicators for a skill.
-     * This should be implemented by each skill.
-     *
-     * @param list   list to update
-     * @param player player to base location on
-     * @param level  level of the skill updating for
-     */
-    public void updateIndicators(List<IIndicator> list, Player player, int level) { }
 
     private static boolean skillDamage = false;
 
@@ -815,39 +770,6 @@ public abstract class Skill implements IconHolder
     private static final String DESC      = "desc";
     private static final String ATTR      = "attributes";
 
-    /**
-     * Saves the skill data to the configuration, overwriting all previous data
-     *
-     * @param config config to save to
-     */
-    public void save(DataSection config) {
-        config.set(NAME, name);
-        config.set(TYPE, type.replace(ChatColor.COLOR_CHAR, '&'));
-        config.set(MAX, maxLevel);
-        config.set(REQ, skillReq);
-        config.set(REQLVL, skillReqLevel);
-        config.set(PERM, needsPermission);
-        //config.set("mana-tick", settings.getManaTick(1, 0));
-        settings.save(config.createSection(ATTR));
-        if (hasMessage()) {
-            config.set(MSG, message.replace(ChatColor.COLOR_CHAR, '&'));
-        }
-        Data.serializeIcon(indicator, config);
-        config.set(DESC, description);
-    }
-
-    /**
-     * Saves some of the skill data to the config, avoiding
-     * overwriting any pre-existing data
-     *
-     * @param config config to save to
-     */
-    public void softSave(DataSection config) {
-        boolean neededOnly = config.keys().size() > 0;
-        if (!neededOnly){
-            save(config);
-        }
-    }
 
     /**
      * Loads skill data from the configuration

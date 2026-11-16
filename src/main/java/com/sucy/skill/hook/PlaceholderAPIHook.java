@@ -53,7 +53,7 @@ public class PlaceholderAPIHook extends PlaceholderExpansion {
         PLACEHOLDERS.put("skill_level:", (p, skill) -> Integer.toString(p.getSkill(skill).getLevel()));
         PLACEHOLDERS.put("skill_points", (p, u) -> getSkillPoints(p.getMainClass()));
         PLACEHOLDERS.put("skill_points:", (p, group) -> getSkillPoints(p.getClass(group)));
-        PLACEHOLDERS.put("value:", (p, key) -> formats(DynamicSkill.getCastData(p.getPlayer())));
+        //PLACEHOLDERS.put("value:", (p, key) -> formats(DynamicSkill.getCastData(p.getPlayer())));
         new PlaceholderAPIHook().register();
     }
     // %sapi_mana%

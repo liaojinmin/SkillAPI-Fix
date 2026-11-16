@@ -1,6 +1,7 @@
 package com.sucy.skill.dynamic.trigger;
 
 import com.sucy.skill.api.Settings;
+import com.sucy.skill.api.skills.SkillContext;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
 import org.bukkit.event.entity.EntityDeathEvent;
@@ -44,7 +45,7 @@ public class KillTrigger implements Trigger<EntityDeathEvent> {
 
     /** {@inheritDoc} */
     @Override
-    public void setValues(final EntityDeathEvent event, final Map<String, Object> data) { }
+    public void setValues(final EntityDeathEvent event, final SkillContext context) { }
 
     /** {@inheritDoc} */
     @Override

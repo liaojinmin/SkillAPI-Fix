@@ -26,6 +26,7 @@
  */
 package com.sucy.skill.dynamic.target;
 
+import com.sucy.skill.api.skills.SkillContext;
 import com.sucy.skill.api.util.Nearby;
 import com.sucy.skill.cast.IIndicator;
 import org.bukkit.Location;
@@ -46,6 +47,7 @@ public class NearestTarget extends TargetComponent {
     /** {@inheritDoc} */
     @Override
     List<LivingEntity> getTargets(
+            final SkillContext context,
             final LivingEntity caster, final int level, final List<LivingEntity> targets) {
 
         final double radius = parseValues(caster, RADIUS, level, 3.0);
@@ -62,8 +64,8 @@ public class NearestTarget extends TargetComponent {
 
     /** {@inheritDoc} */
     @Override
-    void makeIndicators(final List<IIndicator> list, final Player caster, final LivingEntity target, final int level) {
-        makeCircleIndicator(list, target, parseValues(caster, RADIUS, level, 3.0));
+    void makeIndicators(final SkillContext context, final List<IIndicator> list, final Player caster, final LivingEntity target, final int level) {
+        makeCircleIndicator(context, list, target, parseValues(caster, RADIUS, level, 3.0));
     }
 
     @Override

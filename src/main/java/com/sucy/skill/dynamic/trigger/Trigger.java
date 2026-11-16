@@ -27,6 +27,7 @@
 package com.sucy.skill.dynamic.trigger;
 
 import com.sucy.skill.api.Settings;
+import com.sucy.skill.api.skills.SkillContext;
 import com.sucy.skill.dynamic.DynamicSkill;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.event.Event;
@@ -64,7 +65,7 @@ public interface Trigger<E extends Event> {
      * @param event event details
      * @param data caster's value data to populate
      */
-    void setValues(final E event, final Map<String, Object> data);
+    void setValues(final E event, final SkillContext context);
 
     /**
      * Fetches the caster as determined by the triggering event.

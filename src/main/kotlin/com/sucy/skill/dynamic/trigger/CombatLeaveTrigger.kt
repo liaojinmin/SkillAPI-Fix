@@ -2,6 +2,7 @@ package com.sucy.skill.dynamic.trigger
 
 import com.sucy.skill.CombatManager
 import com.sucy.skill.api.Settings
+import com.sucy.skill.api.skills.SkillContext
 import org.bukkit.entity.LivingEntity
 
 /**
@@ -29,7 +30,7 @@ class CombatLeaveTrigger: Trigger<CombatManager.PlayerLeaveCombatEvent> {
         return event.player
     }
 
-    override fun setValues(event: CombatManager.PlayerLeaveCombatEvent, data: MutableMap<String, Any>) {
+    override fun setValues(event: CombatManager.PlayerLeaveCombatEvent, data: SkillContext) {
     }
 
     override fun shouldTrigger(event: CombatManager.PlayerLeaveCombatEvent, level: Int, settings: Settings): Boolean {

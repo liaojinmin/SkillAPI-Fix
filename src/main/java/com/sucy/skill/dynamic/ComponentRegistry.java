@@ -1,11 +1,7 @@
 package com.sucy.skill.dynamic;
 
-import com.sucy.skill.SkillAPI;
 import com.sucy.skill.dynamic.condition.*;
 import com.sucy.skill.dynamic.condition.summon.MythicSummonSurvivalCondition;
-import com.sucy.skill.dynamic.custom.CustomComponent;
-import com.sucy.skill.dynamic.custom.CustomEffectComponent;
-import com.sucy.skill.dynamic.custom.EditorOption;
 import com.sucy.skill.dynamic.mechanic.*;
 import com.sucy.skill.dynamic.mechanic.MythicFactionMechanic;
 import com.sucy.skill.dynamic.mechanic.summon.MythicSummonDeleteMechanic;
@@ -19,10 +15,6 @@ import com.sucy.skill.dynamic.trigger.team.PlayerTeamStartTrigger;
 import org.bukkit.event.Event;
 import org.bukkit.plugin.EventExecutor;
 
-import java.io.BufferedWriter;
-import java.io.File;
-import java.io.FileOutputStream;
-import java.io.OutputStreamWriter;
 import java.util.EnumMap;
 import java.util.HashMap;
 import java.util.Map;
@@ -73,61 +65,7 @@ public class ComponentRegistry {
         });
     }
 
-    public static void register(final CustomEffectComponent component) {
-        register((EffectComponent) component);
-    }
 
-    public static void save() {
-        final StringBuilder builder = new StringBuilder("[");
-        TRIGGERS.values().forEach(trigger -> append(trigger, builder));
-        COMPONENTS.forEach((type, map) -> map.keySet().forEach(key -> append(getComponent(type, key), builder)));
-        if (builder.length() > 2) {
-            builder.replace(builder.length() - 1, builder.length(), "]");
-        } else {
-            builder.append(']');
-        }
-
-        final File file = new File(SkillAPI.getPlugin(SkillAPI.class).getDataFolder(), "tool-config.json");
-        try (final FileOutputStream out = new FileOutputStream(file)) {
-            final BufferedWriter write = new BufferedWriter(new OutputStreamWriter(out, "UTF-8"));
-            write.write(builder.toString());
-            write.close();
-        } catch (Exception var4) {
-            var4.printStackTrace();
-        }
-    }
-
-    private static void append(final Object obj, final StringBuilder builder) {
-        if (!(obj instanceof CustomComponent)) {
-            return;
-        }
-
-        final CustomComponent component = (CustomComponent) obj;
-        builder.append("{\"type\":\"").append(component.getType().name())
-                .append("\",\"key\":\"").append(component.getKey())
-                .append("\",\"display\":\"").append(component.getDisplayName())
-                .append("\",\"container\":\"").append(component.isContainer())
-                .append("\",\"description\":\"").append(component.getDescription())
-                .append("\",\"options\":[");
-
-        boolean first = true;
-        for (EditorOption option : component.getOptions()) {
-            if (!first) {
-                builder.append(',');
-            }
-            first = false;
-
-            builder.append("{\"type\":\"").append(option.type)
-                    .append("\",\"key\":\"").append(option.key)
-                    .append("\",\"display\":\"").append(option.name)
-                    .append("\",\"description\":\"").append(option.description)
-                    .append("\"");
-            option.extra.forEach((key, value) -> builder.append(",\"").append(key).append("\":").append(value));
-            builder.append("}");
-        }
-
-        builder.append("]},");
-    }
 
     private static void register(final EffectComponent component) {
         COMPONENTS.computeIfAbsent(component.getType(), t -> new HashMap<>())
@@ -317,6 +255,7 @@ public class ComponentRegistry {
         register(new MythicCastMechanic());
         register(new MythicCastTargetMechanic());
         register(new RunicReduceMechanic());
+        register(new CrackMechanic());
 
         // armorStand
         register(new ArmorStandMechanic());
@@ -325,6 +264,7 @@ public class ComponentRegistry {
 
         register(new GermAnimationStartMechanic());
         register(new GermAnimationStopMechanic());
+        register(new GermDosMechanic());
 
         // meta
         register(new DataEditMechanic());
@@ -354,5 +294,8 @@ public class ComponentRegistry {
 
         // nf
         register(new NeonFlashAttributeMechanic());
+
+        register(new BuffHudMechanic());
+        register(new InterruptParryMechanic());
     }
 }

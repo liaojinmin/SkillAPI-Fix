@@ -2,6 +2,7 @@ package com.sucy.skill.dynamic.trigger
 
 import com.sucy.skill.api.Settings
 import com.sucy.skill.api.event.TrailHurtEvent
+import com.sucy.skill.api.skills.SkillContext
 import org.bukkit.entity.LivingEntity
 
 /**
@@ -29,7 +30,7 @@ class TrailHurtTrigger: Trigger<TrailHurtEvent> {
         return event.trailEntity.livingEntity
     }
 
-    override fun setValues(event: TrailHurtEvent, data: MutableMap<String, Any>) {
+    override fun setValues(event: TrailHurtEvent, data: SkillContext) {
     }
 
     override fun shouldTrigger(event: TrailHurtEvent, level: Int, settings: Settings): Boolean {

@@ -33,8 +33,8 @@ public class ContextArmorStandTarget extends TargetComponent {
 
     @Override
     List<LivingEntity> getTargets(
-            LivingEntity caster,
             SkillContext context,
+            LivingEntity caster,
             int level,
             List<LivingEntity> targets
     ) {
@@ -52,15 +52,10 @@ public class ContextArmorStandTarget extends TargetComponent {
         }
     }
 
-    @Override
-    List<LivingEntity> getTargets(LivingEntity caster, int level, List<LivingEntity> targets) {
-        return Collections.emptyList();
-    }
-
     /** {@inheritDoc} */
     @Override
-    void makeIndicators(final List<IIndicator> list, final Player caster, final LivingEntity target, final int level) {
-        makeCircleIndicator(list, caster, 0.5);
+    void makeIndicators(final SkillContext context, final List<IIndicator> list, final Player caster, final LivingEntity target, final int level) {
+        makeCircleIndicator(context, list, caster, 0.5);
     }
 
     @Override

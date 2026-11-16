@@ -2,6 +2,7 @@ package com.sucy.skill.dynamic.trigger
 
 import com.sucy.skill.api.Settings
 import com.sucy.skill.api.event.SkillLinkEvent
+import com.sucy.skill.api.skills.SkillContext
 import org.bukkit.entity.LivingEntity
 
 /**
@@ -29,7 +30,7 @@ class SkillLinkTrigger: Trigger<SkillLinkEvent> {
         return event.player
     }
 
-    override fun setValues(event: SkillLinkEvent, data: MutableMap<String, Any>) {
+    override fun setValues(event: SkillLinkEvent, data: SkillContext) {
         data[key + "_amount"] = event.link.amount
         data[key + "_skill"] = event.link.skill.name
         data[key + "_classification"] = event.link.clazz

@@ -59,8 +59,7 @@ public class WarpValueMechanic extends MechanicComponent
     @Override
     public boolean execute(LivingEntity caster, SkillContext context, int level, List<LivingEntity> targets)
     {
-        if (targets.size() == 0 || !settings.has(KEY))
-        {
+        if (targets.isEmpty() || !settings.has(KEY)) {
             return false;
         }
 

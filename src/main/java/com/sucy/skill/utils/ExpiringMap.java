@@ -1,6 +1,5 @@
 package com.sucy.skill.utils;
 
-import javax.print.DocFlavor;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;

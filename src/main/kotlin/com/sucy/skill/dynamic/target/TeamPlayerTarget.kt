@@ -1,6 +1,7 @@
 package com.sucy.skill.dynamic.target
 
 import com.google.common.collect.ImmutableList
+import com.sucy.skill.api.skills.SkillContext
 import com.sucy.skill.cast.IIndicator
 import me.geek.team.common.TeamManager
 import me.neon.arena.utils.getGameTeamManager
@@ -16,12 +17,12 @@ import org.bukkit.entity.Player
  */
 class TeamPlayerTarget: TargetComponent() {
 
-    override fun makeIndicators(list: List<IIndicator>, caster: Player, target: LivingEntity, level: Int) {
-        makeCircleIndicator(list, caster, 0.5)
+    override fun makeIndicators(context: SkillContext, list: List<IIndicator>, caster: Player, target: LivingEntity, level: Int) {
+        makeCircleIndicator(context, list, caster, 0.5)
     }
 
     /** {@inheritDoc}  */
-    override fun getTargets(caster: LivingEntity, level: Int, targets: List<LivingEntity>): List<LivingEntity> {
+    override fun getTargets(context: SkillContext, caster: LivingEntity, level: Int, targets: List<LivingEntity>): List<LivingEntity> {
         if (caster is Player) {
 
             val gameTeamManager = caster.getGameTeamManager()

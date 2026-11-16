@@ -2,6 +2,7 @@ package com.sucy.skill.dynamic.trigger;
 
 import com.sucy.skill.api.Settings;
 import com.sucy.skill.api.event.SkillDamageEvent;
+import com.sucy.skill.api.skills.SkillContext;
 import org.bukkit.entity.LivingEntity;
 
 import java.util.Map;
@@ -37,7 +38,7 @@ public class SkillTakenTrigger extends SkillTrigger<SkillDamageEvent> {
 
     /** {@inheritDoc} */
     @Override
-    public void setValues(final SkillDamageEvent event, final Map<String, Object> data) {
-        data.put("api-taken", event.getDamage());
+    public void setValues(final SkillDamageEvent event, final SkillContext context) {
+        context.put("api-taken", event.getDamage());
     }
 }

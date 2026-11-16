@@ -3,6 +3,7 @@ package com.sucy.skill.dynamic.target;
 
 import com.sucy.skill.SkillAPI;
 import com.sucy.skill.api.armorstand.ArmorStandEntity;
+import com.sucy.skill.api.skills.SkillContext;
 import com.sucy.skill.api.util.Nearby;
 import com.sucy.skill.cast.IIndicator;
 import com.sucy.skill.dynamic.TempEntity;
@@ -27,17 +28,17 @@ public class AreaTarget extends TargetComponent {
 
     /** {@inheritDoc} */
     @Override
-    List<LivingEntity> getTargets(final LivingEntity caster, final int level, final List<LivingEntity> targets) {
+    List<LivingEntity> getTargets(final SkillContext context, final LivingEntity caster, final int level, final List<LivingEntity> targets) {
 
         final double radius = parseValues(caster, RADIUS, level, 3.0);
         final boolean random = settings.getBool(RANDOM, false);
-        return determineTargets(caster, level, targets, t -> shuffle(Nearby.getLivingNearAABBby(t.getLocation(), radius), random));
+        return determineTargets(context, caster, level, targets, t -> shuffle(Nearby.getLivingNearAABBby(t.getLocation(), radius), random));
     }
 
     /** {@inheritDoc} */
     @Override
-    void makeIndicators(final List<IIndicator> list, final Player caster, final LivingEntity target, final int level) {
-        makeCircleIndicator(list, target, parseValues(caster, RADIUS, level, 3.0));
+    void makeIndicators(final SkillContext context, final List<IIndicator> list, final Player caster, final LivingEntity target, final int level) {
+        makeCircleIndicator(context, list, target, parseValues(caster, RADIUS, level, 3.0));
     }
 
     private boolean isValidTargets(final LivingEntity caster, final LivingEntity from, final LivingEntity target) {
@@ -56,6 +57,7 @@ public class AreaTarget extends TargetComponent {
 
     @Override
     List<LivingEntity> determineTargets(
+            final SkillContext context,
             final LivingEntity caster,
             final int level,
             final List<LivingEntity> from,

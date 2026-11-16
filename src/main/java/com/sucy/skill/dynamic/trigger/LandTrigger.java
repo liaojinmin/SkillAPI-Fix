@@ -2,6 +2,7 @@ package com.sucy.skill.dynamic.trigger;
 
 import com.sucy.skill.api.Settings;
 import com.sucy.skill.api.event.PlayerLandEvent;
+import com.sucy.skill.api.skills.SkillContext;
 import org.bukkit.entity.LivingEntity;
 
 import java.util.Map;
@@ -34,8 +35,8 @@ public class LandTrigger implements Trigger<PlayerLandEvent> {
 
     /** {@inheritDoc} */
     @Override
-    public void setValues(final PlayerLandEvent event, final Map<String, Object> data) {
-        data.put("api-distance", event.getDistance());
+    public void setValues(final PlayerLandEvent event, final SkillContext context) {
+        context.put("api-distance", event.getDistance());
     }
 
     /** {@inheritDoc} */

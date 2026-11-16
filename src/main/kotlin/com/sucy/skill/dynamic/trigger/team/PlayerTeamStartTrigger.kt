@@ -2,6 +2,7 @@ package com.sucy.skill.dynamic.trigger.team
 
 import com.sucy.skill.api.Settings
 import com.sucy.skill.api.event.MythicSummonDeathEvent
+import com.sucy.skill.api.skills.SkillContext
 import com.sucy.skill.dynamic.trigger.Trigger
 import me.geek.team.api.event.PlayerStartGameEvent
 import org.bukkit.entity.LivingEntity
@@ -31,7 +32,7 @@ class PlayerTeamStartTrigger: Trigger<PlayerStartGameEvent> {
         return event.player
     }
 
-    override fun setValues(event: PlayerStartGameEvent, data: MutableMap<String, Any>) {
+    override fun setValues(event: PlayerStartGameEvent, data: SkillContext) {
     }
 
     override fun shouldTrigger(event: PlayerStartGameEvent, level: Int, settings: Settings): Boolean {

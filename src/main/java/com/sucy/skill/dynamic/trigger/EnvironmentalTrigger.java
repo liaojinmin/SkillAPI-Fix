@@ -1,6 +1,7 @@
 package com.sucy.skill.dynamic.trigger;
 
 import com.sucy.skill.api.Settings;
+import com.sucy.skill.api.skills.SkillContext;
 import com.sucy.skill.dynamic.DynamicSkill;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.event.entity.EntityDamageEvent;
@@ -35,8 +36,8 @@ public class EnvironmentalTrigger implements Trigger<EntityDamageEvent> {
 
     /** {@inheritDoc} */
     @Override
-    public void setValues(final EntityDamageEvent event, final Map<String, Object> data) {
-        data.put("api-taken", event.getDamage());
+    public void setValues(final EntityDamageEvent event, final SkillContext context) {
+        context.put("api-taken", event.getDamage());
     }
 
     /** {@inheritDoc} */

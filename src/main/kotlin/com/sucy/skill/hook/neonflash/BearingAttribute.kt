@@ -36,7 +36,7 @@ class BearingAttribute(
 
     override fun delete(livingEntity: LivingEntity) {
         val player = livingEntity as? Player ?: return
-        val playerData = SkillAPI.getPlayerData(player.uniqueId) ?: return
-        playerData.maxMana = 0.0
+        //val playerData = SkillAPI.getPlayerData(player.uniqueId) ?: return
+        //playerData.maxMana = 0.0
     }
 }

@@ -2,7 +2,6 @@ package com.sucy.skill.api.player;
 
 import com.rit.sucy.config.FilterType;
 import com.rit.sucy.player.TargetHelper;
-import com.rit.sucy.version.VersionManager;
 import com.rit.sucy.version.VersionPlayer;
 import com.sucy.skill.SkillAPI;
 import com.sucy.skill.api.classes.RPGClass;
@@ -11,12 +10,10 @@ import com.sucy.skill.api.enums.*;
 import com.sucy.skill.api.skills.PassiveSkill;
 import com.sucy.skill.api.skills.Skill;
 import com.sucy.skill.api.skills.SkillShot;
-import com.sucy.skill.api.skills.TargetSkill;
 import com.sucy.skill.data.GroupSettings;
 import com.sucy.skill.language.ErrorNodes;
 import com.sucy.skill.language.RPGFilter;
 import com.sucy.skill.listener.AttributeListener;
-import com.sucy.skill.log.LogType;
 import com.sucy.skill.log.Logger;
 import com.sucy.skill.manager.AttributeManager;
 import com.sucy.skill.screen.AttributeGermScreen;
@@ -28,11 +25,9 @@ import me.neon.flash.attribute.AttributePlayer;
 import me.neon.flash.attribute.comp.AttributeContainer;
 import me.neon.flash.attribute.comp.AttributeData;
 import me.neon.flash.attribute.comp.AttributeOption;
-import me.neon.flash.attribute.comp.SuitData;
 import me.neon.libs.util.ResourceLocation;
 import org.bukkit.Bukkit;
 import org.bukkit.OfflinePlayer;
-import org.bukkit.attribute.AttributeInstance;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
 import org.jetbrains.annotations.NotNull;
@@ -43,7 +38,6 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.locks.ReentrantLock;
 import java.util.function.Predicate;
-import java.util.function.Supplier;
 
 import static com.sucy.skill.api.event.PlayerSkillCastFailedEvent.Cause.*;
 
@@ -95,6 +89,7 @@ public class PlayerData {
 
     private double         mana;
     private double         maxMana;
+    private double         lastMaxMana;
     private double         bonusHealth;
     private boolean        passive;
     private int            attribPoints;
@@ -1290,18 +1285,6 @@ public class PlayerData {
     }
 
     /**
-     * Gives max mana to the player. This does not carry over to other accounts
-     * and will reset when SkillAPI is disabled. This does however carry over through
-     * death and professions. This will accept negative values.
-     *
-     * @param amount amount of bonus mana to give
-     */
-    public void addMaxMana(double amount) {
-        if (Math.abs(amount) < 1e-3) return;
-        maxMana += amount;
-    }
-
-    /**
      * Retrieves the amount of mana the player currently has.
      *
      * @return current player mana
@@ -1330,6 +1313,11 @@ public class PlayerData {
 
     public void setMaxMana(double amount) {
         maxMana = amount;
+
+        if (lastMaxMana >= maxMana) {
+           return;
+        }
+        lastMaxMana = maxMana;
         mana = amount;
     }
 
@@ -1533,7 +1521,11 @@ public class PlayerData {
      * @return true if successfully cast the skill, false otherwise
      */
     public boolean cast(String skillName) {
-        return cast(skills.get(skillName.toLowerCase()));
+        return cast(skillName, null);
+    }
+
+    public boolean cast(String skillName, LivingEntity target) {
+        return cast(skills.get(skillName.toLowerCase()), target);
     }
 
     /**
@@ -1546,6 +1538,10 @@ public class PlayerData {
      * @return true if successfully cast the skill, false otherwise
      */
     public boolean cast(PlayerSkill skill) {
+        return cast(skill, null);
+    }
+
+    public boolean cast(PlayerSkill skill, LivingEntity target) {
         // Invalid skill
         if (skill == null) { throw new IllegalArgumentException("Skill cannot be null"); }
 
@@ -1553,45 +1549,43 @@ public class PlayerData {
 
         // Not unlocked or on cooldown
         if (!check(skill, true, true)) {
-          //  debug("Not unlocked or on cooldown", skill.getData().getName());
+            //  debug("Not unlocked or on cooldown", skill.getData().getName());
             return false;
         }
 
         // Dead players can't cast skills
         Player p = getPlayer();
         if (p.isDead()) {
-         //   debug("Dead players can't cast skills", skill.getData().getName());
+            //   debug("Dead players can't cast skills", skill.getData().getName());
             return PlayerSkillCastFailedEvent.invoke(skill, CASTER_DEAD);
         }
 
         // Disable casting in spectator mode
         if (p.getGameMode().name().equals("SPECTATOR")) {
-          //  debug("Disable casting in spectator mode", skill.getData().getName());
+            //  debug("Disable casting in spectator mode", skill.getData().getName());
             return PlayerSkillCastFailedEvent.invoke(skill, SPECTATOR);
         }
 
         // Skill Shots
         if (skill.getData() instanceof SkillShot) {
-          //  System.out.println("instanceof SkillShot "+ skill.getData().getName());
             PlayerCastSkillEvent event = new PlayerCastSkillEvent(this, skill, p);
             Bukkit.getPluginManager().callEvent(event);
 
             // Make sure it isn't cancelled
             if (!event.isCancelled()) {
                 try {
-                    // 设置魔法值恢复等待时间
-                    setManaRestoreTick(skill.getManaTick());
-                    setKeyTimer(skill.getKeyTimer());
-                    if (((SkillShot) skill.getData()).cast(p, level)) {
-                        //System.out.println(" skill applyUse");
+                    if (((SkillShot) skill.getData()).cast(p, level, target)) {
                         boolean accept = applyUse(p, skill, event.getManaCost());
                         if (accept) {
                             PlayerCastSkillEndEvent event2 = new PlayerCastSkillEndEvent(this, skill, p);
                             Bukkit.getPluginManager().callEvent(event2);
+                            // 设置魔法值恢复等待时间
+                            setManaRestoreTick(skill.getManaTick());
+                            setKeyTimer(skill.getKeyTimer());
                         }
                         return accept;
                     } else {
-                      //  System.out.println(" skill cast EFFECT_FAILED");
+                        //  System.out.println(" skill cast EFFECT_FAILED");
                         return PlayerSkillCastFailedEvent.invoke(skill, EFFECT_FAILED);
                     }
                 } catch (Exception ex) {
@@ -1600,63 +1594,19 @@ public class PlayerData {
                     return PlayerSkillCastFailedEvent.invoke(skill, EFFECT_FAILED);
                 }
             } else {
-             //   debug("PlayerSkillCastFailedEvent", skill.getData().getName());
-              //  System.out.println("  技能 " + skill.getData().getName() + " 执行事件被阻断");
                 return PlayerSkillCastFailedEvent.invoke(skill, CANCELED);
-            }
-        }
-
-        // Target Skills
-        else if (skill.getData() instanceof TargetSkill) {
-           // System.out.println("instanceof TargetSkill" + skill.getData().getName());
-            LivingEntity target = TargetHelper.getLivingTarget(p, skill.getData().getRange(level));
-
-            // Must have a target
-            if (target == null) {
-                PlayerSkillCastFailedEvent.invoke(skill, NO_TARGET);
-                return false;
-            }
-
-            PlayerCastSkillEvent event = new PlayerCastSkillEvent(this, skill, p);
-            Bukkit.getPluginManager().callEvent(event);
-
-            // Make sure it isn't cancelled
-            if (!event.isCancelled()) {
-                try {
-                    // 设置魔法值恢复等待时间
-                    setManaRestoreTick(skill.getManaTick());
-                    setKeyTimer(skill.getKeyTimer());
-                    final boolean canAttack = !SkillAPI.getSettings().canAttack(p, target);
-                    if (((TargetSkill) skill.getData()).cast(p, target, level, canAttack)) {
-                     //   System.out.println(" skill applyUse");
-                       // return applyUse(p, skill, event.getManaCost());
-                        boolean accept = applyUse(p, skill, event.getManaCost());
-                        if (accept) {
-                            PlayerCastSkillEndEvent event2 = new PlayerCastSkillEndEvent(this, skill, p);
-                            Bukkit.getPluginManager().callEvent(event2);
-                        }
-                        return accept;
-                    } else {
-                      //  System.out.println(" skill cast EFFECT_FAILED");
-                        return PlayerSkillCastFailedEvent.invoke(skill, EFFECT_FAILED);
-                    }
-                } catch (Exception ex) {
-                    Logger.bug("Failed to cast skill - " + skill.getData().getName() + ": Internal skill error");
-                    ex.printStackTrace();
-                    return PlayerSkillCastFailedEvent.invoke(skill, EFFECT_FAILED);
-                }
-            } else {
-               // System.out.println("  技能 " + skill.getData().getName() + " 执行事件被阻断");
-                PlayerSkillCastFailedEvent.invoke(skill, CANCELED);
             }
         }
 
         return false;
     }
 
-    private boolean applyUse(final Player player, final PlayerSkill skill, final double manaCost) {
+    private boolean applyUse(final Player player, final PlayerSkill skill, double manaCost) {
         skill.startCooldown();
         if (SkillAPI.getSettings().isManaEnabled()) {
+            if (skill.getManaRatioCost() > 0) {
+                manaCost += maxMana * skill.getManaRatioCost();
+            }
             useMana(manaCost, ManaCost.SKILL_CAST);
         }
         return true;

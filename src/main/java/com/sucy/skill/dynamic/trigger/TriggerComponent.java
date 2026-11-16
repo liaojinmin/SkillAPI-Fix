@@ -22,15 +22,9 @@ public class TriggerComponent extends EffectComponent {
         return running;
     }
 
-    public boolean trigger(final LivingEntity caster, final LivingEntity target, final int level) {
-        return execute(
-                caster,
-                new SkillContext(),
-                level,
-                Collections.singletonList(target)
-        );
+    public boolean trigger(final SkillContext context, final LivingEntity caster, final LivingEntity target, final int level) {
+        return execute(context, caster, level, Collections.singletonList(target));
     }
-
 
     @Override
     public String getKey() {
@@ -43,7 +37,7 @@ public class TriggerComponent extends EffectComponent {
     }
 
     @Override
-    public boolean execute(final LivingEntity caster, SkillContext context, final int level, final List<LivingEntity> targets) {
+    public boolean execute(final SkillContext context, final LivingEntity caster, final int level, final List<LivingEntity> targets) {
         try {
             if (context.get("trigger_use") != null) {
                 if (context.remove("trigger_mark") == null) {
@@ -51,7 +45,7 @@ public class TriggerComponent extends EffectComponent {
                 }
             }
             running = true;
-            return executeChildren(caster, context, level, targets);
+            return executeChildren(context, caster, level, targets);
         } finally {
             running = false;
         }

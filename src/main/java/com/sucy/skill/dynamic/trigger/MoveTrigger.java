@@ -1,6 +1,7 @@
 package com.sucy.skill.dynamic.trigger;
 
 import com.sucy.skill.api.Settings;
+import com.sucy.skill.api.skills.SkillContext;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.event.player.PlayerMoveEvent;
 
@@ -32,9 +33,9 @@ public class MoveTrigger implements Trigger<PlayerMoveEvent> {
 
     /** {@inheritDoc} */
     @Override
-    public void setValues(final PlayerMoveEvent event, final Map<String, Object> data) {
+    public void setValues(final PlayerMoveEvent event, final SkillContext context) {
         final double distance = event.getTo().distance(event.getFrom());
-        data.put("api-distance", distance);
+        context.put("api-distance", distance);
     }
 
     /** {@inheritDoc} */

@@ -408,9 +408,7 @@ public class SkillAPI extends JavaPlugin {
     }
 
     public void addDynamicSkill(DynamicSkill skill) {
-        if (registrationManager.isAddingDynamicSkills()) { skills.put(skill.getName().toLowerCase(), skill); } else {
-            throw new IllegalStateException("Cannot add dynamic skills from outside SkillAPI");
-        }
+        skills.put(skill.getName().toLowerCase(), skill);
     }
 
     public void addDynamicClass(DynamicClass rpgClass) {

@@ -1,6 +1,7 @@
 package com.sucy.skill.dynamic.trigger
 
 import com.sucy.skill.api.Settings
+import com.sucy.skill.api.skills.SkillContext
 import me.neon.flash.api.event.AttributeChangeEvent
 import org.bukkit.entity.LivingEntity
 
@@ -29,7 +30,7 @@ class AttributeChangeTrigger: Trigger<AttributeChangeEvent> {
         return event.attributePlayer.player
     }
 
-    override fun setValues(event: AttributeChangeEvent, data: MutableMap<String, Any>) {
+    override fun setValues(event: AttributeChangeEvent, data: SkillContext) {
         val oldValue = event.oldData?.getSourceAttributeValue() ?: 0.0
         val newValue = event.newData?.getSourceAttributeValue() ?: 0.0
         val base = event.baseValue

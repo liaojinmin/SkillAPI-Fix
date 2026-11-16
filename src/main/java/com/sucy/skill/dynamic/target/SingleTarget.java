@@ -28,6 +28,7 @@ package com.sucy.skill.dynamic.target;
 
 import com.google.common.collect.ImmutableList;
 import com.rit.sucy.player.TargetHelper;
+import com.sucy.skill.api.skills.SkillContext;
 import com.sucy.skill.cast.IIndicator;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
@@ -44,20 +45,21 @@ public class SingleTarget extends TargetComponent {
 
     /** {@inheritDoc} */
     @Override
-    public void makeIndicators(List<IIndicator> list, Player caster, LivingEntity target, int level) {
+    public void makeIndicators(final SkillContext context, List<IIndicator> list, Player caster, LivingEntity target, int level) {
         double range = parseValues(caster, RANGE, level, 3.0);
         double angle = parseValues(caster, TOLERANCE, level, 4.0);
-        makeConeIndicator(list, target, range, angle);
+        makeConeIndicator(context, list, target, range, angle);
     }
 
     /** {@inheritDoc} */
     @Override
     List<LivingEntity> getTargets(
+            final SkillContext context,
             final LivingEntity caster, final int level, final List<LivingEntity> targets) {
 
         double range = parseValues(caster, RANGE, level, 5.0);
         double tolerance = parseValues(caster, TOLERANCE, level, 4.0);
-        return determineTargets(caster, level, targets, t -> {
+        return determineTargets(context, caster, level, targets, t -> {
             final LivingEntity target = TargetHelper.getLivingTarget(t, range, tolerance);
             return target == null ? ImmutableList.of() : ImmutableList.of(target);
         });

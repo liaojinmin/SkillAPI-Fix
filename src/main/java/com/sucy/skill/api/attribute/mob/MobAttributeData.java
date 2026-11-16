@@ -5,6 +5,7 @@ import com.sucy.skill.api.attribute.AttributeAPI;
 import com.sucy.skill.api.event.AttributeEntityAddEvent;
 import com.sucy.skill.api.player.PlayerData;
 import com.sucy.skill.hook.mythic.MythicManager;
+import me.neon.libs.util.HexColor;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.LivingEntity;
@@ -115,7 +116,7 @@ public class MobAttributeData {
     }
 
     public String getDisplay() {
-        return entity.getName();
+        return HexColor.INSTANCE.uncolored(entity.getName());
     }
 
     @Override

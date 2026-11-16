@@ -1,6 +1,7 @@
 package com.sucy.skill.dynamic.trigger
 
 import com.sucy.skill.api.Settings
+import com.sucy.skill.api.skills.SkillContext
 import me.neon.core.event.HealthRestoreEvent
 import org.bukkit.entity.LivingEntity
 
@@ -29,7 +30,7 @@ class PlayerHealthRestoreTrigger: Trigger<HealthRestoreEvent> {
         return event.player
     }
 
-    override fun setValues(event: HealthRestoreEvent, data: MutableMap<String, Any>) {
+    override fun setValues(event: HealthRestoreEvent, data: SkillContext) {
         data[key] = event.amount.toDouble()
     }
 

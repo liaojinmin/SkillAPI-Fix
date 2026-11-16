@@ -1,5 +1,6 @@
 package com.sucy.skill.dynamic.target
 
+import com.sucy.skill.api.skills.SkillContext
 import com.sucy.skill.cast.IIndicator
 import com.sucy.skill.dynamic.TempEntity
 import me.neon.libs.util.item.isAir
@@ -35,12 +36,12 @@ class RandomLocationTarget: TargetComponent() {
         val ground: Boolean,
     )
 
-    override fun makeIndicators(list: List<IIndicator>, caster: Player, target: LivingEntity, level: Int) {
-        makeCircleIndicator(list, caster, 0.5)
+    override fun makeIndicators(context: SkillContext, list: List<IIndicator>, caster: Player, target: LivingEntity, level: Int) {
+        makeCircleIndicator(context, list, caster, 0.5)
     }
 
     /** {@inheritDoc}  */
-    override fun getTargets(caster: LivingEntity, level: Int, targets: List<LivingEntity>): List<LivingEntity> {
+    override fun getTargets(context: SkillContext, caster: LivingEntity, level: Int, targets: List<LivingEntity>): List<LivingEntity> {
         val minRange = parseValues(caster, "minRange", level, 1.0)
         val maxRange = parseValues(caster, "maxRange", level, 5.0)
         val minAmount = settings.getInt("minAmount", 1)

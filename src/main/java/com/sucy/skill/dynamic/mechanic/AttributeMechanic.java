@@ -70,7 +70,7 @@ public class AttributeMechanic extends MechanicComponent {
 
       //  System.out.println("execute 属性触发者: "+caster.getName());
         String key = settings.getString(KEY, "");
-        if (targets.size() == 0) {
+        if (targets.isEmpty()) {
             return false;
         }
 
@@ -133,6 +133,7 @@ public class AttributeMechanic extends MechanicComponent {
         }
         return true;
     }
+
     @Override
     public String getKey() {
         return "attribute";

@@ -1,6 +1,7 @@
 package com.sucy.skill.dynamic.trigger
 
 import com.sucy.skill.api.Settings
+import com.sucy.skill.api.skills.SkillContext
 import me.neon.core.event.MagicPulseUseEvent
 import org.bukkit.entity.LivingEntity
 
@@ -29,7 +30,7 @@ class MagicPulseTrigger: Trigger<MagicPulseUseEvent> {
         return event.player
     }
 
-    override fun setValues(event: MagicPulseUseEvent, data: MutableMap<String, Any>) {
+    override fun setValues(event: MagicPulseUseEvent, data: SkillContext) {
     }
 
     override fun shouldTrigger(event: MagicPulseUseEvent, level: Int, settings: Settings): Boolean {

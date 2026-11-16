@@ -37,8 +37,12 @@ function Skill(name) {
 			.setTooltip('The amount of skill points needed to unlock and upgrade this skill'),
 		new AttributeValue('技能冷却', 'cooldown', 0, 0)
 			.setTooltip('The time in seconds before the skill can be cast again (only works with the Cast trigger)'),
+
+		new AttributeValue('百分比体力消耗', 'mana-ratio', 0, 0)
+			.setTooltip('使用此技能扣除百分比体力值'),
 		new AttributeValue('Mana', 'mana', 0, 0)
 			.setTooltip('The amount of mana it takes to cast the skill (only works with the Cast trigger)'),
+
 		new AttributeValue('Mana Tick', 'mana-tick', 1000, 0)
 			.setTooltip('法力值恢复延时'),
 		new AttributeValue('Min Spent', 'points-spent-req', 0, 0)

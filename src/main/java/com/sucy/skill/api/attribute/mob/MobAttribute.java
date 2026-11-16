@@ -13,7 +13,7 @@ import java.util.stream.Collectors;
 
 public class MobAttribute {
 
-    private static ConcurrentHashMap<UUID, MobAttributeData> data = new ConcurrentHashMap<>();
+    private static final ConcurrentHashMap<UUID, MobAttributeData> data = new ConcurrentHashMap<>();
 
     public static List<MobAttributeData> getAllData() {
         return new ArrayList<>(data.values());

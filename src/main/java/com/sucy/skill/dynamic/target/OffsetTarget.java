@@ -27,6 +27,7 @@
 package com.sucy.skill.dynamic.target;
 
 import com.google.common.collect.ImmutableList;
+import com.sucy.skill.api.skills.SkillContext;
 import com.sucy.skill.cast.IIndicator;
 import com.sucy.skill.dynamic.TempEntity;
 import org.bukkit.entity.LivingEntity;
@@ -48,15 +49,16 @@ public class OffsetTarget extends TargetComponent {
 
     /** {@inheritDoc} */
     @Override
-    public void makeIndicators(List<IIndicator> list, Player caster, LivingEntity target, int level) {
-        makeCircleIndicator(list, getTargetLoc(caster, level, target), 0.5);
+    public void makeIndicators(final SkillContext context, List<IIndicator> list, Player caster, LivingEntity target, int level) {
+        makeCircleIndicator(context, list, getTargetLoc(caster, level, target), 0.5);
     }
 
     /** {@inheritDoc} */
     @Override
     List<LivingEntity> getTargets(
+            final SkillContext context,
             final LivingEntity caster, final int level, final List<LivingEntity> targets) {
-        return determineTargets(caster, level, targets, t -> ImmutableList.of(getTargetLoc(caster, level, t)));
+        return determineTargets(context, caster, level, targets, t -> ImmutableList.of(getTargetLoc(caster, level, t)));
     }
 
     private TempEntity getTargetLoc(LivingEntity caster, int level, LivingEntity t) {

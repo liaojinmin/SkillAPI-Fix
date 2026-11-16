@@ -43,6 +43,8 @@ public final class SkillAttribute
      */
     public static final String MANA = "mana";
 
+    public static final String MANA_RATIO = "mana-ratio";
+
     /**
      * <p>Level requirement attribute of a skill</p>
      */

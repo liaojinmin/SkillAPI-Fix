@@ -1,6 +1,7 @@
 package com.sucy.skill.dynamic.trigger
 
 import com.sucy.skill.api.Settings
+import com.sucy.skill.api.skills.SkillContext
 import me.neon.core.event.PlayerEndKneeEvent
 import org.bukkit.entity.LivingEntity
 
@@ -25,7 +26,7 @@ class KneeEndTrigger : Trigger<PlayerEndKneeEvent> {
     }
 
     /** {@inheritDoc}  */
-    override fun setValues(event: PlayerEndKneeEvent, data: Map<String, Any>) {}
+    override fun setValues(event: PlayerEndKneeEvent, data: SkillContext) {}
 
     /** {@inheritDoc}  */
     override fun getCaster(event: PlayerEndKneeEvent): LivingEntity {

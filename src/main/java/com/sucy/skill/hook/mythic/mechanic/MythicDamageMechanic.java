@@ -1,5 +1,6 @@
 package com.sucy.skill.hook.mythic.mechanic;
 
+import com.sucy.skill.SkillAPI;
 import com.sucy.skill.api.skills.Skill;
 import io.lumine.xikage.mythicmobs.adapters.AbstractEntity;
 import io.lumine.xikage.mythicmobs.io.MythicLineConfig;
@@ -48,7 +49,9 @@ public class MythicDamageMechanic extends SkillMechanic implements ITargetedEnti
         if (Bukkit.isPrimaryThread()) {
             return sync(data, t);
         } else {
+            SkillAPI.singleton().getLogger().warning("MythicDamageMechanic 禁止异步触发伤害 by "+line);
             return false;
+
         }
     }
 
@@ -60,6 +63,7 @@ public class MythicDamageMechanic extends SkillMechanic implements ITargetedEnti
         if (t.isDead()) {
             return false;
         }
+
         if (t.isLiving() && t.getHealth() <= 0.0d) {
             return false;
         }
@@ -75,8 +79,6 @@ public class MythicDamageMechanic extends SkillMechanic implements ITargetedEnti
             return false;
         }
         LivingEntity target = (LivingEntity) targetSkill;
-
-
         try {
             String pString = type.get(data).toLowerCase();
             double amount;

@@ -34,6 +34,7 @@ import org.bukkit.entity.LivingEntity;
  * skills, and AOE abilities around yourself or where you are looking</p>
  */
 public interface SkillShot {
+
     /**
      * Casts the skill
      *
@@ -45,11 +46,12 @@ public interface SkillShot {
     boolean cast(LivingEntity user, int level);
 
     /**
-     * 临时的有目标触发器，因为 TargetSkill 无具体实现，不行浪费时间完善框架
+     * 临时的有目标触发器，因为 TargetSkill 无具体实现，不浪费时间完善框架
      * @param user  user of the skill
      * @param level skill level
      * @param target 技能目标
      * @return true if could cast, false otherwise
      */
     boolean cast(LivingEntity user, int level, LivingEntity target);
+
 }

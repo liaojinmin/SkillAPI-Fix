@@ -1,6 +1,7 @@
 package com.sucy.skill.dynamic.trigger;
 
 import com.sucy.skill.api.Settings;
+import com.sucy.skill.api.skills.SkillContext;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.event.block.BlockBreakEvent;
 
@@ -35,9 +36,9 @@ public class BlockBreakTrigger implements Trigger<BlockBreakEvent> {
 
     /** {@inheritDoc} */
     @Override
-    public void setValues(final BlockBreakEvent event, final Map<String, Object> data) {
-        data.put("api-block-type", event.getBlock().getType().name());
-        data.put("api-block-loc", event.getBlock().getLocation());
+    public void setValues(final BlockBreakEvent event, final SkillContext context) {
+        context.put("api-block-type", event.getBlock().getType().name());
+        context.put("api-block-loc", event.getBlock().getLocation());
     }
 
     /** {@inheritDoc} */

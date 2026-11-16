@@ -68,6 +68,7 @@ dependencies {
 
     compileOnly("me.neon.libs:NeonLibs:1.0.1.6-local")
     compileOnly("me.neon.flash:NeonFlash:1.0.1-SNAPSHOT-local")
+    compileOnly("me.neon.core:NeonECore:1.2.6-SNAPSHOT-local")
     compileOnly("ink.ptms.adyeshach:all:2.0.0-snapshot-1")
     compileOnly("ink.ptms.chemdah:api:1.1.0")
 

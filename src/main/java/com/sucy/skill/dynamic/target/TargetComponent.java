@@ -55,18 +55,14 @@ public abstract class TargetComponent extends EffectComponent {
      * @return true if applied to something, false otherwise
      */
     @Override
-    public boolean execute(LivingEntity caster, SkillContext context, int level, List<LivingEntity> targets) {
-        List<LivingEntity> list = getTargets(caster, level, targets);
-        if (list.isEmpty()) {
-            list = getTargets(caster, context, level, targets);
-        }
-        return (!list.isEmpty() && executeChildren(caster, context, level, list));
+    public boolean execute(final SkillContext context, LivingEntity caster, int level, List<LivingEntity> targets) {
+        List<LivingEntity> list = getTargets(context, caster, level, targets);
+        return (!list.isEmpty() && executeChildren(context, caster, level, list));
     }
 
     @Override
     public void load(DynamicSkill skill, DataSection config) {
         super.load(skill, config);
-
         final String group = settings.getString(ALLY, "enemy").toLowerCase();
         everyone = group.equalsIgnoreCase("both");
         allies = group.equalsIgnoreCase("ally");
@@ -75,20 +71,13 @@ public abstract class TargetComponent extends EffectComponent {
     }
 
     abstract List<LivingEntity> getTargets(
+            final SkillContext context,
             final LivingEntity caster,
             final int level,
             final List<LivingEntity> targets);
 
-    abstract void makeIndicators(final List<IIndicator> list, final Player caster, final LivingEntity target, final int level);
 
-    List<LivingEntity> getTargets(
-            final LivingEntity caster,
-            final SkillContext context,
-            final int level,
-            final List<LivingEntity> targets) {
-        return Collections.emptyList();
-    }
-
+    abstract void makeIndicators(final SkillContext context, final List<IIndicator> list, final Player caster, final LivingEntity target, final int level);
 
     /**
      * Creates the list of indicators for the skill
@@ -99,19 +88,19 @@ public abstract class TargetComponent extends EffectComponent {
      * @param level  the level of the skill to create for
      */
     @Override
-    public void makeIndicators(List<IIndicator> list, Player caster, List<LivingEntity> targets, int level) {
-        targets.forEach(target -> makeIndicators(list, caster, target, level));
+    public void makeIndicators(final SkillContext context, List<IIndicator> list, Player caster, List<LivingEntity> targets, int level) {
+        targets.forEach(target -> makeIndicators(context, list, caster, target, level));
         List<LivingEntity> childTargets = null;
         for (final EffectComponent component : children) {
             if (component.hasEffect) {
-                if (childTargets == null) { childTargets = getTargets(caster, level, targets); }
+                if (childTargets == null) { childTargets = getTargets(context, caster, level, targets); }
 
-                component.makeIndicators(list, caster, childTargets, level);
+                component.makeIndicators(context, list, caster, childTargets, level);
             }
         }
     }
 
-    void makeConeIndicator(final List<IIndicator> list, final LivingEntity target, final double range, final double angle) {
+    void makeConeIndicator(final SkillContext context, final List<IIndicator> list, final LivingEntity target, final double range, final double angle) {
         if (indicatorType != IndicatorType.NONE) {
             Location loc = target.getLocation();
             ConeIndicator indicator = new ConeIndicator(angle, range);
@@ -121,7 +110,7 @@ public abstract class TargetComponent extends EffectComponent {
         }
     }
 
-    void makeCircleIndicator(final List<IIndicator> list, final LivingEntity source, final double radius) {
+    void makeCircleIndicator(final SkillContext context, final List<IIndicator> list, final LivingEntity source, final double radius) {
         if (indicatorType == IndicatorType.DIM_3) {
             final Location loc = source.getLocation();
             IIndicator indicator = new SphereIndicator(radius);
@@ -136,10 +125,12 @@ public abstract class TargetComponent extends EffectComponent {
     }
 
     List<LivingEntity> determineTargets(
+            final SkillContext context,
             final LivingEntity caster,
             final int level,
             final List<LivingEntity> from,
-            final Function<LivingEntity, List<LivingEntity>> conversion
+            final Function<LivingEntity,
+                    List<LivingEntity>> conversion
     ) {
 
         final double max = parseValues(caster, MAX, level, 99);

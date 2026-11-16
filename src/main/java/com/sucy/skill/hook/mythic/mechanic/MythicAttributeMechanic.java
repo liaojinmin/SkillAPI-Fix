@@ -4,25 +4,14 @@ import com.sucy.skill.SkillAPI;
 import com.sucy.skill.api.attribute.mob.MobAttribute;
 import com.sucy.skill.api.attribute.mob.MobAttributeData;
 import com.sucy.skill.api.player.PlayerData;
-import com.sucy.skill.api.skills.Skill;
-import com.sucy.skill.api.skills.SkillCastAPI;
-import com.sucy.skill.utils.AttributeParseUtils;
-import com.sucy.skill.utils.Pair;
 import io.lumine.xikage.mythicmobs.adapters.AbstractEntity;
-import io.lumine.xikage.mythicmobs.adapters.AbstractLocation;
 import io.lumine.xikage.mythicmobs.io.MythicLineConfig;
-import io.lumine.xikage.mythicmobs.mobs.ActiveMob;
 import io.lumine.xikage.mythicmobs.skills.ITargetedEntitySkill;
 import io.lumine.xikage.mythicmobs.skills.SkillMechanic;
 import io.lumine.xikage.mythicmobs.skills.SkillMetadata;
-import io.lumine.xikage.mythicmobs.skills.SkillTrigger;
-import io.lumine.xikage.mythicmobs.skills.placeholders.parsers.PlaceholderInt;
 import io.lumine.xikage.mythicmobs.skills.placeholders.parsers.PlaceholderString;
-import org.bukkit.entity.Entity;
-import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
 
-import java.util.HashSet;
 import java.util.concurrent.TimeUnit;
 
 public class MythicAttributeMechanic extends SkillMechanic implements ITargetedEntitySkill {

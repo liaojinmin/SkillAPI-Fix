@@ -39,21 +39,13 @@ public class SkillCastAPI {
             throw new IllegalArgumentException("Skill cannot be null");
         }
 
-      //  System.out.println("caster: " + caster.getName() + " skill: "+skill.getName());
-
-      //  if (target != null) {
-           // System.out.println("  target: " + target.getName());
-   //     } else  {
-         //  System.out.println("  target is null");
-     //   }
-
         if (caster instanceof Player) {
 
             PlayerData player = SkillAPI.getPlayerData(caster.getUniqueId());
             if (player == null) {
                 return false;
             }
-            return player.cast(skill.getName());
+            return player.cast(skill.getName(), target);
         }
 
         EntityCastSkillEvent event = new EntityCastSkillEvent(caster, skill, level);
@@ -76,17 +68,6 @@ public class SkillCastAPI {
                 }
             }
             return ((SkillShot) skill).cast(caster, level, target);
-        }
-        if (skill instanceof TargetSkill) {
-
-            if (target == null) {
-                target = TargetHelper.getLivingTarget(caster, skill.getRange(level));
-                if (target == null) {
-                    return false;
-                }
-            }
-            boolean canAttack = !SkillAPI.getSettings().canAttack(caster, target);
-            return ((TargetSkill) skill).cast(caster, target, level, canAttack);
         }
         if (skill instanceof PassiveSkill) {
             ((PassiveSkill) skill).initialize(caster, level);

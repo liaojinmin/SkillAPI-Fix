@@ -2,6 +2,7 @@ package com.sucy.skill.dynamic.trigger.summon
 
 import com.sucy.skill.api.Settings
 import com.sucy.skill.api.event.MythicSummonDeathEvent
+import com.sucy.skill.api.skills.SkillContext
 import com.sucy.skill.dynamic.trigger.Trigger
 import org.bukkit.entity.LivingEntity
 
@@ -30,7 +31,7 @@ class MythicSummonDeathTrigger: Trigger<MythicSummonDeathEvent> {
         return event.summon.owner
     }
 
-    override fun setValues(event: MythicSummonDeathEvent, data: MutableMap<String, Any>) {
+    override fun setValues(event: MythicSummonDeathEvent, context: SkillContext) {
 
     }
 

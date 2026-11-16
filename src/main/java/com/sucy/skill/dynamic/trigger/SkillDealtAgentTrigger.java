@@ -3,6 +3,7 @@ package com.sucy.skill.dynamic.trigger;
 import com.sucy.skill.api.Settings;
 import com.sucy.skill.api.event.SkillDamageAgentEvent;
 import com.sucy.skill.api.event.SkillDamageEvent;
+import com.sucy.skill.api.skills.SkillContext;
 import org.bukkit.entity.LivingEntity;
 
 import java.util.Map;
@@ -37,7 +38,7 @@ public class SkillDealtAgentTrigger extends SkillTrigger<SkillDamageAgentEvent> 
 
     /** {@inheritDoc} */
     @Override
-    public void setValues(final SkillDamageAgentEvent event, final Map<String, Object> data) {
-        data.put("api-dealt", event.getDamage());
+    public void setValues(final SkillDamageAgentEvent event, final SkillContext context) {
+        context.put("api-dealt", event.getDamage());
     }
 }
