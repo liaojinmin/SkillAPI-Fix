@@ -41,6 +41,10 @@ depend('component', function() {
 	setupOptionList(document.getElementById('targetOptions'), Target, Type.TARGET);
 	setupOptionList(document.getElementById('conditionOptions'), Condition, Type.CONDITION);
 	setupOptionList(document.getElementById('mechanicOptions'), Mechanic, Type.MECHANIC);
+
+	// 选择器搜索
+	bindOptionSearch('triggerSearch', ['triggerOptions']);
+	bindOptionSearch('componentSearch', ['targetOptions', 'conditionOptions', 'mechanicOptions']);
 });
 depend('material', function() {
 	depend('skill', function() {
@@ -67,26 +71,32 @@ depend('material', function() {
 		});
 		document.getElementById('saveButton').addEventListener('click', function(e) {
 			saveToFile('skills.yml', getSkillSaveData());
+			toast('已下载 skills.yml');
 		});
 		document.getElementById('saveSkill').addEventListener('click', function(e) {
 			saveToFile(activeSkill.data[0].value + '.yml', activeSkill.getSaveString());
+			toast('已下载 ' + activeSkill.data[0].value + '.yml');
 		});
 		document.getElementById('deleteSkill').addEventListener('click', function(e) {
 			var list = document.getElementById('skillList');
 			var index = list.selectedIndex;
-			
-			skills.splice(index, 1);
-			if (skills.length == 0)
-			{
-				newSkill();
-			}
-			list.remove(index);
-			index = Math.min(index, skills.length - 1);
-			activeSkill = skills[index];
-			list.selectedIndex = index;
-			
-			activeSkill.apply();
-			showSkillPage('builder');
+			var name = skills[index] ? skills[index].data[0].value : '';
+
+			showConfirm('确定删除技能「' + name + '」吗？此操作不可撤销。', function() {
+				skills.splice(index, 1);
+				if (skills.length == 0)
+				{
+					newSkill();
+				}
+				list.remove(index);
+				index = Math.min(index, skills.length - 1);
+				activeSkill = skills[index];
+				list.selectedIndex = index;
+
+				activeSkill.apply();
+				showSkillPage('builder');
+				toast('已删除技能：' + name, 'warn');
+			});
 		});
 	});
 	
@@ -105,6 +115,7 @@ depend('material', function() {
 		});
 		document.getElementById('saveButton').addEventListener('click', function(e) {
 			saveToFile('classes.yml', getClassSaveData());
+			toast('已下载 classes.yml');
 		});
 	});
 });
@@ -158,6 +169,21 @@ function setupOptionList(div, list, type)
             e.className = 'premium';
 		e.innerHTML = list[x].name;
 		e.component = list[x];
+		e.tabIndex = 0;
+		e.addEventListener('mouseenter', function(e) {
+			showOptionTip(this, this.component.name, getOptionDescription(this.component));
+		});
+		e.addEventListener('mouseleave', hideOptionTip);
+		e.addEventListener('focus', function(e) {
+			showOptionTip(this, this.component.name, getOptionDescription(this.component));
+		});
+		e.addEventListener('blur', hideOptionTip);
+		e.addEventListener('keydown', function(e) {
+			if (e.key === 'Enter' || e.key === ' ') {
+				e.preventDefault();
+				this.click();
+			}
+		});
 		e.addEventListener('click', function(e) {
 			if (activeComponent == activeSkill && activeSkill.usingTrigger(this.component.name)) {
 				showSkillPage('builder');
@@ -174,6 +200,363 @@ function setupOptionList(div, list, type)
 	}
     
     //saveToFile('wiki_' + type + '.txt', output);
+}
+
+/**
+ * 组件选择列表，供搜索框统一重置
+ */
+var OPTION_LISTS = [ 'triggerOptions', 'targetOptions', 'conditionOptions', 'mechanicOptions' ];
+var OPTION_SEARCH_INPUTS = [];
+
+/**
+ * 给选择器绑定搜索框
+ *
+ * @param {string} inputId  - 搜索框 id
+ * @param {Array}  listIds  - 需要过滤的列表 id
+ */
+function bindOptionSearch(inputId, listIds) {
+	var input = document.getElementById(inputId);
+	if (!input) return;
+	OPTION_SEARCH_INPUTS.push(input);
+	input.addEventListener('input', function(e) {
+		var query = this.value.trim().toLowerCase();
+		for (var i = 0; i < listIds.length; i++) {
+			filterOptionList(listIds[i], query);
+		}
+	});
+}
+
+/**
+ * 按关键字过滤单个列表中的 h5 选项
+ */
+function filterOptionList(listId, query) {
+	var list = document.getElementById(listId);
+	if (!list) return;
+	var items = list.getElementsByTagName('h5');
+	for (var i = 0; i < items.length; i++) {
+		var match = query === '' || items[i].textContent.toLowerCase().indexOf(query) >= 0;
+		items[i].style.display = match ? '' : 'none';
+	}
+}
+
+/**
+ * 清空搜索并恢复全部选项
+ */
+function resetOptionSearch() {
+	for (var i = 0; i < OPTION_SEARCH_INPUTS.length; i++) {
+		OPTION_SEARCH_INPUTS[i].value = '';
+	}
+	for (var j = 0; j < OPTION_LISTS.length; j++) {
+		filterOptionList(OPTION_LISTS[j], '');
+	}
+}
+
+/**
+ * 右侧属性面板拖拽调宽
+ *
+ * 宽度会保存在 localStorage.formWidth，下次打开自动恢复；
+ * 同时保证组件树至少保留 Math.min(560, 视口宽 - 620) 的空间。
+ */
+var FORM_MIN_WIDTH = 300;
+
+function clampFormWidth(width) {
+	var max = Math.max(FORM_MIN_WIDTH, Math.min(window.innerWidth * 0.6, window.innerWidth - 620));
+	return Math.round(Math.max(FORM_MIN_WIDTH, Math.min(width, max)));
+}
+
+function initFormResizer() {
+	var resizer = document.getElementById('formResizer');
+	var form = document.getElementById('skillForm');
+	if (!resizer || !form) return;
+
+	var saved = parseInt(localStorage.getItem('formWidth'), 10);
+	if (saved > 0 && window.innerWidth > 1080) {
+		form.style.width = clampFormWidth(saved) + 'px';
+	}
+
+	// 与属性面板的可见状态保持一致（面板隐藏时不显示拖拽条）
+	if (window.getComputedStyle(form).display !== 'none') {
+		resizer.style.display = 'block';
+	}
+
+	var dragging = false;
+	var rightEdge = 0;
+
+	resizer.addEventListener('mousedown', function(e) {
+		if (e.button !== 0) return;
+		e.preventDefault();
+		dragging = true;
+		rightEdge = form.getBoundingClientRect().right;
+		resizer.className = 'formResizer active';
+		document.body.style.cursor = 'col-resize';
+		document.body.style.userSelect = 'none';
+	});
+
+	window.addEventListener('mousemove', function(e) {
+		if (!dragging) return;
+		form.style.width = clampFormWidth(rightEdge - e.clientX) + 'px';
+	});
+
+	window.addEventListener('mouseup', endFormDrag);
+	window.addEventListener('blur', endFormDrag);
+
+	window.addEventListener('resize', function() {
+		var current = parseInt(form.style.width, 10);
+		if (current > 0) {
+			form.style.width = clampFormWidth(current) + 'px';
+		}
+	});
+
+	function endFormDrag() {
+		if (!dragging) return;
+		dragging = false;
+		resizer.className = 'formResizer';
+		document.body.style.cursor = '';
+		document.body.style.userSelect = '';
+		var width = parseInt(form.style.width, 10);
+		if (width > 0) {
+			localStorage.setItem('formWidth', width);
+		}
+	}
+}
+
+/* --------------------------------------------------------------------------
+   组件介绍浮层
+   -------------------------------------------------------------------------- */
+
+var optionTipElement = null;
+
+function ensureOptionTip() {
+	if (!optionTipElement) {
+		optionTipElement = document.createElement('div');
+		optionTipElement.className = 'optionTip';
+		document.body.appendChild(optionTipElement);
+	}
+	return optionTipElement;
+}
+
+/**
+ * 取组件介绍：构造一次实例后缓存到定义对象上，避免每次悬停都重复构造
+ */
+function getOptionDescription(def) {
+	if (!def) return '';
+	if (typeof def.__description === 'string') return def.__description;
+
+	var description = '';
+	try {
+		var instance = new def.construct();
+		description = instance.description || '';
+	} catch (err) {
+		description = '';
+	}
+	def.__description = description;
+	return description;
+}
+
+/**
+ * 在选项下方显示介绍，空间不足时自动翻到上方并做视口内收
+ */
+function showOptionTip(element, name, description) {
+	var tip = ensureOptionTip();
+
+	if (!description) {
+		tip.classList.remove('show');
+		return;
+	}
+
+	tip.innerHTML = '';
+
+	var title = document.createElement('div');
+	title.className = 'optionTipTitle';
+	title.textContent = name;
+	var body = document.createElement('div');
+	body.className = 'optionTipBody';
+	body.textContent = description;
+	tip.appendChild(title);
+	tip.appendChild(body);
+
+	tip.style.left = '0px';
+	tip.style.top = '0px';
+	tip.classList.add('show');
+
+	var rect = element.getBoundingClientRect();
+	var size = tip.getBoundingClientRect();
+
+	var left = rect.left;
+	if (left + size.width > window.innerWidth - 10) {
+		left = window.innerWidth - size.width - 10;
+	}
+	if (left < 10) left = 10;
+
+	var top = rect.bottom + 8;
+	if (top + size.height > window.innerHeight - 10) {
+		top = rect.top - size.height - 8;
+	}
+	if (top < 10) top = 10;
+
+	tip.style.left = left + 'px';
+	tip.style.top = top + 'px';
+}
+
+function hideOptionTip() {
+	if (optionTipElement) {
+		optionTipElement.classList.remove('show');
+	}
+}
+
+// 选择器滚动时立即隐藏，避免浮层与选项错位
+document.addEventListener('scroll', hideOptionTip, true);
+
+/* --------------------------------------------------------------------------
+   轻提示 / 确认弹层
+   -------------------------------------------------------------------------- */
+
+var lastToast = { message: '', time: 0 };
+
+function toast(message, type) {
+	var host = document.getElementById('toastHost');
+	if (!host) return;
+
+	// 同一时间重复触发时合并，避免弹出一串相同提示
+	var now = Date.now();
+	if (message === lastToast.message && now - lastToast.time < 300) return;
+	lastToast = { message: message, time: now };
+
+	var item = document.createElement('div');
+	item.className = 'toast ' + (type || 'ok');
+	item.textContent = message;
+	host.appendChild(item);
+
+	setTimeout(function() {
+		item.className += ' out';
+	}, 2200);
+	setTimeout(function() {
+		if (item.parentNode) item.parentNode.removeChild(item);
+	}, 2800);
+}
+
+var confirmCallback = null;
+
+function showConfirm(message, onConfirm) {
+	var dialog = document.getElementById('confirmDialog');
+	if (!dialog) {
+		if (onConfirm) onConfirm();
+		return;
+	}
+	document.getElementById('confirmMessage').textContent = message;
+	confirmCallback = onConfirm;
+	dialog.style.display = 'flex';
+}
+
+function hideConfirm() {
+	var dialog = document.getElementById('confirmDialog');
+	if (dialog) dialog.style.display = 'none';
+	confirmCallback = null;
+}
+
+function isConfirmOpen() {
+	var dialog = document.getElementById('confirmDialog');
+	return !!dialog && dialog.style.display === 'flex';
+}
+
+/* --------------------------------------------------------------------------
+   组件树搜索
+   -------------------------------------------------------------------------- */
+
+function filterTree(query) {
+	var content = document.getElementById('builderContent');
+	if (!content) return;
+
+	var q = (query || '').trim().toLowerCase();
+	var components = content.getElementsByClassName('component');
+	var i;
+
+	for (i = 0; i < components.length; i++) {
+		components[i].parentNode.style.display = '';
+	}
+	if (q === '') return;
+
+	for (i = 0; i < components.length; i++) {
+		components[i].parentNode.style.display = 'none';
+	}
+
+	for (i = 0; i < components.length; i++) {
+		var label = components[i].getElementsByTagName('h3')[0];
+		if (!label || label.textContent.toLowerCase().indexOf(q) < 0) continue;
+
+		// 命中项及其所有祖先容器保持可见
+		var node = components[i].parentNode;
+		while (node && node !== content) {
+			if (!node.className || node.className.indexOf('componentChildren') < 0) {
+				node.style.display = '';
+			}
+			node = node.parentNode;
+		}
+	}
+}
+
+function bindTreeSearch() {
+	var input = document.getElementById('treeSearch');
+	if (!input) return;
+
+	input.addEventListener('input', function() {
+		filterTree(this.value);
+	});
+	input.addEventListener('keydown', function(e) {
+		if (e.key === 'Escape') {
+			this.value = '';
+			filterTree('');
+			this.blur();
+		}
+	});
+}
+
+/* --------------------------------------------------------------------------
+   快捷键
+   -------------------------------------------------------------------------- */
+
+function bindShortcuts() {
+	document.addEventListener('keydown', function(e) {
+		var key = (e.key || '').toLowerCase();
+		var tag = (e.target.tagName || '').toLowerCase();
+		var typing = tag === 'input' || tag === 'textarea' || tag === 'select';
+
+		if (key === 'escape') {
+			if (isConfirmOpen()) {
+				hideConfirm();
+				return;
+			}
+			if (typing) return;
+
+			var componentChooser = document.getElementById('componentChooser');
+			var triggerChooser = document.getElementById('triggerChooser');
+			if ((componentChooser && componentChooser.style.display === 'block')
+				|| (triggerChooser && triggerChooser.style.display === 'block')
+				|| document.getElementById('skillForm').style.display === 'block') {
+				showSkillPage('builder');
+			}
+			return;
+		}
+
+		if (!(e.ctrlKey || e.metaKey)) return;
+
+		if (key === 's') {
+			e.preventDefault();
+			document.getElementById('saveButton').click();
+			return;
+		}
+
+		if (key === 'f') {
+			e.preventDefault();
+			var chooserOpen = document.getElementById('componentChooser').style.display === 'block' ? 'componentSearch'
+				: (document.getElementById('triggerChooser').style.display === 'block' ? 'triggerSearch' : 'treeSearch');
+			var input = document.getElementById(chooserOpen);
+			if (input) {
+				input.focus();
+				input.select();
+			}
+		}
+	});
 }
 
 var skillsActive = true;
@@ -210,6 +593,35 @@ window.onload = function()
 			showSkillPage('builder');
 		});
 	}
+
+	// 点击浮层空白处关闭选择器
+	var choosers = document.querySelectorAll('.chooser');
+	for (var i = 0; i < choosers.length; i++)
+	{
+		choosers[i].addEventListener('click', function(e) {
+			if (e.target === this) {
+				showSkillPage('builder');
+			}
+		});
+	}
+
+	// 右侧属性面板拖拽调宽
+	initFormResizer();
+
+	// 确认弹层
+	document.getElementById('confirmCancel').addEventListener('click', hideConfirm);
+	document.getElementById('confirmOk').addEventListener('click', function() {
+		var callback = confirmCallback;
+		hideConfirm();
+		if (callback) callback();
+	});
+	document.getElementById('confirmDialog').addEventListener('click', function(e) {
+		if (e.target === this) hideConfirm();
+	});
+
+	// 组件树搜索与快捷键
+	bindTreeSearch();
+	bindShortcuts();
     
     var attribs = localStorage.getItem('attribs');
     var skillData = localStorage.getItem('skillData');
@@ -250,7 +662,7 @@ function switchToSkills() {
     {
         document.getElementById('skillTab').className = 'tab tabLeft tabActive';
         document.getElementById('classTab').className = 'tab tabRight';
-        document.getElementById('skills').style.display = 'block';
+        document.getElementById('skills').style.display = 'grid';
         document.getElementById('classes').style.display = 'none';
         skillsActive = true;
     }
@@ -261,7 +673,7 @@ function switchToClasses() {
     {
         document.getElementById('classTab').className = 'tab tabRight tabActive';
         document.getElementById('skillTab').className = 'tab tabLeft';
-        document.getElementById('classes').style.display = 'block';
+        document.getElementById('classes').style.display = 'grid';
         document.getElementById('skills').style.display = 'none';
         skillsActive = false;
     }
@@ -272,10 +684,22 @@ function switchToClasses() {
  */
 function showSkillPage(name) 
 {
-	setPageStyle('builder', name);
+	// 组件树常驻，属性表单作为右侧面板共存，选择器以浮层形式打开
+	hideOptionTip();
+	setPageStyle('builder', 'builder');
 	setPageStyle('skillForm', name);
 	setPageStyle('componentChooser', name);
 	setPageStyle('triggerChooser', name);
+
+	// 拖拽条只在属性面板可见时出现
+	var resizer = document.getElementById('formResizer');
+	if (resizer) {
+		resizer.style.display = (name == 'skillForm') ? 'block' : 'none';
+	}
+
+	if (name == 'componentChooser' || name == 'triggerChooser') {
+		resetOptionSearch();
+	}
 }
 
 /**

@@ -1,539 +1,1003 @@
+@charset "UTF-8";
+
+/* ==========================================================================
+   SkillAPI 编辑器 · 主题与布局
+   --------------------------------------------------------------------------
+   本文件只负责「骨架布局 + 表单 + 通用控件」，组件树样式见 builderStyle.css
+   注意：JS 通过 #id 与固定类名操作 DOM，修改选择器名会破坏功能
+   ========================================================================== */
+
 @font-face {
-    font-family: 'Mojave-Web';
-    src: url('mojave-webfont.eot');
-    src: url('mojave-webfont.eot?#iefix') format('embedded-opentype'),
-         url('mojave-webfont.ttf') format('truetype');
-    font-weight: normal;
-    font-style: normal;
+	font-family: 'Mojave-Web';
+	src: url('mojave-webfont.eot');
+	src: url('mojave-webfont.eot?#iefix') format('embedded-opentype'),
+		url('mojave-webfont.ttf') format('truetype');
+	font-weight: normal;
+	font-style: normal;
 }
 
 @font-face {
-    font-family: 'Sertig-Web';
-    src: url('sertig-webfont.eot');
-    src: url('sertig-webfont.eot?#iefix') format('embedded-opentype'),
-         url('sertig-webfont.ttf') format('truetype');
-    font-weight: normal;
-    font-style: normal;
+	font-family: 'Sertig-Web';
+	src: url('sertig-webfont.eot');
+	src: url('sertig-webfont.eot?#iefix') format('embedded-opentype'),
+		url('sertig-webfont.ttf') format('truetype');
+	font-weight: normal;
+	font-style: normal;
 }
+
+:root {
+	--bg:        #0d1015;
+	--bg-2:      #11151c;
+	--panel:     #151a23;
+	--panel-2:   #1a202b;
+	--field:     #0f141c;
+	--border:    #242c39;
+	--border-2:  #33405a;
+	--text:      #e7ebf3;
+	--muted:     #8b95a8;
+	--accent:    #f0a83c;
+	--accent-2:  #4c8dff;
+	--ok:        #2fbf71;
+	--danger:    #e5484d;
+
+	--trigger:   #ff7b72;
+	--target:    #3fd07f;
+	--condition: #5b9dff;
+	--mechanic:  #b585ff;
+
+	--radius:    10px;
+	--radius-sm: 8px;
+	--font: system-ui, -apple-system, "Segoe UI", "Microsoft YaHei", "PingFang SC", sans-serif;
+	--mono: ui-monospace, "Cascadia Mono", "JetBrains Mono", Consolas, monospace;
+}
+
+/* --------------------------------------------------------------------------
+   基础
+   -------------------------------------------------------------------------- */
 
 * {
-	padding: 0;
+	box-sizing: border-box;
+}
+
+html,
+body {
+	height: 100%;
 	margin: 0;
+	padding: 0;
 }
 
-html {
-  box-sizing: border-box;
-}
-
-*,
-*:before,
-*:after {
-  box-sizing: inherit;
-}
-
-html, body {
-	width: 100%;
-	height: 100%;
+body {
+	display: grid;
+	grid-template-rows: auto minmax(0, 1fr) auto;
 	overflow: hidden;
-	font: 20px Sertig-Web;
-	font-weight: bold;
-	color: white;
-	background-color: black;
+	font: 14px/1.55 var(--font);
+	color: var(--text);
+	background: var(--bg);
+	-webkit-font-smoothing: antialiased;
 }
 
-#badBrowser {
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background-color: black;
+h1, h2, h3, h4, h5, h6, p {
+	margin: 0;
+	font-weight: 600;
 }
 
-#attribute-label {
-    width: 90% !important;
-    text-align: center !important;
-    color: #888;
+a {
+	color: var(--accent-2);
+	text-decoration: none;
 }
 
-#badBrowser p {
-    text-align: center;
-    margin-top: 40%;
-    font: 24px Sertig-Web;
+a:hover {
+	text-decoration: underline;
 }
 
-#builder, #skillForm, #classForm, #componentChooser, #triggerChooser {
-	width: calc(100% - 200px);
-	height: 100%;
-	float: left;
-	overflow-y: auto;
+hr {
+	height: 1px;
+	margin: 14px 0;
+	border: 0;
+	background: var(--border);
 }
 
-#skillForm, /*#builder,*/ #componentChooser, #triggerChooser {
-	display: none;
+::selection {
+	background: rgba(240, 168, 60, .35);
 }
 
-#skills, #classes {
-	float: left;
-	width: 100%;
-	height: calc(100% - 45px);
-	background-color: black;
-	border-radius: 0;
+/* 滚动条 */
+* {
+	scrollbar-width: thin;
+	scrollbar-color: #2b3546 transparent;
+}
+
+::-webkit-scrollbar {
+	width: 10px;
+	height: 10px;
+}
+
+::-webkit-scrollbar-track {
+	background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+	background: #2b3546;
+	border: 2px solid transparent;
+	background-clip: padding-box;
+	border-radius: 999px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+	background: #3d4a60;
+	background-clip: padding-box;
+}
+
+/* --------------------------------------------------------------------------
+   顶部工具栏
+   -------------------------------------------------------------------------- */
+
+.appbar {
+	display: flex;
+	align-items: center;
+	gap: 18px;
+	padding: 10px 16px;
+	background: var(--bg-2);
+	border-bottom: 1px solid var(--border);
+}
+
+.brand h1 {
+	font: 700 20px 'Sertig-Web', var(--font);
+	letter-spacing: .6px;
+	color: var(--accent);
+	white-space: nowrap;
+}
+
+.brand h1 span {
+	margin-left: 8px;
+	font-size: 14px;
+	font-weight: 400;
+	letter-spacing: 0;
+	color: var(--muted);
+}
+
+.modeTabs {
+	display: flex;
+	gap: 4px;
+	padding: 4px;
+	background: #0b0e13;
+	border: 1px solid var(--border);
+	border-radius: 999px;
+}
+
+.tab {
+	padding: 8px 22px;
+	border-radius: 999px;
+	font-size: 14px;
+	font-weight: 600;
+	color: var(--muted);
+	cursor: pointer;
+	transition: background-color .15s, color .15s;
+}
+
+.tab:hover {
+	color: var(--text);
+	background: #1b2230;
+}
+
+.tabActive,
+.tabActive:hover {
+	color: #221605;
+	background: var(--accent);
+}
+
+.appActions {
+	display: flex;
+	gap: 8px;
+	margin-left: auto;
+}
+
+.ioButton {
+	height: 34px;
+	padding: 0 16px;
+	font: 600 14px var(--font);
+	color: var(--text);
+	background: #1e2632;
+	border: 1px solid var(--border);
+	border-radius: var(--radius-sm);
+	cursor: pointer;
+	transition: background-color .15s, border-color .15s;
+}
+
+.ioButton:hover {
+	background: #27313f;
+	border-color: var(--border-2);
+}
+
+.ioButton.primary {
+	color: #221605;
+	background: var(--accent);
+	border-color: var(--accent);
+}
+
+.ioButton.primary:hover {
+	background: #ffbf5e;
+	border-color: #ffbf5e;
+}
+
+.ioButton.danger {
+	color: #ffd9da;
+	background: #3a1b1d;
+	border-color: #58262a;
+}
+
+.ioButton.danger:hover {
+	color: #fff;
+	background: var(--danger);
+	border-color: var(--danger);
+}
+
+/* --------------------------------------------------------------------------
+   主区域：列表 / 组件树 / 属性表单
+   -------------------------------------------------------------------------- */
+
+#main {
+	min-height: 0;
 	overflow: hidden;
+}
+
+#skills {
+	display: grid;
+	grid-template-columns: 258px minmax(0, 1fr) auto auto;
+	height: 100%;
+	position: relative;
 }
 
 #classes {
 	display: none;
+	grid-template-columns: 258px minmax(0, 1fr);
+	height: 100%;
+	position: relative;
 }
 
-#main {
-	height: calc(100% - 135px);
-	background-color: #333;
-	clear: both;
+/* 左侧列表 */
+.listPane {
+	display: flex;
+	flex-direction: column;
+	min-height: 0;
+	background: var(--panel);
+	border-right: 1px solid var(--border);
 }
 
-#small {
-	height: calc(100% - 150px);
-	background-color: black;
-	display: none;
-	padding: 20px;
-	clear: both;
+.paneTitle {
+	padding: 11px 14px;
+	font-size: 13px;
+	font-weight: 700;
+	letter-spacing: .08em;
+	text-transform: uppercase;
+	color: var(--muted);
+	border-bottom: 1px solid var(--border);
 }
 
-#builderSpacer {
-	display: inline-block;
-	width: calc(20% - 40px);
-	height: 10px;
-}
-
-#tabSpacer {
-	float:left;
-	width: 5%;
-	height: 10px;
-}
-
-#skillList, #classList  {
-	float: left;
-	width: 200px;
-    font: 18px Sertig-Web;
-    background-color: #181818;
-    color: white;
-    font-weight: bold;
-    height: 100%;
-    padding: 5px;
-    border: none;
-}
-
-#skillList option, #classList option {
-	border-radius: 10px;
-	padding: 3px;
-	padding-left: 8px;
-	cursor: pointer;
-}
-
-header {
-	width: 380px;
-	float: left;
-	height: 60px;
-}
-
-h1 {
-	font: 32px Sertig-Web;
-	font-weight: bold;
-	color: #FFAB3C;
-	padding: 10px;
-}
-
-h2 {
-	font: 18px Sertig-Web;
-	font-weight: bold;
-	padding-left: 10px;
-}
-
-h4 {
-	font: 32px Mojave-Web;
-	font-weight: bold;
-	text-align: center;
-	padding: 10px;
-	color: #0f0;
-	clear: both;
-}
-
-h5 {
-	float: left;
-	width: 225px;
-	padding: 10px 5px;
-	background-color: #181818;
-	margin-bottom: 10px;
-	margin-left: 10px;
-	border-radius: 5px;
-	border: 2px solid #333;
-	text-align: center;
-	font: 24px Sertig-Web;
-	font-weight: bold;
-	
-	transition: background-color 600ms;
-}
-
-h5:hover {
-	background-color: #777;
-	cursor: pointer;
-}
-
-h6 {
-	clear: both;
-	display: inline-block;
-	width: calc(25% - 26px);
-	padding: 5px 5px;
-	background-color: #043;
-	margin-left: 3px;
-	margin-top: 10px;
-	margin-bottom: 5px;
-	border-radius: 5px;
-	text-align: center;
-	font: 24px Sertig-Web;
-	font-weight: bold;
-	
-	transition: background-color 600ms;
-}
-
-h6:hover {
-	background-color: #666;
-	cursor: pointer;
-}
-
-hr {
-	clear: both;
-	margin: 10px 0;
-}
-
-table {
-	text-size-adjust: 100%;
-	margin-top: 18px;
-	border-collapse: collapse;
+#skillList,
+#classList {
+	flex: 1 1 auto;
 	width: 100%;
-}
-
-
-table p,a {
-	font-size: 12px;
-	-webkit-font-smoothing: subpixel-antialiased;
-	text-size-adjust: 100%;
-	line-height: 20px;
-	font-family: 'Microsoft YaHei', serif;
-	padding: 0;
+	min-height: 0;
+	padding: 8px;
 	margin: 0;
-	color: #7e8890
+	font: 14px var(--font);
+	color: var(--text);
+	background: transparent;
+	border: 0;
+	outline: none;
+	overflow-y: auto;
 }
 
-footer {
-	width: 100%;
-	height: 0;
-	background-color: black;
-	font-family: 'Microsoft YaHei', serif;
+#skillList option,
+#classList option {
+	padding: 9px 11px;
+	margin: 2px 0;
+	border-radius: var(--radius-sm);
+	cursor: pointer;
 }
 
-footer a {
-	text-align: center;
-	height: 25px;
-	display: inline-block;
-	width: 25%;
-	color: #7e8890;
-	padding-top: 5px;
-	text-decoration: none;
-	border-top: 1px solid white;
-	position: absolute;
-	left: 0;
-	transition: background-color 600ms;
-	border-left: 1px solid white;
+#skillList option:checked,
+#classList option:checked {
+	color: #221605;
+	background: var(--accent);
 }
 
-footer a:hover {
-	background-color: #222;
+/* 中间：组件树 */
+#builder {
+	display: block;
+	min-height: 0;
+	overflow-y: auto;
+	background: var(--bg);
 }
 
-footer a:first-child {
-	border-left: none;
+.paneHeader {
+	position: sticky;
+	top: 0;
+	z-index: 5;
+	display: flex;
+	align-items: center;
+	gap: 12px;
+	padding: 11px 14px;
+	background: rgba(17, 21, 28, .92);
+	backdrop-filter: blur(8px);
+	border-bottom: 1px solid var(--border);
 }
 
-footer #docs {
-	left: 0%;
+.paneHeaderTitle {
+	font-size: 13px;
+	font-weight: 700;
+	letter-spacing: .08em;
+	text-transform: uppercase;
+	color: var(--muted);
 }
 
-input, select, textarea {
-    box-sizing: border-box;
-    -ms-box-sizing: border-box;
-    -moz-box-sizing: border-box;
-    -webkit-box-sizing: border-box;
+.treeSearch {
+	flex: 0 1 200px;
+	min-width: 90px;
+	height: 30px;
+	padding: 0 12px;
+	font: 13px var(--font);
+	color: var(--text);
+	background: var(--field);
+	border: 1px solid var(--border);
+	border-radius: 999px;
+	outline: none;
+	transition: border-color .15s, box-shadow .15s;
 }
 
-.cancelButton {
-	background-color: #A00;
-	color: white;
-	transition: background-color 600ms, color 600ms;
+.treeSearch:focus {
+	border-color: var(--accent-2);
+	box-shadow: 0 0 0 3px rgba(76, 141, 255, .16);
 }
 
-.cancelButton:hover {
-	background-color: white;
-	color: #A00;
+.paneHeaderActions {
+	display: flex;
+	gap: 6px;
+	margin-left: auto;
 }
 
-.doneButton {
-	background-color: #008966;
-    border: 2px solid #004433;
-	color: white;
-	transition: background-color 600ms, color 600ms;
+.paneHeaderActions h6 {
+	padding: 7px 13px;
+	font: 600 13px var(--font);
+	color: var(--text);
+	background: #1e2632;
+	border: 1px solid var(--border);
+	border-radius: 999px;
+	cursor: pointer;
+	transition: background-color .15s, border-color .15s, color .15s;
 }
 
-.doneButton:hover {
-	background-color: #004433;
-    border: 2px solid #002211;
-}
-
-hr {
-    display: block;
-    background-color: #888;
-    height: 1px;
-    width: 100%;
-    clear: both;
+.paneHeaderActions h6:hover {
+	background: #28323f;
+	border-color: var(--border-2);
 }
 
 #saveSkill {
-	background-color: #375a7f;
+	color: #bcd9ff;
+	background: #1b2c42;
+	border-color: #2b4a70;
 }
 
 #saveSkill:hover {
-    background-color: #6af;
+	background: #24405f;
 }
 
-.ioButton {
-	height: 40px;
-	margin: 10px 1px;
-	width: calc(100% - 20px);
-	background-color: #375a7f;
-	color: white;
-    border: none;
-	border-radius: 5px;
-	font: 20px Sertig-Web;
-	font-weight: bold;
-	cursor: pointer;
-	transition: background-color 600ms;
+#builderContent {
+	padding: 16px 18px 80px;
 }
 
-.ioButton:hover {
-	background-color: #6af;
+.paneHeaderActions h6.cancelButton {
+	color: #ffb4b6;
+	background: #2a1618;
+	border-color: #4a2226;
 }
 
-.ioText {
+.paneHeaderActions h6.cancelButton:hover {
+	color: #fff;
+	background: #462025;
+	border-color: #6b3036;
+}
+
+#builderContent:empty::after {
+	content: '暂无组件，点击右上角「触发器」开始搭建';
+	display: block;
+	padding: 40px 0;
 	text-align: center;
-	margin-top: 15px;
-	margin-bottom: 5px;
+	color: var(--muted);
+	font-size: 14px;
 }
 
-.premium {
-    background-color: #033;
+/* 右侧：属性表单 */
+.formPane {
+	display: none;
+	width: clamp(380px, 27vw, 590px);
+	max-width: 60vw;
+	min-height: 0;
+	overflow-y: auto;
+	background: var(--panel);
+	border-left: 1px solid var(--border);
 }
 
-.premium:hover {
-    background-color: #6aa;
+/* 属性面板拖拽条：默认占据 6px 网格列，可拖动调宽 */
+.formResizer {
+	display: none;
+	position: relative;
+	width: 6px;
+	cursor: col-resize;
+	background: var(--border);
+	transition: background-color .15s;
 }
 
-.tab {
-    position: relative;
-    float: left;
-    width: calc(45% - 36px);
-    margin-left: 5px;
-    background-color: black;
-    border-bottom: none;
-    margin: 5px 5px 0;
-    color: white;
-    padding: 3px 10px;
-    font: 24px Sertig-Web;
-	font-weight: bold;
-    text-align: center;
-	
-	transition: background-color 600ms;
+/* 扩大可抓取范围，同时不占用布局宽度 */
+.formResizer::after {
+	content: '';
+	position: absolute;
+	top: 0;
+	bottom: 0;
+	left: -3px;
+	right: -3px;
 }
 
-.tab {
-    cursor: pointer;
-    background: #008966;
+.formResizer:hover,
+.formResizer.active {
+	background: var(--accent-2);
 }
 
-.tab:hover {
-    background-color: #FFAB3C;
+/* 职业视图的表单始终显示，占满剩余列 */
+#classForm {
+	display: block;
+	width: auto;
+	max-width: none;
+	border-left: 0;
 }
 
-.tabActive, .tabActive:hover {
-    background-color: #fff;
-    color: black;
+/* --------------------------------------------------------------------------
+   表单控件
+   -------------------------------------------------------------------------- */
+
+#skillForm form,
+#classForm form {
+	padding: 16px 18px 90px;
 }
 
-.tabLeft:before {
-    position: absolute;
-    left: -1px;
-    top: -1px;
-    content: '';
-    border-top: 20px solid #333;
-    border-right: 20px solid transparent;
+#skillForm h4,
+#classForm h4 {
+	padding-bottom: 11px;
+	font-size: 16px;
+	font-weight: 700;
+	color: var(--text);
+	border-bottom: 1px solid var(--border);
 }
 
-.tabLeft:after {
-    position: absolute;
-    left: -3px;
-    top: -3px;
-    content: '';
-    border-top: 20px solid #333;
-    border-right: 20px solid transparent;
+#skillForm label,
+#classForm label {
+	display: block;
+	margin: 16px 0 6px;
+	font-size: 13px;
+	font-weight: 600;
+	color: var(--muted);
 }
 
-.tabRight:before {
-    position: absolute;
-    right: -1px;
-    top: -1px;
-    content: '';
-    border-top: 20px solid #333;
-    border-left: 20px solid transparent;
+#skillForm input,
+#skillForm select,
+#skillForm textarea,
+#classForm input,
+#classForm select,
+#classForm textarea {
+	width: 100%;
+	padding: 9px 11px;
+	font: 14px var(--font);
+	color: var(--text);
+	background: var(--field);
+	border: 1px solid var(--border);
+	border-radius: var(--radius-sm);
+	outline: none;
+	transition: border-color .15s, box-shadow .15s;
 }
 
-.tabRight:after {
-    position: absolute;
-    right: -3px;
-    top: -3px;
-    content: '';
-    border-top: 20px solid #333;
-    border-left: 20px solid transparent;
+#skillForm input:focus,
+#skillForm select:focus,
+#skillForm textarea:focus,
+#classForm input:focus,
+#classForm select:focus,
+#classForm textarea:focus {
+	border-color: var(--accent-2);
+	box-shadow: 0 0 0 3px rgba(76, 141, 255, .16);
 }
 
-#io {
-	float: right;
-	width: 200px;
-}
-
-#skillForm label, #classForm label {
-	float: left;
-	text-align: right;
-	width: 40%;
-	padding-right: 15px;
-	font: 24px Sertig-Web;
-	font-weight: bold;
-	padding-top: 10px;
-	clear: both;
-}
-
-#skillForm input, #skillForm select, #classForm input, #classForm select, #skillForm .byteList, #classForm .byteList {
-	font: 20px Sertig-Web;
-	font-weight: bold;
-	background-color: #181818;
-	border: 1px solid #888;
-    border-top: none;
-    border-right: none;
-	border-radius: 5px;
-	color: white;
-	padding: 5px 10px;
-    padding-right: 0;
-	margin: 2px 5px; 
-	width: 40%;
-	float: left;
-}
-
-#skillForm .grayed, #classForm .grayed {
-    color: #999;
-}
-
-#skillForm .byteList, #classForm .byteList {
-    width: calc(40% - 24px);
-    min-height: 50px;
-}
-
-#skillForm .multilist, #classForm .multilist {
-    padding: 5px;
-    padding-left: 10px;
-    cursor: pointer;
-    border-radius: 10px;
-}
-
-#skillForm .multilist:hover, #classForm .multilist:hover {
-    background-color: red;
-}
-
-#skillForm select, #classForm select {
-	background-color: #222;
+#skillForm select,
+#classForm select {
 	cursor: pointer;
 }
 
-#skillForm textarea, #classForm textArea {
-	font: 20px Sertig-Web;
-	font-weight: bold;
-	background-color: #181818;
-	border: 1px solid #888;
-    border-top: none;
-    border-right: none;
-	border-radius: 5px;
-	color: white;
-	padding: 5px 10px;
-	margin: 2px 5px;
-	width: 40%;
-	float: left;
-	height: 200px;
+#skillForm textarea,
+#classForm textarea {
+	min-height: 150px;
+	resize: vertical;
+	font-family: var(--mono);
+	font-size: 13px;
+	line-height: 1.65;
 }
 
-textArea {
-    resize: vertical;
+/* 属性值：基础值 + ( 每级 ) */
+#skillForm .attrLabel,
+#classForm .attrLabel {
+	display: inline-block;
+	width: auto;
+	margin: 0 6px;
+	font-size: 12px;
+	font-weight: 500;
+	color: var(--muted);
 }
 
-#skillForm p, #classForm p {
-	text-align: center;
-	font: 20px Sertig-Web;
-	color: #ccc;
-}
-
-#skillForm .areaLabel, #classForm .areaLabel {
-}
-
-#skillForm .attrLabel, #classForm .attrLabel {
-	width: 25px;
-	text-align: left;
+#skillForm input.base,
+#classForm input.base {
+	display: inline-block;
+	width: calc(50% - 34px);
 	margin: 0;
+}
+
+#skillForm input.scale,
+#classForm input.scale {
+	display: inline-block;
+	width: calc(30% - 24px);
+	margin: 0;
+}
+
+/* 多选列表 / 字节列表 */
+#skillForm .byteList,
+#classForm .byteList {
+	padding: 8px;
+	background: var(--field);
+	border: 1px solid var(--border);
+	border-radius: var(--radius-sm);
+}
+
+#skillForm .byteList input,
+#classForm .byteList input {
+	width: auto;
+	margin: 4px 8px 4px 0;
+	accent-color: var(--accent);
+}
+
+#skillForm .multilist,
+#classForm .multilist {
+	padding: 4px 8px;
+	border-radius: 6px;
+	cursor: pointer;
+}
+
+#skillForm .multilist:hover,
+#classForm .multilist:hover {
+	background: #243044;
+}
+
+.grayed {
+	color: var(--muted) !important;
+	font-size: 13px;
+	font-weight: 400;
+}
+
+#attribute-label {
+	width: 100% !important;
+	color: var(--muted);
+}
+
+/* 表单内的按钮（返回 / 保存 / 删除） */
+#skillForm h5,
+#classForm h5 {
+	display: block;
+	float: none;
+	width: auto;
+	margin: 14px 0 0;
+	padding: 11px 0;
+	text-align: center;
+	font: 600 14px var(--font);
+	color: #bcd9ff;
+	background: #1b2c42;
+	border: 1px solid #2b4a70;
+	border-radius: var(--radius-sm);
+	cursor: pointer;
+	transition: background-color .15s, border-color .15s, color .15s;
+}
+
+#skillForm h5:hover,
+#classForm h5:hover {
+	background: #24405f;
+}
+
+#skillForm h5.cancelButton,
+#classForm h5.cancelButton {
+	color: #ffd9da;
+	background: #3a1b1d;
+	border-color: #58262a;
+}
+
+#skillForm h5.cancelButton:hover,
+#classForm h5.cancelButton:hover {
+	color: #fff;
+	background: var(--danger);
+	border-color: var(--danger);
+}
+
+#skillForm h5.doneButton,
+#classForm h5.doneButton {
+	color: #062314;
+	background: var(--ok);
+	border-color: transparent;
+}
+
+#skillForm h5.doneButton:hover,
+#classForm h5.doneButton:hover {
+	background: #45d98a;
+}
+
+/* --------------------------------------------------------------------------
+   选择器浮层（触发器 / 组件）
+   -------------------------------------------------------------------------- */
+
+.chooser {
+	display: none;
+	position: absolute;
+	inset: 0;
+	z-index: 20;
+	padding: 28px;
+	background: rgba(5, 8, 12, .72);
+	backdrop-filter: blur(3px);
+	overflow: auto;
+}
+
+.chooserCard {
+	max-width: 980px;
+	margin: 0 auto;
+	padding: 24px 26px 26px;
+	background: linear-gradient(180deg, #1a202b 0%, #151a23 100%);
+	border: 1px solid var(--border);
+	border-radius: 14px;
+	box-shadow:
+		inset 0 1px 0 rgba(255, 255, 255, .04),
+		0 24px 60px rgba(0, 0, 0, .5);
+}
+
+.chooserCard h4 {
+	margin: 24px 0 12px;
+	font-size: 15px;
+	font-weight: 700;
+	letter-spacing: .05em;
+	color: #aab7cb;
+}
+
+.chooserCard h4:first-of-type {
+	margin-top: 0;
+}
+
+.optionSearch {
+	width: 100%;
+	padding: 11px 14px;
+	margin: 8px 0 6px;
+	font: 14px var(--font);
+	color: var(--text);
+	background: var(--field);
+	border: 1px solid var(--border);
+	border-radius: var(--radius-sm);
+	outline: none;
+}
+
+.optionSearch:focus {
+	border-color: var(--accent-2);
+	box-shadow: 0 0 0 3px rgba(76, 141, 255, .16);
+}
+
+.optionGrid {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 10px;
+}
+
+.optionGrid h5 {
+	float: none;
+	width: auto;
+	margin: 0;
+	padding: 9px 16px;
+	font: 600 13.5px/1.4 var(--font);
+	color: var(--text);
+	background: #1e2632;
+	border: 1px solid var(--border);
+	border-radius: 999px;
+	cursor: pointer;
+	transition: background-color .15s, border-color .15s, color .15s;
+}
+
+.optionGrid h5:hover {
+	color: #221605;
+	background: var(--accent);
+	border-color: var(--accent);
+}
+
+.optionGrid h5.premium {
+	color: #9fc8ff;
+	border-color: #2b4a70;
+	background: #182636;
+}
+
+.optionGrid h5.premium:hover {
+	color: #221605;
+	background: var(--accent);
+	border-color: var(--accent);
+}
+
+.optionGrid h5:focus-visible {
+	outline: none;
+	border-color: var(--accent-2);
+	box-shadow: 0 0 0 3px rgba(76, 141, 255, .2);
+}
+
+/* 组件介绍浮层
+   内边距改由标题栏 / 正文承担，使标题与正文形成上下两层配色 */
+.optionTip {
+	position: fixed;
+	z-index: 400;
+	min-width: 240px;
+	max-width: 420px;
 	padding: 0;
-	padding-top: 10px;
-	clear: none;
+	overflow: hidden;
+	background:
+		radial-gradient(130% 120% at 0% 0%, rgba(240, 168, 60, .16), rgba(240, 168, 60, 0) 58%),
+		linear-gradient(180deg, #273242 0%, #1d2532 36%, #161c26 74%, #12171f 100%);
+	border: 1px solid #3b4a62;
+	border-radius: 12px;
+	box-shadow:
+		inset 0 1px 0 rgba(255, 255, 255, .07),
+		inset 0 0 0 1px rgba(76, 141, 255, .05),
+		0 18px 44px rgba(0, 0, 0, .62);
+	pointer-events: none;
+	opacity: 0;
+	transform: translateY(4px);
+	transition: opacity .12s ease, transform .12s ease;
 }
 
-#skillForm .base, #classForm .base {
-	width: calc(25% - 32px);
+.optionTip.show {
+	opacity: 1;
+	transform: translateY(0);
 }
 
-#skillForm .scale, #classForm .scale {
-	width: calc(15% - 18px);
+/* 标题栏：顶部暖色高光层 */
+.optionTipTitle {
+	padding: 10px 16px 9px;
+	font-size: 15px;
+	font-weight: 700;
+	letter-spacing: .02em;
+	color: #ffd08d;
+	text-shadow: 0 1px 0 rgba(0, 0, 0, .45);
+	background: linear-gradient(180deg, rgba(240, 168, 60, .22), rgba(240, 168, 60, .05));
+	border-bottom: 1px solid rgba(240, 168, 60, .26);
+	box-shadow: inset 0 -1px 0 rgba(0, 0, 0, .28);
 }
 
-#skillForm .byteList input, #classForm .byteList input {
-    width: 15px;
-    margin-top: 6px;
+/* 正文：下沉的深色层，与标题栏拉开明度差 */
+.optionTipBody {
+	padding: 12px 16px 14px;
+	font-size: 14px;
+	line-height: 1.72;
+	color: #dbe2ef;
+	white-space: pre-wrap;
+	background: linear-gradient(180deg, rgba(255, 255, 255, .025), rgba(0, 0, 0, .14));
 }
 
-::-webkit-scrollbar {
-    width: 12px;
-}
- 
-::-webkit-scrollbar-track {
-    border-radius: 10px;
-	border: 1px solid #aaa;
-}
- 
-::-webkit-scrollbar-thumb {
-    border-radius: 10px;
-	background-color: #aaa;
+.chooserCard h5.cancelButton {
+	float: none;
+	width: auto;
+	margin: 24px 0 0;
+	padding: 11px 0;
+	text-align: center;
+	font: 600 14px var(--font);
+	color: #ffd9da;
+	background: #3a1b1d;
+	border: 1px solid #58262a;
+	border-radius: var(--radius-sm);
+	cursor: pointer;
+	transition: background-color .15s;
 }
 
+.chooserCard h5.cancelButton:hover {
+	color: #fff;
+	background: var(--danger);
+	border-color: var(--danger);
+}
 
-@media screen and (max-width: 599px) {
-	
+/* 组件树中的删除按钮复用 .cancelButton */
+.cancelButton {
+	color: #ffd9da;
+}
+
+/* --------------------------------------------------------------------------
+   浮层动效
+   -------------------------------------------------------------------------- */
+
+@keyframes editorFadeIn {
+	from { opacity: 0; }
+	to   { opacity: 1; }
+}
+
+@keyframes editorPopIn {
+	from { opacity: 0; transform: translateY(8px) scale(.985); }
+	to   { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+.chooser {
+	animation: editorFadeIn .16s ease both;
+}
+
+.chooserCard {
+	animation: editorPopIn .18s ease both;
+}
+
+/* --------------------------------------------------------------------------
+   确认弹层
+   -------------------------------------------------------------------------- */
+
+.dialog {
+	display: none;
+	position: fixed;
+	inset: 0;
+	z-index: 200;
+	align-items: center;
+	justify-content: center;
+	padding: 24px;
+	background: rgba(5, 8, 12, .72);
+	backdrop-filter: blur(3px);
+	animation: editorFadeIn .14s ease both;
+}
+
+.dialogCard {
+	width: 420px;
+	max-width: 90vw;
+	padding: 22px 22px 18px;
+	background: var(--panel);
+	border: 1px solid var(--border);
+	border-radius: 14px;
+	box-shadow: 0 24px 60px rgba(0, 0, 0, .5);
+	animation: editorPopIn .16s ease both;
+}
+
+.dialogCard h4 {
+	font-size: 16px;
+	font-weight: 700;
+	color: var(--text);
+}
+
+.dialogCard p {
+	margin-top: 10px;
+	font-size: 14px;
+	line-height: 1.6;
+	color: var(--muted);
+	word-break: break-all;
+}
+
+.dialogActions {
+	display: flex;
+	justify-content: flex-end;
+	gap: 8px;
+	margin-top: 20px;
+}
+
+/* --------------------------------------------------------------------------
+   轻提示
+   -------------------------------------------------------------------------- */
+
+.toastHost {
+	position: fixed;
+	right: 18px;
+	bottom: 18px;
+	z-index: 300;
+	display: flex;
+	flex-direction: column;
+	align-items: flex-end;
+	gap: 8px;
+	pointer-events: none;
+}
+
+.toast {
+	padding: 10px 15px;
+	font: 600 13px var(--font);
+	color: var(--text);
+	background: #1e2632;
+	border: 1px solid var(--border-2);
+	border-left: 3px solid var(--ok);
+	border-radius: 8px;
+	box-shadow: 0 12px 30px rgba(0, 0, 0, .45);
+	animation: editorPopIn .18s ease both;
+	transition: opacity .4s ease, transform .4s ease;
+}
+
+.toast.warn {
+	border-left-color: var(--accent);
+}
+
+.toast.out {
+	opacity: 0;
+	transform: translateY(6px);
+}
+
+/* --------------------------------------------------------------------------
+   页脚 / 提示层
+   -------------------------------------------------------------------------- */
+
+.legal {
+	padding: 4px 0;
+	background: var(--bg-2);
+	border-top: 1px solid var(--border);
+}
+
+.legal table {
+	width: 100%;
+	border-collapse: collapse;
+}
+
+.legal p,
+.legal a {
+	margin: 0;
+	font: 12px/19px 'Microsoft YaHei', var(--font);
+	color: #6b7488;
+}
+
+.legal a:hover {
+	color: var(--muted);
+}
+
+#small {
+	display: none;
+	padding: 40px 20px;
+	text-align: center;
+	color: var(--muted);
+}
+
+#badBrowser {
+	display: none;
+	position: fixed;
+	inset: 0;
+	z-index: 999;
+	padding: 30vh 20px 0;
+	text-align: center;
+	background: var(--bg);
+}
+
+#badBrowser p {
+	font-size: 16px;
+	color: var(--muted);
+}
+
+/* --------------------------------------------------------------------------
+   响应式
+   -------------------------------------------------------------------------- */
+
+@media screen and (max-width: 1080px) {
+	#skills {
+		grid-template-columns: 214px minmax(0, 1fr) auto auto;
+	}
+
+	/* 窄屏下属性表单改为覆盖式抽屉（职业表单保持原布局） */
+	#skillForm {
+		position: absolute;
+		inset: 0 0 0 auto;
+		width: 400px;
+		max-width: 90vw;
+		z-index: 15;
+		box-shadow: -20px 0 50px rgba(0, 0, 0, .45);
+	}
+
+	/* 抽屉模式下不提供拖拽，避免与固定定位冲突 */
+	#formResizer {
+		display: none !important;
+	}
+}
+
+@media screen and (max-width: 720px) {
 	#main {
 		display: none;
 	}
-	
+
 	#small {
 		display: block;
 	}

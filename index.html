@@ -3,132 +3,150 @@
 
 <head>
 	<meta charset="UTF-8"/>
-	<title>SkillAPI-编辑器-NeonStudio.cn</title>
-	<!-- other scripts are loaded in com.js -->
+	<meta name="viewport" content="width=device-width, initial-scale=1"/>
+	<title>SkillAPI 编辑器 · NeonStudio</title>
+	<!-- 加载顺序不可调整：loader.js 必须先于 main.js，其余脚本由 depend() 注入 -->
 	<script src="editor/js/loader.js"></script>
 	<script src="editor/js/main.js"></script>
 	<link rel="stylesheet" href="editor/builderStyle.css" />
 	<link rel="stylesheet" href="editor/style.css" />
-    <link rel="stylesheet" href="editor/tooltips.css" />
+	<link rel="stylesheet" href="editor/tooltips.css" />
 	<link rel="icon" href="editor/img/favicon.ico" type="image/x-icon">
-	
 </head>
 
 <body>
 
-	<!-- Site header -->
-	<header>
-		<h1>SkillAPI-Neon-Fix</h1>
+	<!-- 浏览器不支持时的提示层 -->
+	<div id="badBrowser">
+		<p>请使用 Chrome 或 Firefox 打开编辑器</p>
+	</div>
+
+	<!-- 顶部工具栏 -->
+	<header class="appbar">
+		<div class="brand">
+			<h1>SkillAPI<span>Neon-Fix</span></h1>
+		</div>
+		<nav class="modeTabs">
+			<div id="skillTab" class="tab tabLeft tabActive">技能</div>
+			<div id="classTab" class="tab tabRight">职业</div>
+		</nav>
+		<div class="appActions">
+			<button id="saveButton" class="ioButton primary">下载所有</button>
+			<button class="ioButton" onclick="window.location.href='http://docs.neonstudio.cn/'">霓虹插件坊</button>
+		</div>
 	</header>
-	
-	<!-- IO Buttons -->
-	<div id="io">
-		<button id="saveButton" class="ioButton">下载所有</button>
-	</div>
 
-	<div style="float: right; width: 200px">
-		<button class="ioButton" onclick="window.location.href='http://docs.neonstudio.cn/'">霓虹插件坊</button>
-	</div>
-	
-	<!-- Display when the window is too small -->
+	<!-- 窗口过窄时的提示 -->
 	<div id="small">
-		<p>请放大浏览器窗口或缩小</p>
+		<p>窗口过窄，请放大浏览器窗口</p>
 	</div>
-	
-	<div id="main">
-		
-		<!-- Skill/Class Tabs -->
-		<div id="tabSpacer"></div>
-		<div id="skillTab" class="tab tabLeft tabActive">技能</div>
-		<div id="classTab" class="tab tabRight">职业</div>
-		
-		<!-- Skill Content -->
+
+	<main id="main">
+
+		<!-- 技能视图 -->
 		<div id="skills">
-			
-			<!-- Skill list -->
-			<select id="skillList" size="30">
-				<option selected="selected">Skill 1</option>
-				<option>+ 创建技能</option>
-			</select>
-			
-			<!-- Effect builder -->
-			<div id="builder">
-				<h6 id="skillDetails">基本信息</h6>
-				<h6 id="addTrigger">触发器</h6>
-				<h6 id="saveSkill" class>下载</h6>
-				<h6 id="deleteSkill" class="cancelButton">删除</h6>
+
+			<!-- 技能列表 -->
+			<aside class="listPane">
+				<div class="paneTitle">技能列表</div>
+				<select id="skillList" size="30">
+					<option selected="selected">Skill 1</option>
+					<option>+ 创建技能</option>
+				</select>
+			</aside>
+
+			<!-- 组件树 -->
+			<section id="builder">
+				<div class="paneHeader">
+					<div class="paneHeaderTitle">组件树</div>
+					<input id="treeSearch" class="treeSearch" type="text" placeholder="搜索组件…"/>
+					<div class="paneHeaderActions">
+						<h6 id="skillDetails">基本信息</h6>
+						<h6 id="addTrigger">触发器</h6>
+						<h6 id="saveSkill">下载</h6>
+						<h6 id="deleteSkill" class="cancelButton">删除</h6>
+					</div>
+				</div>
 				<div id="builderContent"></div>
+			</section>
+
+			<!-- 属性面板宽度拖拽条 -->
+			<div id="formResizer" class="formResizer" title="拖动调整属性面板宽度"></div>
+
+			<!-- 属性表单 -->
+			<aside id="skillForm" class="formPane"></aside>
+
+			<!-- 触发器选择 -->
+			<div id="triggerChooser" class="chooser">
+				<div class="chooserCard">
+					<h4>触发器</h4>
+					<input id="triggerSearch" class="optionSearch" type="text" placeholder="搜索触发器…"/>
+					<div id="triggerOptions" class="optionGrid"></div>
+					<h5 class="cancelButton">取消</h5>
+				</div>
 			</div>
-			
-			<!-- Component editor -->
-			<div id="skillForm">
+
+			<!-- 目标 / 条件 / 组件选择 -->
+			<div id="componentChooser" class="chooser">
+				<div class="chooserCard">
+					<input id="componentSearch" class="optionSearch" type="text" placeholder="搜索目标 / 条件 / 组件…"/>
+					<h4>目标选择器</h4>
+					<div id="targetOptions" class="optionGrid"></div>
+					<h4>触发条件</h4>
+					<div id="conditionOptions" class="optionGrid"></div>
+					<h4>技能组件</h4>
+					<div id="mechanicOptions" class="optionGrid"></div>
+					<h5 class="cancelButton">取消</h5>
+				</div>
 			</div>
-			
-			<!-- Trigger selection -->
-			<div id="triggerChooser">
-				<h4>触发器</h4>
-				
-				<div id="triggerOptions"></div>
-				
-				<h5 class="cancelButton">取消</h5>
-			</div>
-			
-			<!-- 组件选择 -->
-			<div id="componentChooser">
-			
-				<h4>目标选择器</h4>
-				<div id="targetOptions"></div>
-				
-				<h4>触发条件</h4>
-				<div id="conditionOptions"></div>
-				
-				<h4>技能组件</h4>
-				<div id="mechanicOptions"></div>
-				
-				<hr/>
-				<h5 class="cancelButton">取消</h5>
-				
-			</div>
+
 		</div>
-		
-		<!-- Class Content -->
+
+		<!-- 职业视图 -->
 		<div id="classes">
-		
-			<!-- Class list -->
-			<select id="classList" size="30">
-				<option selected="selected">Class 1</option>
-				<option>+ 创建职业</option>
-			</select>
-			
-			<div id="classForm"></div>
+			<aside class="listPane">
+				<div class="paneTitle">职业列表</div>
+				<select id="classList" size="30">
+					<option selected="selected">Class 1</option>
+					<option>+ 创建职业</option>
+				</select>
+			</aside>
+			<section id="classForm" class="formPane"></section>
 		</div>
-		
+
+	</main>
+
+	<!-- 轻提示 -->
+	<div id="toastHost" class="toastHost"></div>
+
+	<!-- 确认弹层 -->
+	<div id="confirmDialog" class="dialog">
+		<div class="dialogCard">
+			<h4>确认操作</h4>
+			<p id="confirmMessage"></p>
+			<div class="dialogActions">
+				<button id="confirmCancel" class="ioButton" type="button">取消</button>
+				<button id="confirmOk" class="ioButton danger" type="button">确认</button>
+			</div>
+		</div>
 	</div>
-	
-	<!-- Site footer -->
 
-	<!--
-	<footer>
-		<a id="docs" href="http://docs.neonstudio.cn/" target="_blank">霓虹插件</a>
-	</footer> -->
+	<!-- 页脚 -->
+	<footer class="legal">
+		<table>
+			<tr>
+				<td align="center">
+					<a href="https://beian.miit.gov.cn/" target="_blank">粤ICP备2024197007号-1</a>
+				</td>
+			</tr>
+			<tr>
+				<td align="center">
+					<p>Copyright © 2024 NeonCraftStudio. 保留所有权利。</p>
+				</td>
+			</tr>
+		</table>
+	</footer>
 
-	<table>
-		<tr>
-			<td align="center">
-				<a href="https://beian.miit.gov.cn/" target="_blank" >粤ICP备2024197007号-1</a>
-			</td>
-		</tr>
-		<tr>
-			<td align="center">
-				<p>Copyright © 2024 NeonCraftStudio. 保留所有权利。</p>
-			</td>
-		</tr>
-
-	</table>
-
-    <div id="badBrowser">
-        <p>使用Chrome或Firefox</p>
-    </div>
 </body>
 
 </html>
