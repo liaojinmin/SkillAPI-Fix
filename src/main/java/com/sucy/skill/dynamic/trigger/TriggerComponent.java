@@ -23,6 +23,7 @@ public class TriggerComponent extends EffectComponent {
     }
 
     public boolean trigger(final SkillContext context, final LivingEntity caster, final LivingEntity target, final int level) {
+        context.set("caster", caster);
         return execute(context, caster, level, Collections.singletonList(target));
     }
 
@@ -39,11 +40,13 @@ public class TriggerComponent extends EffectComponent {
     @Override
     public boolean execute(final SkillContext context, final LivingEntity caster, final int level, final List<LivingEntity> targets) {
         try {
-            if (context.get("trigger_use") != null) {
-                if (context.remove("trigger_mark") == null) {
+            /*
+            if (context.get(caster, "trigger_use", useGlobalContext) != null) {
+                if (context.del(caster, "trigger_mark", useGlobalContext) == null) {
                     return false;
                 }
             }
+             */
             running = true;
             return executeChildren(context, caster, level, targets);
         } finally {

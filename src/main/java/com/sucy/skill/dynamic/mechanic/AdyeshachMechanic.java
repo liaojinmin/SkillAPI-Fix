@@ -59,8 +59,8 @@ public class AdyeshachMechanic extends MechanicComponent {
     }
 
     @Override
-    public boolean execute(LivingEntity caster, SkillContext context, int level, List<LivingEntity> targets) {
-        int duration = (int) (20 * parseValues(caster, DURATION, level, 5));
+    public boolean execute(final SkillContext context, LivingEntity caster, int level, List<LivingEntity> targets) {
+        int duration = (int) (20 * parseValues(context, caster, DURATION, level, 5));
         String name = settings.getString(NAME, "Armor Stand");
         boolean nameVisible = settings.getBool(NAME_VISIBLE, false);
         boolean gravity = settings.getBool(GRAVITY, false);
@@ -83,10 +83,10 @@ public class AdyeshachMechanic extends MechanicComponent {
             Vector side = dir.clone().crossProduct(UP);
             loc.add(
                     dir.multiply(
-                            parseValues(caster, FORWARD, level, 0)
+                            parseValues(context, caster, FORWARD, level, 0)
                     )
-            ).add(0, parseValues(caster, UPWARD, level, 0), 0)
-                    .add(side.multiply(parseValues(caster, RIGHT, level, 0)));
+            ).add(0, parseValues(context, caster, UPWARD, level, 0), 0)
+                    .add(side.multiply(parseValues(context, caster, RIGHT, level, 0)));
             entityInstanceList.add(FastAPIKt.spawnEntity(world, loc, types,  ManagerType.TEMPORARY, (it) -> {
                 it.setCustomName(name);
                 it.setCustomNameVisible(nameVisible);
@@ -103,13 +103,11 @@ public class AdyeshachMechanic extends MechanicComponent {
                     AdyHuman eq = (AdyHuman) it;
                     eq.setName("");
                     eq.setTexture(texture);
-                  //  Adyeshach.INSTANCE.api().getNetworkAPI().getAshcon().getTexture(texture).thenAccept(a -> eq.setTexture(a.value(), a.signature()));
-                    //eq.setSkinEnabled(false);
                 }
             }));
 
         }
         SkillAPI.schedule(() -> entityInstanceList.forEach(EntityInstance::remove), duration);
-        return targets.size() > 0;
+        return !targets.isEmpty();
     }
 }

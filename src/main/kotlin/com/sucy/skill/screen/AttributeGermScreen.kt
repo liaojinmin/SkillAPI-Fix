@@ -81,8 +81,8 @@ class AttributeGermScreen(
         canvas.indexName = attribute.key
         // texture TODO
         // text
-        canvas.getGuiPart("图标标题", GermGuiLabel::class.java).setText(attribute.getIconDisplay(data))
-        canvas.getGuiPart("图标描述", GermGuiLabel::class.java).texts = attribute.getIconLore(data)
+       // canvas.getGuiPart("图标标题", GermGuiLabel::class.java).setText(attribute.getIconDisplay(data))
+      //  canvas.getGuiPart("图标描述", GermGuiLabel::class.java).texts = attribute.getIconLore(data)
         canvas.getGuiPart("加点按钮", GermGuiButton::class.java)?.apply {
             this.registerCallbackHandler({ _, _ ->
                 if (!data.upAttribute(attribute.key)) {

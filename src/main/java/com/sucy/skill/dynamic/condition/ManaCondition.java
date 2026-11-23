@@ -29,6 +29,7 @@ package com.sucy.skill.dynamic.condition;
 import com.sucy.skill.SkillAPI;
 import com.sucy.skill.api.player.PlayerData;
 import com.sucy.skill.api.player.PlayerSkill;
+import com.sucy.skill.api.skills.SkillContext;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
 
@@ -38,14 +39,14 @@ public class ManaCondition extends ConditionComponent {
     private static final String MAX  = "max-value";
 
     @Override
-    public boolean test(final LivingEntity caster, final int level, final LivingEntity target) {
+    public boolean test(final SkillContext context, final LivingEntity caster, final int level, final LivingEntity target) {
         if (!(target instanceof Player)) {
             return false;
         }
 
         final String type = settings.getString(TYPE).toLowerCase();
-        final double min = parseValues(caster, MIN, level, 0);
-        final double max = parseValues(caster, MAX, level, 99);
+        final double min = parseValues(context, caster, MIN, level, 0);
+        final double max = parseValues(context, caster, MAX, level, 99);
         final PlayerData data = SkillAPI.getPlayerData(target.getUniqueId());
         if (data == null) return false;
         final PlayerSkill skill = getSkillData(caster);

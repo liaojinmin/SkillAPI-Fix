@@ -31,7 +31,7 @@ class MythicSummonDeathTrigger: Trigger<MythicSummonDeathEvent> {
         return event.summon.owner
     }
 
-    override fun setValues(event: MythicSummonDeathEvent, context: SkillContext) {
+    override fun setValues(event: MythicSummonDeathEvent, context: SkillContext, useGlobal: Boolean) {
 
     }
 

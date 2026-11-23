@@ -20,13 +20,13 @@ class MythicFactionMechanic: MechanicComponent() {
     }
 
     override fun execute(
-        caster: LivingEntity,
         context: SkillContext,
+        caster: LivingEntity,
         level: Int,
         targets: MutableList<LivingEntity>,
     ): Boolean {
         val faction = settings.getString("faction")!!
-        val duration = parseValues(caster, "duration", level, 5.0) * 20
+        val duration = parseValues(context, caster, "duration", level, 5.0) * 20
         val mobs = targets.mapNotNull {
             val ac = MythicManager.api.getActiveMob(it.uniqueId)
             if (ac.isPresent) {

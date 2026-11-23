@@ -48,16 +48,16 @@ public class MetaSetMechanic extends MechanicComponent {
 
 
     @Override
-    public boolean execute(LivingEntity caster, SkillContext context, int level, List<LivingEntity> targets) {
-        if (targets.size() == 0 || !settings.has(KEY)) {
+    public boolean execute(final SkillContext context, LivingEntity caster, int level, List<LivingEntity> targets) {
+        if (targets.isEmpty() || !settings.has(KEY)) {
             return false;
         }
 
         String key = settings.getString(KEY).replace("{uuid}", caster.getUniqueId().toString());
 
-        double tick = parseValues(caster, TICK, level, 1);
+        double tick = parseValues(context, caster, TICK, level, 1);
         for (LivingEntity target : targets) {
-            double amount = parseValues(caster, AMOUNT, level, 1);
+            double amount = parseValues(context, caster, AMOUNT, level, 1);
             DataSkills.setValue(target.getUniqueId(), key, amount, (int) tick);
         }
         return true;

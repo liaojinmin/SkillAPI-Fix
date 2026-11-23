@@ -64,16 +64,15 @@ public class ValueAddMechanic extends MechanicComponent {
         }
 
         String key = settings.getString(KEY);
-        double amount = parseValues(caster, AMOUNT, level, 1) * targets.size();
-        Map<String, Object> data = DynamicSkill.getCastData(caster);
-        if (!data.containsKey(key)) {
-            data.put(key, amount);
+        double amount = parseValues(context, caster, AMOUNT, level, 1) * targets.size();
+        if (!context.containsKey(caster, key, useGlobalContext)) {
+            context.set(caster, key, amount, useGlobalContext);
             Bukkit.getPluginManager().callEvent(
                     new ValueMechanicChangeEvent(ValueMechanicChangeEvent.ValueAction.ADD, caster, key, amount)
             );
         } else {
-            double a = amount + (Double) data.get(key);
-            data.put(key, a);
+            double a = amount + (Double) context.get(caster, key, useGlobalContext);
+            context.set(caster, key, a, useGlobalContext);
             Bukkit.getPluginManager().callEvent(
                     new ValueMechanicChangeEvent(ValueMechanicChangeEvent.ValueAction.ADD, caster, key, a)
             );

@@ -28,17 +28,15 @@ public class DelayMechanic extends MechanicComponent {
      * @return true if applied to something, false otherwise
      */
     @Override
-    public boolean execute(final LivingEntity caster, SkillContext context, final int level, final List<LivingEntity> targets) {
+    public boolean execute(final SkillContext context, final LivingEntity caster, final int level, final List<LivingEntity> targets) {
         if (targets.isEmpty()) {
             return false;
         }
-        final double seconds = parseValues(caster, SECONDS, level, 2.0);
+        final double seconds = parseValues(context, caster, SECONDS, level, 2.0);
         final String mark = settings.getString(ReturnMechanic.MARK, "标记名称");
-        //germAction = settings.getString(ReturnMechanic.DENY_GERM_ACTION, "");
-        //commands = settings.getStringList(ReturnMechanic.DENY_COMMANDS);
         // 添加标记
         ReturnMechanic.addMark(caster, new ReturnMechanic.MarkTask(
-                () -> executeChildren(caster, context, level, targets),
+                () -> executeChildren(context, caster, level, targets),
                 (long) (seconds * 20)
         ), mark);
 

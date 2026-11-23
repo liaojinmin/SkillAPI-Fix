@@ -21,14 +21,14 @@ public class DataEditMechanic extends MechanicComponent {
     }
 
     @Override
-    public boolean execute(LivingEntity caster, SkillContext context, int level, List<LivingEntity> targets) {
-        if (targets.size() == 0 || !settings.has(KEY)) {
+    public boolean execute(final SkillContext context, LivingEntity caster, int level, List<LivingEntity> targets) {
+        if (targets.isEmpty() || !settings.has(KEY)) {
             return false;
         }
 
         String key = settings.getString(KEY).replace("{uuid}", caster.getUniqueId().toString());
         String action = settings.getString(ACTION);
-        double value = parseValues(caster, VALUE, level, 1);
+        double value = parseValues(context, caster, VALUE, level, 1);
         for (LivingEntity target : targets) {
             CustomDataStack data = DataSkills.getMetaStack(target.getUniqueId(), true);
             if (data != null) {

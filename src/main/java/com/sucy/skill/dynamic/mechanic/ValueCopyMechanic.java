@@ -1,7 +1,6 @@
 package com.sucy.skill.dynamic.mechanic;
 
 import com.sucy.skill.api.skills.SkillContext;
-import com.sucy.skill.dynamic.DynamicSkill;
 import org.bukkit.entity.LivingEntity;
 
 import java.util.List;
@@ -21,10 +20,9 @@ public class ValueCopyMechanic extends MechanicComponent {
     }
 
     @Override
-    public boolean execute(
-            final LivingEntity caster, SkillContext context, final int level, final List<LivingEntity> targets) {
+    public boolean execute(final SkillContext context, final LivingEntity caster, final int level, final List<LivingEntity> targets) {
 
-        if (targets.size() == 0 || !settings.has(KEY)) {
+        if (targets.isEmpty() || !settings.has(KEY)) {
             return false;
         }
 
@@ -33,18 +31,18 @@ public class ValueCopyMechanic extends MechanicComponent {
         final boolean toTarget = settings.getString(TO_TARGET, "true").equalsIgnoreCase("true");
 
         if (toTarget) {
-            targets.forEach(target -> apply(caster, target, key, destination));
+            targets.forEach(target -> apply(context, caster, target, key, destination));
         } else {
-            apply(targets.get(0), caster, key, destination);
+            apply(context, targets.get(0), caster, key, destination);
         }
 
         return true;
     }
 
-    private boolean apply(final LivingEntity from, final LivingEntity to, final String key, final String destination) {
-        final Object value = DynamicSkill.getCastData(from).get(key);
+    private boolean apply(final SkillContext context, final LivingEntity from, final LivingEntity to, final String key, final String destination) {
+        final Object value = context.get(from, key, useGlobalContext);
         if (value == null) return false;
-        DynamicSkill.getCastData(to).put(destination, value);
+        context.set(from, destination, value, useGlobalContext);
         return true;
     }
 }

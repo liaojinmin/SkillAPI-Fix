@@ -32,6 +32,7 @@ import com.sucy.skill.api.skills.SkillContext;
 import com.sucy.skill.dynamic.TempEntity;
 import com.sucy.skill.listener.MechanicListener;
 import com.sucy.skill.task.RemoveTask;
+import com.sucy.skill.utils.Pair;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.entity.Arrow;
@@ -82,17 +83,16 @@ public class ProjectileMechanic extends MechanicComponent
         return "projectile";
     }
 
-    private SkillContext skillContext = null;
+
 
     @Override
-    public boolean execute(LivingEntity caster, SkillContext context, int level, List<LivingEntity> targets) {
-        skillContext = context;
+    public boolean execute(final SkillContext context, LivingEntity caster, int level, List<LivingEntity> targets) {
         // Get common values
-        int amount = (int) parseValues(caster, AMOUNT, level, 1.0);
-        double speed = parseValues(caster, SPEED, level, 2.0);
-        double range = parseValues(caster, RANGE, level, 999);
-        int lifespan = (int) parseValues(caster, LIFESPAN, level, 20);
-        int gravity = (int) parseValues(caster, GRAVITY, level, 0);
+        int amount = (int) parseValues(context, caster, AMOUNT, level, 1.0);
+        double speed = parseValues(context, caster, SPEED, level, 2.0);
+        double range = parseValues(context, caster, RANGE, level, 999);
+        int lifespan = (int) parseValues(context, caster, LIFESPAN, level, 20);
+        int gravity = (int) parseValues(context, caster, GRAVITY, level, 0);
         boolean grav = gravity == 0;
 
         boolean flaming = settings.getString(FLAMING, "false").equalsIgnoreCase("true");
@@ -125,8 +125,8 @@ public class ProjectileMechanic extends MechanicComponent
         for (LivingEntity target : targets) {
             // Apply the spread type
             if (spread.equals("rain")) {
-                double radius = parseValues(caster, RADIUS, level, 2.0);
-                double height = parseValues(caster, HEIGHT, level, 8.0);
+                double radius = parseValues(context, caster, RADIUS, level, 2.0);
+                double height = parseValues(context, caster, HEIGHT, level, 8.0);
 
                 ArrayList<Location> locs = CustomProjectile.calcRain(target.getLocation(), radius, height, amount);
                 for (Location loc : locs) {
@@ -156,10 +156,10 @@ public class ProjectileMechanic extends MechanicComponent
                     dir.setY(0);
                     dir.normalize();
                 }
-                double angle = parseValues(caster, ANGLE, level, 30.0);
-                double right = parseValues(caster, RIGHT, level, 0);
-                double upward = parseValues(caster, UPWARD, level, 0);
-                double forward = parseValues(caster, FORWARD, level, 0);
+                double angle = parseValues(context, caster, ANGLE, level, 30.0);
+                double right = parseValues(context, caster, RIGHT, level, 0);
+                double upward = parseValues(context, caster, UPWARD, level, 0);
+                double forward = parseValues(context, caster, FORWARD, level, 0);
 
                 Vector looking = target.getLocation().getDirection().setY(0).normalize();
                 Vector normal = looking.clone().crossProduct(UP);
@@ -175,7 +175,7 @@ public class ProjectileMechanic extends MechanicComponent
                         p.teleport(target.getLocation().add(looking).add(0, upward + 0.5, 0).add(p.getVelocity()).setDirection(d));
                     }
                     p.setVelocity(d.multiply(speed));
-                    SkillAPI.setMeta(p, MechanicListener.P_CALL, this);
+                    SkillAPI.setMeta(p, MechanicListener.P_CALL, new Pair<>(context, this));
                     SkillAPI.setMeta(p, LEVEL, level);
                     if (flaming) p.setFireTicks(9999);
                     projectiles.add(p);
@@ -184,7 +184,7 @@ public class ProjectileMechanic extends MechanicComponent
         }
         new RemoveTask(projectiles, (int) Math.ceil(range / Math.abs(speed)));
 
-        return targets.size() > 0;
+        return !targets.isEmpty();
     }
 
     /**
@@ -193,14 +193,13 @@ public class ProjectileMechanic extends MechanicComponent
      * @param projectile projectile calling back for
      * @param hit        the entity hit by the projectile, if any
      */
-    public void callback(Projectile projectile, LivingEntity hit) {
+    public void callback(final SkillContext context, Projectile projectile, LivingEntity hit) {
         if (hit == null)
             hit = new TempEntity(projectile.getLocation());
 
-        ArrayList<LivingEntity> targets = new ArrayList<LivingEntity>();
+        ArrayList<LivingEntity> targets = new ArrayList<>();
         targets.add(hit);
-        if (skillContext == null) skillContext = new SkillContext();
-        executeChildren((LivingEntity) projectile.getShooter(), skillContext, SkillAPI.getMetaInt(projectile, LEVEL), targets);
+        executeChildren(context, (LivingEntity) projectile.getShooter(), SkillAPI.getMetaInt(projectile, LEVEL), targets);
         SkillAPI.removeMeta(projectile, MechanicListener.P_CALL);
         projectile.remove();
     }

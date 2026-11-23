@@ -28,13 +28,13 @@ public class HealthMechanic extends MechanicComponent {
     }
 
     @Override
-    public boolean execute(final LivingEntity caster, SkillContext context, final int level, final List<LivingEntity> targets) {
+    public boolean execute(final SkillContext context, final LivingEntity caster, final int level, final List<LivingEntity> targets) {
         // 1. 读取动作类型（默认 set，兼容旧版）
         final String action = settings.getString(ACTION, "set").toLowerCase();
         // 2. 读取数值计算模式（默认 flat，兼容旧版）
         final String mode = settings.getString(MODE, "flat").toLowerCase();
         // 3. 解析配置中的基础数值（支持公式、属性等动态值）
-        final double baseAmount = parseValues(caster, HEALTH, level, 1);
+        final double baseAmount = parseValues(context, caster, HEALTH, level, 1);
 
         for (final LivingEntity target : targets) {
             // 根据计算模式得到实际生效的数值

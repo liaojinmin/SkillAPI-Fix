@@ -1,5 +1,6 @@
 package com.sucy.skill.dynamic.condition;
 
+import com.sucy.skill.api.skills.SkillContext;
 import org.bukkit.entity.LivingEntity;
 
 /**
@@ -10,7 +11,7 @@ public class GroundCondition extends ConditionComponent {
     private static final String type = "type";
 
     @Override
-    public boolean test(final LivingEntity caster, final int level, final LivingEntity target) {
+    public boolean test(final SkillContext context, final LivingEntity caster, final int level, final LivingEntity target) {
         final boolean onGround = target.isOnGround();
         final boolean wantOnGround = settings.getString(type, "on ground").equalsIgnoreCase("on ground");
     //    System.out.println("GroundCondition onGround: "+onGround+" wantOnGround: "+wantOnGround);

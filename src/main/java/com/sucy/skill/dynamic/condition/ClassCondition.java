@@ -29,6 +29,7 @@ package com.sucy.skill.dynamic.condition;
 import com.sucy.skill.SkillAPI;
 import com.sucy.skill.api.classes.RPGClass;
 import com.sucy.skill.api.player.PlayerData;
+import com.sucy.skill.api.skills.SkillContext;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
 
@@ -37,7 +38,7 @@ public class ClassCondition extends ConditionComponent {
     private static final String EXACT = "exact";
 
     @Override
-    public boolean test(final LivingEntity caster, final int level, final LivingEntity target) {
+    public boolean test(final SkillContext context, final LivingEntity caster, final int level, final LivingEntity target) {
         if (!(target instanceof Player)) return false;
 
         final RPGClass rpgClass = SkillAPI.getClass(settings.getString(CLASS));

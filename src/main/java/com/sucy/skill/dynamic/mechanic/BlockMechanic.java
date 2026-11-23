@@ -38,14 +38,14 @@ public class BlockMechanic extends MechanicComponent {
     private static final String UPWARD  = "upward";
     private static final String RIGHT   = "right";
 
-    private static final HashMap<Location, Integer>    pending  = new HashMap<Location, Integer>();
-    private static final HashMap<Location, BlockState> original = new HashMap<Location, BlockState>();
+    private static final HashMap<Location, Integer>    pending  = new HashMap<>();
+    private static final HashMap<Location, BlockState> original = new HashMap<>();
 
     private final Map<Integer, List<RevertTask>> tasks = new HashMap<>();
 
     @Override
-    public boolean execute(LivingEntity caster, SkillContext context, int level, List<LivingEntity> targets) {
-        if (targets.size() == 0) { return false; }
+    public boolean execute(final SkillContext context, LivingEntity caster, int level, List<LivingEntity> targets) {
+        if (targets.isEmpty()) { return false; }
 
         Material block = Material.ICE;
         try {
@@ -55,23 +55,23 @@ public class BlockMechanic extends MechanicComponent {
         }
 
         boolean sphere = settings.getString(SHAPE, "sphere").toLowerCase().equals("sphere");
-        int ticks = (int) (20 * parseValues(caster, SECONDS, level, 5));
+        int ticks = (int) (20 * parseValues(context, caster, SECONDS, level, 5));
         byte data = (byte) settings.getInt(DATA, 0);
 
         String type = settings.getString(TYPE, "solid").toLowerCase();
         boolean solid = type.equals("solid");
         boolean air = type.equals("air");
 
-        double forward = parseValues(caster, FORWARD, level, 0);
-        double upward = parseValues(caster, UPWARD, level, 0);
-        double right = parseValues(caster, RIGHT, level, 0);
+        double forward = parseValues(context, caster, FORWARD, level, 0);
+        double upward = parseValues(context, caster, UPWARD, level, 0);
+        double right = parseValues(context, caster, RIGHT, level, 0);
 
         List<Block> blocks = new ArrayList<Block>();
         World w = caster.getWorld();
 
         // Grab blocks in a sphere
         if (sphere) {
-            double radius = parseValues(caster, RADIUS, level, 3);
+            double radius = parseValues(context, caster, RADIUS, level, 3);
             double x, y, z, dx, dy, dz;
             double rSq = radius * radius;
             for (LivingEntity t : targets) {
@@ -110,9 +110,9 @@ public class BlockMechanic extends MechanicComponent {
         // Grab blocks in a cuboid
         else {
             // Cuboid options
-            double width = (parseValues(caster, WIDTH, level, 5) - 1) / 2;
-            double height = (parseValues(caster, HEIGHT, level, 5) - 1) / 2;
-            double depth = (parseValues(caster, DEPTH, level, 5) - 1) / 2;
+            double width = (parseValues(context, caster, WIDTH, level, 5) - 1) / 2;
+            double height = (parseValues(context, caster, HEIGHT, level, 5) - 1) / 2;
+            double depth = (parseValues(context, caster, DEPTH, level, 5) - 1) / 2;
             double x, y, z;
 
             for (LivingEntity t : targets) {

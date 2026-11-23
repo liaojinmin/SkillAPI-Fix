@@ -33,9 +33,9 @@ public class MoveTrigger implements Trigger<PlayerMoveEvent> {
 
     /** {@inheritDoc} */
     @Override
-    public void setValues(final PlayerMoveEvent event, final SkillContext context) {
+    public void setValues(final PlayerMoveEvent event, final SkillContext context, final boolean useGlobal) {
         final double distance = event.getTo().distance(event.getFrom());
-        context.put("api-distance", distance);
+        context.set(getCaster(event),"api-distance", distance, useGlobal);
     }
 
     /** {@inheritDoc} */

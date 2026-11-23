@@ -58,17 +58,21 @@ public class ValueMultiplyMechanic extends MechanicComponent {
      * @return true if applied to something, false otherwise
      */
     @Override
-    public boolean execute(LivingEntity caster, SkillContext context, int level, List<LivingEntity> targets) {
-        if (targets.size() == 0 || !settings.has(KEY)) {
+    public boolean execute(final SkillContext context, LivingEntity caster, int level, List<LivingEntity> targets) {
+        if (targets.isEmpty() || !settings.has(KEY)) {
             return false;
         }
 
         String key = settings.getString(KEY);
-        double multiplier = parseValues(caster, MULTIPLIER, level, 1);
-        Map<String, Object> data = DynamicSkill.getCastData(caster);
-        if (data.containsKey(key)) {
-            double a = multiplier * (Double) data.get(key);
-            data.put(key, a);
+        double multiplier = parseValues(context, caster, MULTIPLIER, level, 1);
+        if (context.containsKey(caster, key, useGlobalContext)) {
+            Object value = context.get(caster, key, useGlobalContext);
+            double cp = 0.0;
+            if (value != null) {
+                cp = Double.parseDouble(value.toString());
+            }
+            double a = multiplier * cp;
+            context.set(caster, key, a, useGlobalContext);
             Bukkit.getPluginManager().callEvent(
                     new ValueMechanicChangeEvent(ValueMechanicChangeEvent.ValueAction.MULTIPLY, caster, key, a)
             );

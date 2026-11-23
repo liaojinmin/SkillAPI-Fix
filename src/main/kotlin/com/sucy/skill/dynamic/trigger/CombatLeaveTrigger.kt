@@ -30,7 +30,7 @@ class CombatLeaveTrigger: Trigger<CombatManager.PlayerLeaveCombatEvent> {
         return event.player
     }
 
-    override fun setValues(event: CombatManager.PlayerLeaveCombatEvent, data: SkillContext) {
+    override fun setValues(event: CombatManager.PlayerLeaveCombatEvent, data: SkillContext, useGlobal: Boolean) {
     }
 
     override fun shouldTrigger(event: CombatManager.PlayerLeaveCombatEvent, level: Int, settings: Settings): Boolean {

@@ -35,8 +35,8 @@ public class LandTrigger implements Trigger<PlayerLandEvent> {
 
     /** {@inheritDoc} */
     @Override
-    public void setValues(final PlayerLandEvent event, final SkillContext context) {
-        context.put("api-distance", event.getDistance());
+    public void setValues(final PlayerLandEvent event, final SkillContext context, boolean useGlobal) {
+        context.set(getCaster(event), "api-distance", event.getDistance(), useGlobal);
     }
 
     /** {@inheritDoc} */

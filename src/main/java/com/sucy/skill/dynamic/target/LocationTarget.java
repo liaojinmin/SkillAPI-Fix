@@ -29,12 +29,10 @@ package com.sucy.skill.dynamic.target;
 import com.google.common.collect.ImmutableList;
 import com.rit.sucy.player.TargetHelper;
 import com.sucy.skill.api.skills.SkillContext;
-import com.sucy.skill.cast.IIndicator;
 import com.sucy.skill.dynamic.TempEntity;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.entity.LivingEntity;
-import org.bukkit.entity.Player;
 import org.bukkit.util.Vector;
 
 import java.util.HashSet;
@@ -50,17 +48,10 @@ public class LocationTarget extends TargetComponent {
 
     /** {@inheritDoc} */
     @Override
-    public void makeIndicators(final SkillContext context, List<IIndicator> list, Player caster, LivingEntity target, int level) {
-        final List<LivingEntity> locs = getTargets(context, caster, level, ImmutableList.of(target));
-        if (!locs.isEmpty()) makeCircleIndicator(context, list, locs.get(0), 0.5);
-    }
-
-    /** {@inheritDoc} */
-    @Override
     List<LivingEntity> getTargets(
             final SkillContext context,
             final LivingEntity caster, final int level, final List<LivingEntity> targets) {
-        final double range = parseValues(caster, RANGE, level, 5.0);
+        final double range = parseValues(context, caster, RANGE, level, 5.0);
         final boolean groundOnly = !settings.getString(GROUND, "true").toLowerCase().equals("false");
         return determineTargets(context, caster, level, targets, t -> getTargetLoc(caster, t, range, groundOnly));
     }

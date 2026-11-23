@@ -46,16 +46,13 @@ public class PassiveMechanic extends MechanicComponent {
 
     private final Map<Integer, PassiveTask> tasks = new HashMap<>();
 
-    private SkillContext skillContext = null;
-
     @Override
-    public boolean execute(LivingEntity caster, SkillContext context, int level, List<LivingEntity> targets) {
-        skillContext = context;
+    public boolean execute(final SkillContext context, LivingEntity caster, int level, List<LivingEntity> targets) {
         if (tasks.containsKey(caster.getEntityId())) { return false; }
 
-        if (targets.size() > 0) {
-            final int period = (int) (parseValues(caster, PERIOD, level, 1.0) * 20);
-            final PassiveTask task = new PassiveTask(caster, level, targets, period);
+        if (!targets.isEmpty()) {
+            final int period = (int) (parseValues(context, caster, PERIOD, level, 1.0) * 20);
+            final PassiveTask task = new PassiveTask(context, caster, level, targets, period);
             tasks.put(caster.getEntityId(), task);
 
             return true;
@@ -77,11 +74,13 @@ public class PassiveMechanic extends MechanicComponent {
     }
 
     private class PassiveTask extends BukkitRunnable {
+        private final SkillContext context;
         private List<LivingEntity> targets;
         private LivingEntity       caster;
         private int                level;
 
-        PassiveTask(LivingEntity caster, int level, List<LivingEntity> targets, int period) {
+        PassiveTask(final SkillContext context, LivingEntity caster, int level, List<LivingEntity> targets, int period) {
+            this.context = context;
             this.targets = new ArrayList<>(targets);
             this.caster = caster;
             this.level = level;
@@ -113,8 +112,7 @@ public class PassiveMechanic extends MechanicComponent {
                 }
             }
             level = skill.getActiveLevel(caster);
-            if (skillContext == null) skillContext = new SkillContext();
-            executeChildren(caster, skillContext, level, targets);
+            executeChildren(context, caster, level, targets);
 
             if (skill.checkCancelled()) {
                 cancel();

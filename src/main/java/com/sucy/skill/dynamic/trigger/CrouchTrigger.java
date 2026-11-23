@@ -34,7 +34,7 @@ public class CrouchTrigger implements Trigger<PlayerToggleSneakEvent> {
 
     /** {@inheritDoc} */
     @Override
-    public void setValues(final PlayerToggleSneakEvent event, final SkillContext context) { }
+    public void setValues(final PlayerToggleSneakEvent event, final SkillContext context, final boolean useGlobal) { }
 
     /** {@inheritDoc} */
     @Override

@@ -26,6 +26,7 @@
  */
 package com.sucy.skill.dynamic.condition;
 
+import com.sucy.skill.api.skills.SkillContext;
 import com.sucy.skill.api.util.FlagManager;
 import org.bukkit.entity.LivingEntity;
 
@@ -37,7 +38,7 @@ public class FlagCondition extends ConditionComponent {
     private static final String KEY  = "key";
 
     @Override
-    public boolean test(final LivingEntity caster, final int level, final LivingEntity target) {
+    public boolean test(final SkillContext context, final LivingEntity caster, final int level, final LivingEntity target) {
         final String flag = settings.getString(KEY);
         final boolean set = !settings.getString(TYPE, "set").toLowerCase().equals("not set");
         return FlagManager.hasFlag(target, flag) == set;

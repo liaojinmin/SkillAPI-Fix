@@ -26,6 +26,7 @@
  */
 package com.sucy.skill.dynamic.condition;
 
+import com.sucy.skill.api.skills.SkillContext;
 import org.bukkit.entity.LivingEntity;
 
 /**
@@ -37,10 +38,10 @@ public class HealthCondition extends ConditionComponent {
     private static final String MAX  = "max-value";
 
     @Override
-    public boolean test(final LivingEntity caster, final int level, final LivingEntity target) {
+    public boolean test(final SkillContext context, final LivingEntity caster, final int level, final LivingEntity target) {
         final String type = settings.getString(TYPE).toLowerCase();
-        final double min = parseValues(caster, MIN, level, 0);
-        final double max = parseValues(caster, MAX, level, 999);
+        final double min = parseValues(context, caster, MIN, level, 0);
+        final double max = parseValues(context, caster, MAX, level, 999);
 
         double value;
         switch (type) {

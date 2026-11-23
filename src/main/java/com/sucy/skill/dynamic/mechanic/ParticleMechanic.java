@@ -61,20 +61,16 @@ public class ParticleMechanic extends MechanicComponent
      * @return true if applied to something, false otherwise
      */
     @Override
-    public boolean execute(LivingEntity caster, SkillContext context, int level, List<LivingEntity> targets)
-    {
-        if (targets.size() == 0)
-        {
-            return false;
-        }
+    public boolean execute(final SkillContext context, LivingEntity caster, int level, List<LivingEntity> targets) {
+        if (targets.isEmpty()) return false;
 
         double forward = settings.getDouble(FORWARD, 0);
         double upward = settings.getDouble(UPWARD, 0);
         double right = settings.getDouble(RIGHT, 0);
 
         final Settings copy = new Settings(settings);
-        copy.set(ParticleHelper.PARTICLES_KEY, parseValues(caster, ParticleHelper.PARTICLES_KEY, level, 1), 0);
-        copy.set(ParticleHelper.RADIUS_KEY, parseValues(caster, ParticleHelper.RADIUS_KEY, level, 0), 0);
+        copy.set(ParticleHelper.PARTICLES_KEY, parseValues(context, caster, ParticleHelper.PARTICLES_KEY, level, 1), 0);
+        copy.set(ParticleHelper.RADIUS_KEY, parseValues(context, caster, ParticleHelper.RADIUS_KEY, level, 0), 0);
         copy.set("level", level);
 
         for (LivingEntity target : targets) {
@@ -86,6 +82,6 @@ public class ParticleMechanic extends MechanicComponent
             ParticleHelper.play(loc, copy);
         }
 
-        return targets.size() > 0;
+        return !targets.isEmpty();
     }
 }

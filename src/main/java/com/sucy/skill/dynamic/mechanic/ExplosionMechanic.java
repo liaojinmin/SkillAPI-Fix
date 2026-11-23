@@ -55,11 +55,11 @@ public class ExplosionMechanic extends MechanicComponent {
      * @return true if applied to something, false otherwise
      */
     @Override
-    public boolean execute(LivingEntity caster, SkillContext context, int level, List<LivingEntity> targets) {
-        if (targets.size() == 0) {
+    public boolean execute(final SkillContext context, LivingEntity caster, int level, List<LivingEntity> targets) {
+        if (targets.isEmpty()) {
             return false;
         }
-        double power = parseValues(caster, POWER, level, 4);
+        double power = parseValues(context, caster, POWER, level, 4);
         boolean fire = settings.getBool(FIRE, false);
         boolean damage = settings.getBool(DAMAGE, false);
         for (LivingEntity target : targets) {

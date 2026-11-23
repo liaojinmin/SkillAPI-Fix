@@ -27,6 +27,7 @@
 package com.sucy.skill.dynamic.condition;
 
 import com.rit.sucy.config.parse.DataSection;
+import com.sucy.skill.api.skills.SkillContext;
 import com.sucy.skill.dynamic.DynamicSkill;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.inventory.EntityEquipment;
@@ -60,11 +61,11 @@ public class LoreCondition extends ConditionComponent {
     }
 
     @Override
-    public boolean test(final LivingEntity caster, final int level, final LivingEntity target) {
+    public boolean test(final SkillContext context, final LivingEntity caster, final int level, final LivingEntity target) {
         final EntityEquipment items = target.getEquipment();
-        if (items == null || items.getItemInHand() == null || !items.getItemInHand().hasItemMeta()) { return false; }
+        if (items == null || items.getItemInMainHand() == null || !items.getItemInMainHand().hasItemMeta()) { return false; }
 
-        final List<String> lore = items.getItemInHand().getItemMeta().getLore();
+        final List<String> lore = items.getItemInMainHand().getItemMeta().getLore();
         return lore != null && lore.stream().anyMatch(test);
     }
 }

@@ -27,6 +27,7 @@
 package com.sucy.skill.dynamic.condition;
 
 import com.rit.sucy.config.parse.DataSection;
+import com.sucy.skill.api.skills.SkillContext;
 import com.sucy.skill.dynamic.DynamicSkill;
 import org.bukkit.block.Block;
 import org.bukkit.block.BlockFace;
@@ -60,7 +61,7 @@ public class BlockCondition extends ConditionComponent {
     }
 
     @Override
-    public boolean test(final LivingEntity caster, final int level, final LivingEntity target) {
+    public boolean test(final SkillContext context, final LivingEntity caster, final int level, final LivingEntity target) {
         final Block in = target.getLocation().getBlock();
         final Block tested = this.in ? in : in.getRelative(BlockFace.DOWN);
         return negated != types.contains(tested.getType().name());

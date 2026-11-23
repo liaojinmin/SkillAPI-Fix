@@ -2,6 +2,7 @@ package com.sucy.skill.dynamic.condition
 
 import com.rit.sucy.config.parse.DataSection
 import com.sucy.skill.SkillAPI
+import com.sucy.skill.api.skills.SkillContext
 import com.sucy.skill.dynamic.DynamicSkill
 import org.bukkit.entity.LivingEntity
 
@@ -23,11 +24,11 @@ class AreaEntityCondition : ConditionComponent() {
     }
 
 
-    override fun test(caster: LivingEntity, level: Int, target: LivingEntity): Boolean {
+    override fun test(context: SkillContext, caster: LivingEntity, level: Int, target: LivingEntity): Boolean {
         type = settings.getString("type", "all")
-        minAmount =  parseValues(caster, "minAmount", level, 0.0).toInt()
-        maxAmount = parseValues(caster, "maxAmount", level, 9999.0).toInt()
-        range = parseValues(caster, "range", level, 0.0)
+        minAmount =  parseValues(context, caster, "minAmount", level, 0.0).toInt()
+        maxAmount = parseValues(context, caster, "maxAmount", level, 9999.0).toInt()
+        range = parseValues(context, caster, "range", level, 0.0)
         if (range <= 0.1) return false
         if (target.world.name.equals("world", true)
             || target.world.name.equals("spawn", true)) return false

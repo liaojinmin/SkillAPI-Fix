@@ -21,12 +21,12 @@ public class SoundMechanic extends MechanicComponent {
     }
 
     @Override
-    public boolean execute(LivingEntity caster, SkillContext context, int level, List<LivingEntity> targets) {
-        if (targets.size() == 0) {
+    public boolean execute(final SkillContext context, LivingEntity caster, int level, List<LivingEntity> targets) {
+        if (targets.isEmpty()) {
             return false;
         }
-        float volume = (float) parseValues(caster, VOLUME, level, 100.0) / 100;
-        float pitch = (float) parseValues(caster, PITCH, level, 0.0);
+        float volume = (float) parseValues(context, caster, VOLUME, level, 100.0) / 100;
+        float pitch = (float) parseValues(context, caster, PITCH, level, 0.0);
 
         String type = settings.getString(SOUND, "");
         volume = Math.max(0, volume);
@@ -47,7 +47,7 @@ public class SoundMechanic extends MechanicComponent {
                 );
             }
         }
-        return targets.size() > 0;
+        return !targets.isEmpty();
     }
 
 }

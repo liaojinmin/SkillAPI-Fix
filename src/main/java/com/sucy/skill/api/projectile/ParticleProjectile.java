@@ -33,6 +33,7 @@ import com.sucy.skill.api.event.ParticleProjectileExpireEvent;
 import com.sucy.skill.api.event.ParticleProjectileHitEvent;
 import com.sucy.skill.api.event.ParticleProjectileLandEvent;
 import com.sucy.skill.api.event.ParticleProjectileLaunchEvent;
+import com.sucy.skill.api.skills.SkillContext;
 import com.sucy.skill.api.util.ParticleHelper;
 import com.sucy.skill.dynamic.ArmorStandCarrier;
 import org.bukkit.Bukkit;
@@ -88,8 +89,8 @@ public class ParticleProjectile extends CustomProjectile {
     protected final Vector gravity;
     protected final boolean pierce;
 
-    public ParticleProjectile(LivingEntity shooter, int level, Location loc, Settings settings) {
-        super(shooter);
+    public ParticleProjectile(final SkillContext context, LivingEntity shooter, int level, Location loc, Settings settings) {
+        super(context, shooter);
         this.loc = loc;
         this.settings = settings;
         this.vel = loc.getDirection().multiply(settings.getAttr(SPEED, level, 1.0));
@@ -207,6 +208,7 @@ public class ParticleProjectile extends CustomProjectile {
      * @return list of fired projectiles
      */
     public static ArrayList<ParticleProjectile> spread(
+            final SkillContext context,
             LivingEntity shooter,
             int level,
             Vector center,
@@ -224,9 +226,9 @@ public class ParticleProjectile extends CustomProjectile {
             l.setDirection(dir);
             ParticleProjectile p;
             if (settings.getBool(CarrierProjectile.ARMOR_STAND, false)) {
-                p = new CarrierProjectile(shooter, level, l, settings);
+                p = new CarrierProjectile(context, shooter, level, l, settings);
             } else {
-                p = new ParticleProjectile(shooter, level, l, settings);
+                p = new ParticleProjectile(context,  shooter, level, l, settings);
             }
             p.setCallback(callback);
             list.add(p);
@@ -239,6 +241,7 @@ public class ParticleProjectile extends CustomProjectile {
      * @return list of fired projectiles
      */
     public static ArrayList<ParticleProjectile> rain(
+            final SkillContext context,
             LivingEntity shooter,
             int level,
             Location center,
@@ -256,9 +259,9 @@ public class ParticleProjectile extends CustomProjectile {
 
             ParticleProjectile p;
             if (settings.getBool(CarrierProjectile.ARMOR_STAND, false)) {
-                p = new CarrierProjectile(shooter, level, l, settings);
+                p = new CarrierProjectile(context, shooter, level, l, settings);
             } else {
-                p = new ParticleProjectile(shooter, level, l, settings);
+                p = new ParticleProjectile(context, shooter, level, l, settings);
             }
 
             p.setCallback(callback);

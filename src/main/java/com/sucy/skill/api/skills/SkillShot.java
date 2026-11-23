@@ -27,6 +27,8 @@
 package com.sucy.skill.api.skills;
 
 import org.bukkit.entity.LivingEntity;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 /**
  * <p>Interface for skills that can be cast without a direct target</p>
@@ -43,15 +45,16 @@ public interface SkillShot {
      *
      * @return true if could cast, false otherwise
      */
+    @Deprecated
     boolean cast(LivingEntity user, int level);
 
     /**
-     * 临时的有目标触发器，因为 TargetSkill 无具体实现，不浪费时间完善框架
+     * 有目标触发器，因为 TargetSkill 无具体实现，不浪费时间完善框架
      * @param user  user of the skill
      * @param level skill level
      * @param target 技能目标
      * @return true if could cast, false otherwise
      */
-    boolean cast(LivingEntity user, int level, LivingEntity target);
+    boolean cast(@NotNull final SkillContext context, @NotNull LivingEntity user, int level, @Nullable LivingEntity target);
 
 }

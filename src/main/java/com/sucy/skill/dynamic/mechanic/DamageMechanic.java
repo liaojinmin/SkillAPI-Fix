@@ -69,7 +69,7 @@ public class DamageMechanic extends MechanicComponent {
      * @return true if applied to something, false otherwise
      */
     @Override
-    public boolean execute(LivingEntity caster, SkillContext context, int level, List<LivingEntity> targets) {
+    public boolean execute(final SkillContext context, LivingEntity caster, int level, List<LivingEntity> targets) {
         String pString = settings.getString(TYPE, "damage").toLowerCase();
         boolean percent = pString.equals("multiplier") || pString.equals("percent");
         boolean missing = pString.equals("percent missing");
@@ -80,9 +80,9 @@ public class DamageMechanic extends MechanicComponent {
 
         if (caster instanceof ArmorStandEntity) {
             other = ((ArmorStandEntity) caster).getOwner();
-            damage = parseValues(other, DAMAGE, level, 1.0);
+            damage = parseValues(context, other, DAMAGE, level, 1.0);
         } else {
-            damage = parseValues(caster, DAMAGE, level, 1.0);
+            damage = parseValues(context, caster, DAMAGE, level, 1.0);
         }
         boolean knockback = settings.getBool(KNOCKBACK, true);
         String classification = settings.getString(CLASSIFIER, "default");

@@ -24,13 +24,13 @@ public class GermAnimationStartMechanic extends MechanicComponent {
     }
 
     @Override
-    public boolean execute(LivingEntity caster, SkillContext context, int level, List<LivingEntity> targets) {
-        if (targets.size() == 0 || !settings.has(NAME)) {
+    public boolean execute(final SkillContext context, LivingEntity caster, int level, List<LivingEntity> targets) {
+        if (targets.isEmpty() || !settings.has(NAME)) {
             return false;
         }
 
         final String key = settings.getString(NAME);
-        final float time = (float) parseValues(caster, TIME, level, 1.0);
+        final float time = (float) parseValues(context, caster, TIME, level, 1.0);
 
 
         Collection<? extends Player> players = Bukkit.getOnlinePlayers();
@@ -43,7 +43,7 @@ public class GermAnimationStartMechanic extends MechanicComponent {
                 }
             }
         }
-        executeChildren(caster, context, level, targets);
+        executeChildren(context, caster, level, targets);
         return true;
     }
 }

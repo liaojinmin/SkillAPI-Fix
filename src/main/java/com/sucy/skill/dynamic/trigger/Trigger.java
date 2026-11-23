@@ -63,9 +63,9 @@ public interface Trigger<E extends Event> {
      * the speed a projectile was launched so mechanics can replace it with equally-fast projectiles.
      *
      * @param event event details
-     * @param data caster's value data to populate
+     * @param context caster's value data to populate
      */
-    void setValues(final E event, final SkillContext context);
+    void setValues(final E event, final SkillContext context, final boolean useGlobal);
 
     /**
      * Fetches the caster as determined by the triggering event.

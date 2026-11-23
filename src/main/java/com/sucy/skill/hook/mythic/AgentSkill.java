@@ -15,6 +15,7 @@ import org.bukkit.scheduler.BukkitRunnable;
 
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.CopyOnWriteArrayList;
 
 /**
  * SkillAPI-Fix
@@ -77,40 +78,57 @@ public class AgentSkill extends Skill {
     }
 
     public static void addMark(AbstractEntity entity, DelayedSkill task) {
-        List<DelayedSkill> map = markMap.computeIfAbsent(entity.getUniqueId(), (it) -> new ArrayList<>());
-        map.add(task);
+        List<DelayedSkill> tasks = markMap.computeIfAbsent(
+                entity.getUniqueId(),
+                key -> new CopyOnWriteArrayList<>()
+        );
+        tasks.add(task);
+    }
+
+    private static void removeMarkTask(UUID uuid, DelayedSkill task) {
+        List<DelayedSkill> tasks = markMap.get(uuid);
+        if (tasks == null) {
+            return;
+        }
+        tasks.remove(task);
+        if (tasks.isEmpty()) {
+            markMap.remove(uuid, tasks);
+        }
     }
 
     public static void delMark(UUID uuid) {
-        List<DelayedSkill> map = markMap.remove(uuid);
-        if (map != null) {
-            map.forEach(DelayedSkill::cancel);
+        List<DelayedSkill> tasks = markMap.remove(uuid);
+        if (tasks != null) {
+            tasks.forEach(DelayedSkill::cancel);
         }
     }
 
     public static void clear() {
-        for (Map.Entry<UUID, List<DelayedSkill>> d : markMap.entrySet()) {
-            d.getValue().forEach(DelayedSkill::cancel);
+        for (UUID uuid : new HashSet<>(markMap.keySet())) {
+            delMark(uuid);
         }
-        markMap.clear();
     }
 
     public static void cancelMark(AbstractEntity entity, String mark) {
-        List<DelayedSkill> map = markMap.get(entity.getUniqueId());
-        if (map != null) {
-            Iterator<DelayedSkill> iterator = map.listIterator();
-            while (iterator.hasNext()) {
-                DelayedSkill delayedSkill = iterator.next();
-                if (delayedSkill.getMark().equalsIgnoreCase(mark)) {
-                    delayedSkill.cancel();
-                    iterator.remove();
-                }
+        UUID uuid = entity.getUniqueId();
+        MythicListener.removeMark(entity, mark);
+
+        List<DelayedSkill> tasks = markMap.get(uuid);
+        if (tasks == null) {
+            return;
+        }
+        for (DelayedSkill task : tasks) {
+            if (task.getMark().equalsIgnoreCase(mark)) {
+                task.cancel();
             }
+        }
+        if (tasks.isEmpty()) {
+            markMap.remove(uuid, tasks);
         }
     }
 
     public static void executeSkill(SkillMetadata data, Queue<SkillMechanic> skillqueue) {
-        while (skillqueue.size() > 0) {
+        while (!skillqueue.isEmpty()) {
             SkillMechanic sm = skillqueue.poll();
           //  System.out.println("class:"+mbs.getClass());
             if (sm instanceof DelaySkill) {
@@ -131,7 +149,7 @@ public class AgentSkill extends Skill {
                 final AbstractEntity caster = data.getCaster().getEntity();
                 final String mark = delayMechanic.getMark();
                 if (MythicListener.checkNotMark(caster, mark)) {
-                    DelayedSkill task = new DelayedSkill(data, skillqueue, mark);
+                    DelayedSkill task = new DelayedSkill(data, skillqueue, mark, caster.getUniqueId());
                     addMark(caster, task);
                     task.runTaskLater(MythicMobs.inst(), (long) delayMechanic.getTicks());
                 }
@@ -146,51 +164,62 @@ public class AgentSkill extends Skill {
         private final SkillMetadata data;
         private Queue<SkillMechanic> skills;
         private final String mark;
+        private final UUID ownerId;
         private boolean cancelled;
 
-        DelayedSkill(SkillMetadata data, Queue<SkillMechanic> skills, String mark) {
+        DelayedSkill(SkillMetadata data, Queue<SkillMechanic> skills, String mark, UUID ownerId) {
             this.data = data;
             this.skills = skills;
             this.mark = mark;
-            this.cancelled = false;
+            this.ownerId = ownerId;
         }
 
         public String getMark() {
             return mark;
         }
 
+        @Override
         public void cancel() {
-            super.cancel();
-            this.skills = null;
-            this.cancelled = true;
+            if (cancelled) {
+                return;
+            }
+            cancelled = true;
+            try {
+                super.cancel();
+            } finally {
+                skills = null;
+                removeMarkTask(ownerId, this);
+            }
         }
 
+        @Override
         public void run() {
-            if (!this.cancelled) {
-                try {
-                    final AbstractEntity caster = this.data.getCaster().getEntity();
-                    if (caster.isDead()
-                            && !this.data.getCause().equals(SkillTrigger.DEATH)
-                            && !this.data.getCause().equals(SkillTrigger.DESPAWNED)
-                            && !this.data.getCause().equals(SkillTrigger.EXPLODE))
-                    {
-                        MythicLogger.debug(MythicLogger.DebugLevel.MECHANIC, "! Mob is dead, cancelling skill (cause = {0})", new Object[]{this.data.getCause()});
-                        this.cancel();
-                        return;
-                    }
-                    if (mark.isEmpty()) {
-                        executeSkill(this.data, this.skills);
-                    } else {
-                        if (MythicListener.checkNotMark(caster, mark)) {
-                            executeSkill(this.data, this.skills);
-                        } else {
-                            cancel();
-                        }
-                    }
-                } catch (NullPointerException var2) {
-                    this.cancel();
-                    var2.printStackTrace();
+            if (cancelled) {
+                return;
+            }
+
+            try {
+                final AbstractEntity caster = data.getCaster().getEntity();
+                if (caster.isDead()
+                        && !data.getCause().equals(SkillTrigger.DEATH)
+                        && !data.getCause().equals(SkillTrigger.DESPAWNED)
+                        && !data.getCause().equals(SkillTrigger.EXPLODE)) {
+                    MythicLogger.debug(MythicLogger.DebugLevel.MECHANIC,
+                            "! Mob is dead, cancelling skill (cause = {0})", data.getCause());
+                    cancel();
+                    return;
                 }
+
+                if (!mark.isEmpty() && !MythicListener.checkNotMark(caster, mark)) {
+                    cancel();
+                    return;
+                }
+                executeSkill(data, skills);
+            } catch (NullPointerException exception) {
+                cancel();
+                exception.printStackTrace();
+            } finally {
+                removeMarkTask(ownerId, this);
             }
         }
     }

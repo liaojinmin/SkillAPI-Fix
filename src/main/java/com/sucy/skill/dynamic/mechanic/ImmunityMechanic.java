@@ -58,19 +58,19 @@ public class ImmunityMechanic extends MechanicComponent {
      * @return true if applied to something, false otherwise
      */
     @Override
-    public boolean execute(LivingEntity caster, SkillContext context, int level, List<LivingEntity> targets) {
-        if (targets.size() == 0 || !settings.has(TYPE)) {
+    public boolean execute(final SkillContext context, LivingEntity caster, int level, List<LivingEntity> targets) {
+        if (targets.isEmpty() || !settings.has(TYPE)) {
             return false;
         }
 
         String key = settings.getString(TYPE);
-        double seconds = parseValues(caster, SECONDS, level, 3.0);
-        double multiplier = parseValues(caster, MULTIPLIER, level, 0);
+        double seconds = parseValues(context, caster, SECONDS, level, 3.0);
+        double multiplier = parseValues(context, caster, MULTIPLIER, level, 0);
         int ticks = (int) (seconds * 20);
         for (LivingEntity target : targets) {
             FlagManager.addFlag(target, "immune:" + key.toUpperCase().replace(" ", "_"), ticks);
             SkillAPI.setMeta(target, META_KEY, multiplier);
         }
-        return targets.size() > 0;
+        return !targets.isEmpty();
     }
 }

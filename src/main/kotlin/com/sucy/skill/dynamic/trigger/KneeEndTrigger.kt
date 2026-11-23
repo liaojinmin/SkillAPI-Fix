@@ -26,7 +26,7 @@ class KneeEndTrigger : Trigger<PlayerEndKneeEvent> {
     }
 
     /** {@inheritDoc}  */
-    override fun setValues(event: PlayerEndKneeEvent, data: SkillContext) {}
+    override fun setValues(event: PlayerEndKneeEvent, data: SkillContext, useGlobal: Boolean) {}
 
     /** {@inheritDoc}  */
     override fun getCaster(event: PlayerEndKneeEvent): LivingEntity {

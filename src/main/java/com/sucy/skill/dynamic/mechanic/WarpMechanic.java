@@ -61,16 +61,16 @@ public class WarpMechanic extends MechanicComponent {
      * @return true if applied to something, false otherwise
      */
     @Override
-    public boolean execute(LivingEntity caster, SkillContext context, int level, List<LivingEntity> targets) {
-        if (targets.size() == 0) {
+    public boolean execute(final SkillContext context, LivingEntity caster, int level, List<LivingEntity> targets) {
+        if (targets.isEmpty()) {
             return false;
         }
 
         // Get the world
         boolean throughWalls = settings.getString(WALL, "false").toLowerCase().equals("true");
-        double forward = parseValues(caster, FORWARD, level, 0.0);
-        double upward = parseValues(caster, UPWARD, level, 0.0);
-        double right = parseValues(caster, RIGHT, level, 0.0);
+        double forward = parseValues(context, caster, FORWARD, level, 0.0);
+        double upward = parseValues(context, caster, UPWARD, level, 0.0);
+        double right = parseValues(context, caster, RIGHT, level, 0.0);
 
         for (LivingEntity target : targets) {
             Vector dir = target.getLocation().getDirection();

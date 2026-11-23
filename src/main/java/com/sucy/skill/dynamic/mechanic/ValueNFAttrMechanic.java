@@ -35,7 +35,7 @@ public class ValueNFAttrMechanic extends MechanicComponent {
      * @return true if applied to something, false otherwise
      */
     @Override
-    public boolean execute(LivingEntity caster, SkillContext context, int level, List<LivingEntity> targets) {
+    public boolean execute(final SkillContext context, LivingEntity caster, int level, List<LivingEntity> targets) {
         if (targets.isEmpty()) return false;
         if (targets.get(0) instanceof Player) {
             final ItemStack itemStack = ArmorType.matchItemStack(((Player) targets.get(0)).getInventory(), ArmorType.valueOf(settings.getString(SLOT).toUpperCase()));
@@ -47,19 +47,19 @@ public class ValueNFAttrMechanic extends MechanicComponent {
                 DataParser data = factory.getData(nbtKey);
                 if (data != null) {
                     if (data instanceof StringDataParse) {
-                        DynamicSkill.getCastData(caster).put(key, ((StringDataParse) data).asDouble());
+                        context.set(caster, key, ((StringDataParse) data).asDouble(), useGlobalContext);
                     } else if (data instanceof JsonDataParser) {
                         JsonDataParser jsonDataParser = ((JsonDataParser) data);
                         double value = jsonDataParser.getDouble("base");
                         if (value <= 0) {
                             value = jsonDataParser.getDouble("v");
                         }
-                        DynamicSkill.getCastData(caster).put(key, value);
+                        context.set(caster, key, value, useGlobalContext);
                     }
                     return true;
                 }
             }
-            DynamicSkill.getCastData(caster).put(key, 0.0);
+            context.set(caster, key, 0.0, useGlobalContext);
             return false;
         }
         return false;

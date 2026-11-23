@@ -62,11 +62,11 @@ public class DamageLoreMechanic extends MechanicComponent {
      * @return true if applied to something, false otherwise
      */
     @Override
-    public boolean execute(LivingEntity caster, SkillContext context, int level, List<LivingEntity> targets) {
+    public boolean execute(final SkillContext context, LivingEntity caster, int level, List<LivingEntity> targets) {
         String regex = settings.getString(REGEX, "Damage: {value}");
         regex = regex.replace("{value}", "([0-9]+)");
         Pattern pattern = Pattern.compile(regex);
-        double m = parseValues(caster, MULTIPLIER, level, 1.0);
+        double m = parseValues(context, caster, MULTIPLIER, level, 1.0);
         boolean worked = false;
         boolean offhand = VersionManager.isVersionAtLeast(VersionManager.V1_9_0)
                 && settings.getString(HAND).equalsIgnoreCase("offhand");
@@ -77,7 +77,7 @@ public class DamageLoreMechanic extends MechanicComponent {
 
         ItemStack hand;
         if (offhand) { hand = caster.getEquipment().getItemInOffHand(); } else {
-            hand = caster.getEquipment().getItemInHand();
+            hand = caster.getEquipment().getItemInMainHand();
         }
 
         if (hand == null || !hand.hasItemMeta() || !hand.getItemMeta().hasLore()) { return false; }
@@ -98,7 +98,7 @@ public class DamageLoreMechanic extends MechanicComponent {
                                 skill.damage(target, base * m, caster, classification);
                             }
                         }
-                        worked = targets.size() > 0;
+                        worked = !targets.isEmpty();
                         break;
                     }
                 } catch (Exception ex) {

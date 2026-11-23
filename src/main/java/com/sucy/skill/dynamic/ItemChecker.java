@@ -28,6 +28,7 @@ package com.sucy.skill.dynamic;
 
 import com.rit.sucy.config.parse.NumberParser;
 import com.sucy.skill.api.Settings;
+import com.sucy.skill.api.skills.SkillContext;
 import org.bukkit.ChatColor;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
@@ -64,11 +65,11 @@ public class ItemChecker
      *
      * @return true if all conditions met, false otherwise
      */
-    public static boolean check(Player player, int level, EffectComponent component, boolean remove)
+    public static boolean check(final SkillContext context, Player player, int level, EffectComponent component, boolean remove)
     {
         final Settings settings = component.getSettings();
 
-        int count = (int) component.parseValues(player, AMOUNT, level, 1);
+        int count = (int) component.parseValues(context, player, AMOUNT, level, 1);
 
         // Checks to do
         boolean mat = settings.getBool(CHECK_MAT, true);
@@ -213,7 +214,7 @@ public class ItemChecker
         return false;
     }
 
-    public static boolean findLore(LivingEntity caster, ItemStack item, String regex, String key, double multiplier)
+    public static boolean findLore(final SkillContext context, LivingEntity caster, ItemStack item, String regex, String key, double multiplier)
     {
         Pattern pattern = Pattern.compile(regex.replace("{value}", "([+-]?[0-9]+([.,][0-9]+)?)"));
 
@@ -228,10 +229,9 @@ public class ItemChecker
             if (matcher.find())
             {
                 String value = matcher.group(1);
-                try
-                {
+                try {
                     double base = NumberParser.parseDouble(value);
-                    DynamicSkill.getCastData(caster).put(key, base * multiplier);
+                    context.set(key, base * multiplier);
                     break;
                 }
                 catch (Exception ex)

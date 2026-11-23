@@ -34,8 +34,8 @@ public class LaunchTrigger implements Trigger<ProjectileLaunchEvent> {
 
     /** {@inheritDoc} */
     @Override
-    public void setValues(final ProjectileLaunchEvent event, final SkillContext context) {
-        context.put("api-velocity", event.getEntity().getVelocity().length());
+    public void setValues(final ProjectileLaunchEvent event, final SkillContext context, final boolean useGlobal) {
+        context.set(getCaster(event), "api-velocity", event.getEntity().getVelocity().length(), useGlobal);
     }
 
     /** {@inheritDoc} */

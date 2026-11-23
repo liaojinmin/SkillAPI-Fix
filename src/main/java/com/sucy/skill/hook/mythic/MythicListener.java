@@ -14,13 +14,13 @@ import org.bukkit.event.EventPriority;
 import org.bukkit.event.entity.EntityDeathEvent;
 
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.UUID;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArraySet;
 
 public class MythicListener extends SkillAPIListener {
 
-    private static final HashMap<UUID, CopyOnWriteArraySet<String>> markMap = new HashMap<>();
+    private static final ConcurrentHashMap<UUID, CopyOnWriteArraySet<String>> markMap = new ConcurrentHashMap<>();
 
     public static void addMark(AbstractEntity entity, String... mark) {
         CopyOnWriteArraySet<String> list = markMap.computeIfAbsent(entity.getUniqueId(), (key) -> new CopyOnWriteArraySet<>());
@@ -29,11 +29,31 @@ public class MythicListener extends SkillAPIListener {
     }
 
     public static boolean checkNotMark(AbstractEntity entity, String mark) {
-        CopyOnWriteArraySet<String> set = markMap.get(entity.getUniqueId());
+        UUID uuid = entity.getUniqueId();
+        CopyOnWriteArraySet<String> set = markMap.get(uuid);
         if (set == null) {
             return true;
         }
-        return !set.remove(mark);
+
+        boolean interrupted = set.remove(mark);
+        if (set.isEmpty()) {
+            markMap.remove(uuid, set);
+        }
+        return !interrupted;
+    }
+
+    /** Clears a pending one-shot interruption without cancelling delayed tasks. */
+    public static void removeMark(AbstractEntity entity, String mark) {
+        UUID uuid = entity.getUniqueId();
+        CopyOnWriteArraySet<String> set = markMap.get(uuid);
+        if (set == null) {
+            return;
+        }
+
+        set.remove(mark);
+        if (set.isEmpty()) {
+            markMap.remove(uuid, set);
+        }
     }
 
 

@@ -62,7 +62,7 @@ public class MythicSkillMechanic extends SkillMechanic implements ITargetedEntit
                         (LivingEntity) target.getBukkitEntity()
                 );
             } else {
-                SkillCastAPI.cast((LivingEntity) cast.getBukkitEntity(), skill, level);
+                SkillCastAPI.cast((LivingEntity) cast.getBukkitEntity(), skill, level, null);
             }
         } else {
             final LivingEntity castEntity = (LivingEntity) cast.getBukkitEntity();
@@ -70,7 +70,7 @@ public class MythicSkillMechanic extends SkillMechanic implements ITargetedEntit
                 if (saveTarget) {
                     SkillCastAPI.cast(castEntity, skill, level, (LivingEntity) target.getBukkitEntity());
                 } else {
-                    SkillCastAPI.cast(castEntity, skill, level);
+                    SkillCastAPI.cast(castEntity, skill, level, null);
                 }
             });
         }

@@ -27,6 +27,7 @@
 package com.sucy.skill.dynamic.condition;
 
 import com.rit.sucy.config.parse.DataSection;
+import com.sucy.skill.api.skills.SkillContext;
 import com.sucy.skill.api.util.Combat;
 import com.sucy.skill.dynamic.DynamicSkill;
 import org.bukkit.entity.LivingEntity;
@@ -57,7 +58,7 @@ public class CombatCondition extends ConditionComponent
     }
 
     @Override
-    public boolean test(final LivingEntity caster, final int level, final LivingEntity target) {
+    public boolean test(final SkillContext context, final LivingEntity caster, final int level, final LivingEntity target) {
         return target instanceof Player && Combat.isInCombat((Player) target, seconds) == combat;
     }
 }

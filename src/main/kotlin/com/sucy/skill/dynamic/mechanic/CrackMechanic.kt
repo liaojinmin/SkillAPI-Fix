@@ -33,8 +33,8 @@ class CrackMechanic : MechanicComponent() {
     override fun getKey(): String = "crack"
 
     override fun execute(
-        caster: LivingEntity,
         context: SkillContext,
+        caster: LivingEntity,
         level: Int,
         targets: List<LivingEntity>,
     ): Boolean {
@@ -42,12 +42,12 @@ class CrackMechanic : MechanicComponent() {
 
         // ---- 参数解析 ----
         val type = parseType(settings.getString(TYPE, CrackManager.CrackMotionType.WAVE.name))
-        val radius   = parseValues(caster, RADIUS, level, 3.0).toFloat()
-        val strength = parseValues(caster, STRENGTH, level, 1.0).toFloat()
-        val duration = parseValues(caster, DURATION, level, 40.0).toInt()
-        val length   = parseValues(caster, LENGTH, level, 5.0).toInt()
-        val indexBase = parseValues(caster, INDEX, level, 0.0).toInt()
-        val range    = parseValues(caster, RANGE, level, 64.0)
+        val radius   = parseValues(context, caster, RADIUS, level, 3.0).toFloat()
+        val strength = parseValues(context, caster, STRENGTH, level, 1.0).toFloat()
+        val duration = parseValues(context, caster, DURATION, level, 40.0).toInt()
+        val length   = parseValues(context, caster, LENGTH, level, 5.0).toInt()
+        val indexBase = parseValues(context, caster, INDEX, level, 0.0).toInt()
+        val range    = parseValues(context, caster, RANGE, level, 64.0)
 
         // ---- 施法者朝向（位置由 targeter 决定）----
         val dir = (caster.eyeLocation ?: caster.location).direction

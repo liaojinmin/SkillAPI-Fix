@@ -32,7 +32,7 @@ class PlayerTeamStartTrigger: Trigger<PlayerStartGameEvent> {
         return event.player
     }
 
-    override fun setValues(event: PlayerStartGameEvent, data: SkillContext) {
+    override fun setValues(event: PlayerStartGameEvent, data: SkillContext, useGlobal: Boolean) {
     }
 
     override fun shouldTrigger(event: PlayerStartGameEvent, level: Int, settings: Settings): Boolean {

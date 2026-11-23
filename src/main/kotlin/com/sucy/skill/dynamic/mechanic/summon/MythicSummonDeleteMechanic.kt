@@ -19,8 +19,8 @@ class MythicSummonDeleteMechanic: MechanicComponent() {
     }
 
     override fun execute(
-        caster: LivingEntity,
         context: SkillContext,
+        caster: LivingEntity,
         level: Int,
         targets: MutableList<LivingEntity>,
     ): Boolean {

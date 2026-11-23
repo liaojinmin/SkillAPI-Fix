@@ -53,7 +53,7 @@ public class ItemRemoveMechanic extends MechanicComponent
      * @return true if applied to something, false otherwise
      */
     @Override
-    public boolean execute(LivingEntity caster, SkillContext context, int level, List<LivingEntity> targets)
+    public boolean execute(final SkillContext context, LivingEntity caster, int level, List<LivingEntity> targets)
     {
         boolean players = false;
         for (LivingEntity target : targets)
@@ -61,7 +61,7 @@ public class ItemRemoveMechanic extends MechanicComponent
             if (target instanceof Player)
             {
                 players = true;
-                ItemChecker.check((Player) target, level, this, true);
+                ItemChecker.check(context, (Player) target, level, this, true);
             }
         }
         return players;

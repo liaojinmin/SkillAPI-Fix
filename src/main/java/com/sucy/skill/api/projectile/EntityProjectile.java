@@ -4,6 +4,7 @@ import com.sucy.skill.SkillAPI;
 import com.sucy.skill.api.event.EntityProjectileExpireEvent;
 import com.sucy.skill.api.event.EntityProjectileHitEvent;
 import com.sucy.skill.api.event.EntityProjectileLandEvent;
+import com.sucy.skill.api.skills.SkillContext;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.Material;
@@ -55,12 +56,13 @@ public class EntityProjectile extends CustomProjectile {
     private Consumer<Event> expireEventConsumer = null;
 
     public EntityProjectile(
+            final SkillContext context,
             LivingEntity thrower,
             Location targetLocation,
             @Nullable Entity target,
             double distance
     ) {
-        super(thrower, false);
+        super(context, thrower, false);
         this.originLocation = thrower.getLocation();
         this.targetLocation = targetLocation;
         this.target = target;
@@ -69,6 +71,7 @@ public class EntityProjectile extends CustomProjectile {
     }
 
     public EntityProjectile(
+            final SkillContext context,
             LivingEntity thrower,
             Location targetLocation,
             @Nullable Entity target,
@@ -78,7 +81,7 @@ public class EntityProjectile extends CustomProjectile {
             double upward,
             double forward
     ) {
-        super(thrower, false);
+        super(context, thrower, false);
         this.originLocation = thrower.getLocation();
         this.targetLocation = targetLocation;
         this.target = target;

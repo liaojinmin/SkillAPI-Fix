@@ -31,24 +31,24 @@ class BuffHudMechanic: MechanicComponent() {
         return "buff hud"
     }
 
-    override fun execute(caster: LivingEntity, context: SkillContext, level: Int, targets: MutableList<LivingEntity>): Boolean {
+    override fun execute(context: SkillContext, caster: LivingEntity, level: Int, targets: MutableList<LivingEntity>): Boolean {
         val key = settings.getString(KEY, "DEFAULT")
         val texts = settings.getStringList(TEXTS)
         val texture = settings.getString(TEXTURE, "")
-        val timer = ((parseValues(caster, TIME, level, -1.0) * 20) * 50).toLong()
+        val timer = ((parseValues(context, caster, TIME, level, -1.0) * 20) * 50).toLong()
         if (settings.getBool("useCaster", false)) {
-            compute(caster, caster, settings.getString(ACTION), key, texture, texts, timer)
+            compute(context, caster, caster, settings.getString(ACTION), key, texture, texts, timer)
         } else {
             targets.forEach {
-                compute(caster, it, settings.getString(ACTION), key, texture, texts, timer)
+                compute(context, caster, it, settings.getString(ACTION), key, texture, texts, timer)
             }
         }
         return true
     }
 
-    private fun compute(caster: LivingEntity, livingEntity: LivingEntity, action: String, key: String, texture: String, texts: List<String>, timer: Long) {
+    private fun compute(context: SkillContext, caster: LivingEntity, livingEntity: LivingEntity, action: String, key: String, texture: String, texts: List<String>, timer: Long) {
         if (livingEntity is Player) {
-            val info = texts.map { parseVars(caster, livingEntity, it, true) }
+            val info = texts.map { parseVars(context, caster, livingEntity, it, true) }
             NeonECore.getPlayerData(livingEntity.uniqueId)?.let {
                 val hud = it.buffScreenHUD ?: return
                 when (action.lowercase()) {

@@ -57,9 +57,9 @@ public class SpeedMechanic extends MechanicComponent {
      * @return true if applied to something, false otherwise
      */
     @Override
-    public boolean execute(LivingEntity caster, SkillContext context, int level, List<LivingEntity> targets) {
-        float multiplier = (float) parseValues(caster, MULTIPLIER, level, 1.2);
-        double seconds = parseValues(caster, DURATION, level, 3.0);
+    public boolean execute(final SkillContext context, LivingEntity caster, int level, List<LivingEntity> targets) {
+        float multiplier = (float) parseValues(context, caster, MULTIPLIER, level, 1.2);
+        double seconds = parseValues(context, caster, DURATION, level, 3.0);
         int ticks = (int) (seconds * 20);
         boolean worked = false;
         for (LivingEntity target : targets) {

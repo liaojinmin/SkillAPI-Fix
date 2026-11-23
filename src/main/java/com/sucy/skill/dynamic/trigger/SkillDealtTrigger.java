@@ -37,7 +37,7 @@ public class SkillDealtTrigger extends SkillTrigger<SkillDamageEvent> {
 
     /** {@inheritDoc} */
     @Override
-    public void setValues(final SkillDamageEvent event, final SkillContext context) {
-        context.put("api-dealt", event.getDamage());
+    public void setValues(final SkillDamageEvent event, final SkillContext context, boolean useGlobal) {
+        context.set(getCaster(event), "api-dealt", event.getDamage(), useGlobal);
     }
 }

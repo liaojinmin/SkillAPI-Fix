@@ -8,19 +8,11 @@ import com.sucy.skill.api.attribute.AttributeAPI;
 import com.sucy.skill.api.player.PlayerData;
 import com.sucy.skill.api.player.PlayerSkill;
 import com.sucy.skill.api.skills.SkillContext;
-import com.sucy.skill.cast.IIndicator;
-import com.sucy.skill.cast.IndicatorType;
-import com.sucy.skill.dynamic.data.CustomData;
-import com.sucy.skill.dynamic.data.CustomDataStack;
-import com.sucy.skill.dynamic.data.DataSkills;
 import com.sucy.skill.log.Logger;
-import com.sucy.skill.manager.AttributeManager;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
 
-import javax.script.ScriptEngine;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -28,15 +20,17 @@ import java.util.Map;
  * A component for dynamic skills which takes care of one effect
  */
 public abstract class EffectComponent {
+    private static final String TYPE       = "type";
     private static final String ICON_KEY   = "icon-key";
     private static final String COUNTS_KEY = "counts";
+    private static final String USE_GLOBAL_CONTEXT = "use-global-context";
 
     private static boolean passed;
 
     /**
      * Child components
      */
-    public final ArrayList<EffectComponent> children = new ArrayList<>();
+    protected final ArrayList<EffectComponent> children = new ArrayList<>();
 
     /**
      * The settings for the component
@@ -48,26 +42,10 @@ public abstract class EffectComponent {
      */
     protected DynamicSkill skill;
 
-    /**
-     * Type of indicators to show
-     */
-    protected IndicatorType indicatorType;
+    protected String instanceKey;
 
-    /**
-     * Whether or not the component has preview effects
-     */
-    public boolean hasEffect;
+    protected boolean useGlobalContext = false;
 
-    private String instanceKey;
-
-    /**
-     * Retrieves the config key for the component
-     *
-     * @return config key of the component
-     */
-    public String getInstanceKey() {
-        return instanceKey;
-    }
 
     public abstract String getKey();
 
@@ -78,6 +56,9 @@ public abstract class EffectComponent {
      */
     public abstract ComponentType getType();
 
+
+    public abstract boolean execute(final SkillContext context, LivingEntity caster, int level, List<LivingEntity> targets);
+
     /**
      * Retrieves the settings of the dynamic component
      *
@@ -87,41 +68,8 @@ public abstract class EffectComponent {
         return settings;
     }
 
-    /**
-     * Checks whether or not the component or its children have an effect
-     *
-     * @return true if has an effect, false otherwise
-     */
-    private boolean hasEffect() {
-        if (indicatorType != IndicatorType.NONE) { return true; }
-
-        for (EffectComponent child : children) { if (child.hasEffect()) { return true; } }
-
-        return false;
-    }
-
-    protected double parseMetas(LivingEntity caster, String key, double fallback) {
-        CustomDataStack stack = DataSkills.getMetaStack(caster.getUniqueId(), false);
-        if (stack != null) {
-            CustomData meta = stack.getMeta(key);
-            if (meta != null) {
-                return meta.getValue();
-            } else {
-                return fallback;
-            }
-        } else return fallback;
-    }
-
-    protected String parseMetas(LivingEntity caster, String key, String fallback) {
-        CustomDataStack stack = DataSkills.getMetaStack(caster.getUniqueId(), false);
-        if (stack != null) {
-            CustomData meta = stack.getMeta(key);
-            if (meta != null) {
-                return String.valueOf(meta.getValue());
-            } else {
-                return fallback;
-            }
-        } else return fallback;
+    public boolean isUseGlobalContext() {
+        return useGlobalContext;
     }
 
     /**
@@ -135,54 +83,15 @@ public abstract class EffectComponent {
      *
      * @return the value with attribute modifications if applicable
      */
-    protected double parseValues(LivingEntity caster, String key, int level, double fallback) {
-        double base = getNum(caster, key + "-base", fallback);
+    protected double parseValues(final SkillContext context, LivingEntity caster, String key, int level, double fallback) {
+        double base = getNum(context, caster, key + "-base", fallback);
         if (base < 0) return base;
-        double scale = getNum(caster, key + "-scale", 0);
+        double scale = getNum(context, caster, key + "-scale", 0);
         double value = base + (level - 1) * scale;
 
         // Apply global modifiers
         value = AttributeAPI.scaleDynamic(caster, this, key, value);
         return value;
-    }
-
-    /**
-     * Retrieves a numerical value while using non-numerical values as
-     * keys for the cast data. If the value doesn't exist, this will
-     * return the default value. If it is a key that doesn't have an
-     * attached value, it will return 0. Otherwise, it will return
-     * the appropriate value.
-     *
-     * @param caster   the caster of the skill
-     * @param key      key of the value
-     * @param fallback fallback value in case the settings don't have it
-     *
-     * @return the settings value or, if not a number, the cast data value
-     */
-    protected double getNum(LivingEntity caster, String key, double fallback) {
-        String val = settings.getString(key);
-        if (val == null) { return fallback; }
-
-        try {
-            return Double.parseDouble(val);
-        } catch (Exception ex) { /* Not a number */ }
-
-        final Map<String, Object> map = DynamicSkill.getCastData(caster);
-        if (map.containsKey(val)) {
-            final String mapVal = map.get(val).toString();
-            try {
-                return Double.parseDouble(mapVal);
-            } catch (Exception ex) { /* Not a number */ }
-        }
-
-        try {
-            final int mid = val.indexOf('-', 1);
-            final double min = Double.parseDouble(val.substring(0, mid));
-            final double max = Double.parseDouble(val.substring(mid + 1));
-            return Math.random() * (max - min) + min;
-        } catch (Exception ex) { /* Not a range */ }
-
-        return 0;
     }
 
     /**
@@ -193,7 +102,6 @@ public abstract class EffectComponent {
     protected boolean lastPassed() {
         return passed;
     }
-
 
     protected boolean executeChildren(final SkillContext context, LivingEntity caster, int level, List<LivingEntity> targets) {
         if (targets.isEmpty()) {
@@ -238,15 +146,15 @@ public abstract class EffectComponent {
         }
     }
 
-    protected String filter(LivingEntity caster, LivingEntity target, String text) {
-        return parseVars(caster, target, text);
+    protected String filter(final SkillContext context, LivingEntity caster, LivingEntity target, String text) {
+        return parseVars(context, caster, target, text);
     }
 
-    protected static String parseVars(LivingEntity caster, LivingEntity target, String text) {
-        return parseVars(caster, target, text, false);
+    protected String parseVars(final SkillContext context, LivingEntity caster, LivingEntity target, String text) {
+        return parseVars(context, caster, target, text, false);
     }
 
-    protected static String parseVars(LivingEntity caster, LivingEntity target, String text, boolean toInt) {
+    protected String parseVars(final SkillContext context, LivingEntity caster, LivingEntity target, String text, boolean toInt) {
         // Grab values
         int i = text.indexOf('{');
         if (i < 0) { return text; }
@@ -255,13 +163,12 @@ public abstract class EffectComponent {
         if (j < 0) { return text; }
 
         StringBuilder builder = new StringBuilder();
-        Map<String, Object> data = DynamicSkill.getCastData(caster);
 
         int k = 0;
         while (i >= 0 && j > i) {
             String key = text.substring(i + 1, j);
-            if (data.containsKey(key)) {
-                Object obj = data.get(key);
+            if (context.containsKey(caster, key, useGlobalContext)) {
+                Object obj = context.get(caster, key, useGlobalContext);
                 if (obj instanceof Player) {
                     obj = ((Player) obj).getName();
                 } else if (obj instanceof LivingEntity) {
@@ -269,22 +176,22 @@ public abstract class EffectComponent {
                 } else if (obj instanceof Number && toInt) {
                     obj = ((Number) obj).intValue();
                 }
-                builder.append(text.substring(k, i));
+                builder.append(text, k, i);
                 builder.append(obj);
 
                 k = j + 1;
             } else if (key.equalsIgnoreCase("player") || key.equalsIgnoreCase("caster") ) {
-                builder.append(text.substring(k, i));
+                builder.append(text, k, i);
                 builder.append(caster.getName());
 
                 k = j + 1;
             } else if (key.equalsIgnoreCase("target")) {
-                builder.append(text.substring(k, i));
+                builder.append(text, k, i);
                 builder.append(target.getName());
 
                 k = j + 1;
             } else if (key.equalsIgnoreCase("targetUUID")) {
-                builder.append(text.substring(k, i));
+                builder.append(text, k, i);
                 builder.append(target.getUniqueId().toString());
 
                 k = j + 1;
@@ -295,25 +202,6 @@ public abstract class EffectComponent {
         builder.append(text.substring(k));
         return builder.toString();
     }
-
-    public abstract boolean execute(final SkillContext context, LivingEntity caster, int level, List<LivingEntity> targets);
-
-    /**
-     * Creates the list of indicators for the skill
-     *
-     * @param list    list to store indicators in
-     * @param caster  caster reference
-     * @param targets location to base location on
-     * @param level   the level of the skill to create for
-     */
-    public void makeIndicators(final SkillContext context, List<IIndicator> list, Player caster, List<LivingEntity> targets, int level) {
-        if (hasEffect) {
-            for (EffectComponent component : children) { component.makeIndicators(context, list, caster, targets, level); }
-        }
-    }
-
-    private static final String TYPE      = "type";
-    private static final String INDICATOR = "indicator";
 
     /**
      * Loads component data from the configuration
@@ -333,8 +221,8 @@ public abstract class EffectComponent {
                 skill.setAttribKey(key, this);
             }
         }
-        indicatorType = IndicatorType.getByKey(settings.getString(INDICATOR, "2D"));
-
+        //indicatorType = IndicatorType.getByKey(settings.getString(INDICATOR, "2D"));
+        useGlobalContext = settings.getBool(USE_GLOBAL_CONTEXT, false);
         DataSection children = config.getSection("children");
         if (children != null) {
             for (String key : children.keys()) {
@@ -356,7 +244,31 @@ public abstract class EffectComponent {
                 }
             }
         }
+    }
 
-        hasEffect = hasEffect();
+    private double getNum(SkillContext context, LivingEntity caster, String key, double fallback) {
+        String val = settings.getString(key);
+        if (val == null) { return fallback; }
+
+        try {
+            return Double.parseDouble(val);
+        } catch (Exception ex) { /* Not a number */ }
+
+
+        if (context.containsKey(caster, val, useGlobalContext)) {
+            final String mapVal = String.valueOf(context.get(caster, val, useGlobalContext));
+            try {
+                return Double.parseDouble(mapVal);
+            } catch (Exception ex) { /* Not a number */ }
+        }
+
+        try {
+            final int mid = val.indexOf('-', 1);
+            final double min = Double.parseDouble(val.substring(0, mid));
+            final double max = Double.parseDouble(val.substring(mid + 1));
+            return Math.random() * (max - min) + min;
+        } catch (Exception ex) { /* Not a range */ }
+
+        return 0;
     }
 }

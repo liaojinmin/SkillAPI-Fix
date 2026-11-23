@@ -85,6 +85,9 @@ public class ComponentRegistry {
         register(new KillTrigger());
         register(new LandTrigger());
         register(new LaunchTrigger());
+        register(new BounceCollisionTrigger());
+        register(new BounceSplitTrigger());
+        register(new BounceEndTrigger());
         register(new MoveTrigger());
         register(new PhysicalDealtTrigger());
         register(new PhysicalTakenTrigger());
@@ -175,6 +178,7 @@ public class ComponentRegistry {
         register(new AttributeMechanic());
         register(new BlockMechanic());
         register(new BlockWallMechanic());
+        register(new BounceProjectileMechanic());
         register(new BuffMechanic());
         register(new CancelEffectMechanic());
         register(new CancelMechanic());
@@ -243,7 +247,6 @@ public class ComponentRegistry {
         register(new ValuePlaceholderMechanic());
         register(new ValueRandomMechanic());
         register(new ValueSetMechanic());
-        register(new ValueMMoItemAttrMechanic());
         register(new ValueNFAttrMechanic());
         register(new WarpMechanic());
         register(new WarpLocMechanic());

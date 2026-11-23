@@ -18,7 +18,7 @@ class BadgeCooldownResetMechanic: MechanicComponent() {
         return "badge cooldown reset"
     }
 
-    override fun execute(caster: LivingEntity, context: SkillContext, level: Int, targets: MutableList<LivingEntity>): Boolean {
+    override fun execute(context: SkillContext, caster: LivingEntity, level: Int, targets: MutableList<LivingEntity>): Boolean {
         targets.forEach { target ->
             if (target is Player) {
                 val data = NeonECore.getPlayerData(target.uniqueId)

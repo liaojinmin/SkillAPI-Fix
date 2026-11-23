@@ -28,6 +28,7 @@ package com.sucy.skill.dynamic.condition;
 
 import com.google.common.collect.ImmutableList;
 import com.rit.sucy.config.parse.DataSection;
+import com.sucy.skill.api.skills.SkillContext;
 import com.sucy.skill.dynamic.DynamicSkill;
 import com.sucy.skill.dynamic.ItemChecker;
 import org.bukkit.entity.LivingEntity;
@@ -74,7 +75,7 @@ public class ArmorCondition extends ConditionComponent {
     }
 
     @Override
-    public boolean test(final LivingEntity caster, final int level, final LivingEntity target) {
+    public boolean test(final SkillContext context, final LivingEntity caster, final int level, final LivingEntity target) {
         final EntityEquipment equipment = target.getEquipment();
         return equipment != null && getters.stream().anyMatch(
                 getter -> ItemChecker.check(getter.apply(equipment), level, settings));

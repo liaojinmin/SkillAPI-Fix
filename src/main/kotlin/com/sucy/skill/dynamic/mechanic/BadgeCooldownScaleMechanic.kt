@@ -24,12 +24,12 @@ class BadgeCooldownScaleMechanic: MechanicComponent() {
         return "badge cooldown scale"
     }
 
-    override fun execute(caster: LivingEntity, context: SkillContext, level: Int, targets: MutableList<LivingEntity>): Boolean {
+    override fun execute(context: SkillContext, caster: LivingEntity, level: Int, targets: MutableList<LivingEntity>): Boolean {
         targets.forEach { target ->
             if (target is Player) {
                 val data = NeonECore.getPlayerData(target.uniqueId)
                 if (data != null) {
-                    val scale = parseValues(target, PROPORTION, level, settings.getDouble(PROPORTION))
+                    val scale = parseValues(context, target, PROPORTION, level, settings.getDouble(PROPORTION))
                     when (settings.getString("type", "E")!!) {
                         "E" -> data.badgeScreenHUD?.setCooldownReduction(1, scale)
                         "R" -> data.badgeScreenHUD?.setCooldownReduction(2, scale)

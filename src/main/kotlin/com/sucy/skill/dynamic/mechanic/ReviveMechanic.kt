@@ -19,7 +19,7 @@ class ReviveMechanic: MechanicComponent() {
         return "revive"
     }
 
-    override fun execute(caster: LivingEntity, context: SkillContext, level: Int, targets: MutableList<LivingEntity>): Boolean {
+    override fun execute(context: SkillContext, caster: LivingEntity, level: Int, targets: MutableList<LivingEntity>): Boolean {
         targets.forEach { target ->
             if (target is Player) {
                 ReviveManager.dungeonCache[target.world.name]?.let {

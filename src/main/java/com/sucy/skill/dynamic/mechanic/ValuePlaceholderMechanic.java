@@ -35,7 +35,7 @@ public class ValuePlaceholderMechanic extends MechanicComponent
      * @return true if applied to something, false otherwise
      */
     @Override
-    public boolean execute(LivingEntity caster, SkillContext context, int level, List<LivingEntity> targets)
+    public boolean execute(final SkillContext context, LivingEntity caster, int level, List<LivingEntity> targets)
     {
         if (!PluginChecker.isPlaceholderAPIActive()) {
             return false;
@@ -49,17 +49,16 @@ public class ValuePlaceholderMechanic extends MechanicComponent
 
             final String value = PlaceholderAPIHook.format(placeholder, (Player)targets.get(0));
 
-            switch (type.charAt(0)) {
-                case 'S': // STRING
-                    DynamicSkill.getCastData(caster).put(key, value);
-                    break;
-                default: // NUMBER
-                    try {
-                        DynamicSkill.getCastData(caster).put(key, Double.parseDouble(value));
-                    } catch (final Exception ex) {
-                        Logger.invalid(placeholder + " is not a valid numeric placeholder - PlaceholderAPI returned " + value);
-                        return false;
-                    }
+            // NUMBER
+            if (type.charAt(0) == 'S') { // STRING
+                context.set(caster, key, value, useGlobalContext);
+            } else {
+                try {
+                    context.set(caster, key, Double.parseDouble(value), useGlobalContext);
+                } catch (final Exception ex) {
+                    Logger.invalid(placeholder + " is not a valid numeric placeholder - PlaceholderAPI returned " + value);
+                    return false;
+                }
             }
             return true;
         }

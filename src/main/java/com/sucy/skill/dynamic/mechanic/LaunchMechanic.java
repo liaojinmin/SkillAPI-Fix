@@ -59,14 +59,14 @@ public class LaunchMechanic extends MechanicComponent {
      * @return true if applied to something, false otherwise
      */
     @Override
-    public boolean execute(LivingEntity caster, SkillContext context, int level, List<LivingEntity> targets) {
-        if (targets.size() == 0) {
+    public boolean execute(final SkillContext context, LivingEntity caster,int level, List<LivingEntity> targets) {
+        if (targets.isEmpty()) {
             return false;
         }
 
-        double forward = parseValues(caster, FORWARD, level, 0);
-        double upward = parseValues(caster, UPWARD, level, 0);
-        double right = parseValues(caster, RIGHT, level, 0);
+        double forward = parseValues(context, caster, FORWARD, level, 0);
+        double upward = parseValues(context, caster, UPWARD, level, 0);
+        double right = parseValues(context, caster, RIGHT, level, 0);
         String relative = settings.getString(RELATIVE, "target").toLowerCase();
         for (LivingEntity target : targets) {
             final Vector dir;
@@ -84,6 +84,6 @@ public class LaunchMechanic extends MechanicComponent {
 
             target.setVelocity(dir);
         }
-        return targets.size() > 0;
+        return !targets.isEmpty();
     }
 }

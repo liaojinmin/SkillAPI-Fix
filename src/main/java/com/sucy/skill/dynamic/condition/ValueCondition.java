@@ -27,12 +27,12 @@
 package com.sucy.skill.dynamic.condition;
 
 import com.sucy.skill.api.skills.SkillContext;
-import com.sucy.skill.dynamic.DynamicSkill;
 import org.bukkit.entity.LivingEntity;
 
 import java.util.List;
 
 public class ValueCondition extends ConditionComponent {
+
     private static final String KEY = "key";
     private static final String MIN = "min-value";
     private static final String MAX = "max-value";
@@ -43,16 +43,16 @@ public class ValueCondition extends ConditionComponent {
     }
 
     @Override
-    public boolean execute(LivingEntity caster, SkillContext context, int level, List<LivingEntity> targets) {
-        return test(caster, level, null) && executeChildren(caster, context, level, targets);
+    public boolean execute(final SkillContext context, LivingEntity caster, int level, List<LivingEntity> targets) {
+        return test(context, caster, level, null) && executeChildren(context, caster, level, targets);
     }
 
     @Override
-    public boolean test(final LivingEntity caster, final int level, final LivingEntity target) {
+    public boolean test(final SkillContext context, final LivingEntity caster, final int level, final LivingEntity target) {
         final String key = settings.getString(KEY);
-        final double min = parseValues(caster, MIN, level, 1);
-        final double max = parseValues(caster, MAX, level, 999);
-        final Object data = DynamicSkill.getCastData(caster).get(key);
+        final double min = parseValues(context, caster, MIN, level, 1);
+        final double max = parseValues(context, caster, MAX, level, 999);
+        final Object data = context.get(caster, key, useGlobalContext);
 
         if (data != null) {
             double value = (Double) data;

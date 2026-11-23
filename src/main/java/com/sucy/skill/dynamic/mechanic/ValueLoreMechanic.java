@@ -58,11 +58,11 @@ public class ValueLoreMechanic extends MechanicComponent {
      * @return true if applied to something, false otherwise
      */
     @Override
-    public boolean execute(LivingEntity caster, SkillContext context, int level, List<LivingEntity> targets) {
-        if (targets.size() == 0 || !settings.has(KEY)) { return false; }
+    public boolean execute(final SkillContext context, LivingEntity caster, int level, List<LivingEntity> targets) {
+        if (targets.isEmpty() || !settings.has(KEY)) { return false; }
 
         String key = settings.getString(KEY);
-        double multiplier = parseValues(caster, MULTIPLIER, level, 1);
+        double multiplier = parseValues(context, caster, MULTIPLIER, level, 1);
         boolean offhand = settings.getString(HAND, "").equalsIgnoreCase("offhand");
         String regex = settings.getString(REGEX, "Damage: {value}");
 
@@ -71,8 +71,8 @@ public class ValueLoreMechanic extends MechanicComponent {
         ItemStack hand;
         if (offhand && VersionManager.isVersionAtLeast(VersionManager.V1_9_0)) {
             hand = caster.getEquipment().getItemInOffHand();
-        } else { hand = caster.getEquipment().getItemInHand(); }
+        } else { hand = caster.getEquipment().getItemInMainHand(); }
 
-        return ItemChecker.findLore(caster, hand, regex, key, multiplier);
+        return ItemChecker.findLore(context, caster, hand, regex, key, multiplier);
     }
 }

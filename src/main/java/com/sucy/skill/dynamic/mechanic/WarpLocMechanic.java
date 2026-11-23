@@ -61,12 +61,8 @@ public class WarpLocMechanic extends MechanicComponent
      * @return true if applied to something, false otherwise
      */
     @Override
-    public boolean execute(LivingEntity caster, SkillContext context, int level, List<LivingEntity> targets)
-    {
-        if (targets.size() == 0)
-        {
-            return false;
-        }
+    public boolean execute(final SkillContext context, LivingEntity caster,  int level, List<LivingEntity> targets) {
+        if (targets.isEmpty()) return false;
 
         // Get the world
         String world = settings.getString(WORLD, "current");
@@ -75,8 +71,7 @@ public class WarpLocMechanic extends MechanicComponent
             world = caster.getWorld().getName();
         }
         World w = Bukkit.getWorld(world);
-        if (w == null)
-        {
+        if (w == null) {
             return false;
         }
 
@@ -93,6 +88,6 @@ public class WarpLocMechanic extends MechanicComponent
         {
             target.teleport(loc);
         }
-        return targets.size() > 0;
+        return !targets.isEmpty();
     }
 }

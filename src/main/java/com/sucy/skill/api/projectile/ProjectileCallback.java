@@ -26,13 +26,14 @@
  */
 package com.sucy.skill.api.projectile;
 
+import com.sucy.skill.api.skills.SkillContext;
 import org.bukkit.entity.LivingEntity;
 
 /**
  * Callback interface for receiving when/what a specific projectile hits
  */
-public interface ProjectileCallback
-{
+public interface ProjectileCallback {
+
     /**
      * The callback method for when a projectile hits something or lands
      * on the ground. This is not called when the projectile expires. If
@@ -42,5 +43,5 @@ public interface ProjectileCallback
      * @param projectile projectile calling back for
      * @param hit        the entity hit by the projectile, if any
      */
-    void callback(CustomProjectile projectile, LivingEntity hit);
+    void callback(SkillContext skillContext, CustomProjectile projectile, LivingEntity hit);
 }

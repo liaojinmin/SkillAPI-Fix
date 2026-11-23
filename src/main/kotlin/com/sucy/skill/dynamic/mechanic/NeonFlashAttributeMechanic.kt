@@ -1,7 +1,6 @@
 package com.sucy.skill.dynamic.mechanic
 
 import com.sucy.skill.api.skills.SkillContext
-import com.sucy.skill.dynamic.DynamicSkill
 import me.geek.team.common.TeamManager
 import me.neon.arena.utils.getGameTeamManager
 import me.neon.flash.attribute.AttributeManager
@@ -22,18 +21,18 @@ class NeonFlashAttributeMechanic : MechanicComponent() {
 
     }
 
-    override fun execute(caster: LivingEntity, context: SkillContext, level: Int, targets: List<LivingEntity>): Boolean {
+    override fun execute(context: SkillContext, caster: LivingEntity,  level: Int, targets: List<LivingEntity>): Boolean {
 
         if (targets.isEmpty()) return false
 
         val attr = settings.getString("key")
 
         val value: Double = if (settings.getBool("useValue")) {
-            DynamicSkill.getCastData(caster).getOrDefault(settings.getString("skKey", settings.getString("skValue", "EMPTY")), 0.0).toString().toDouble()
-        } else max(parseValues(caster, "amount", level, 0.0), settings.getDouble("amount"))
+            context.get(caster, settings.getString("skKey", settings.getString("skValue", "EMPTY")), useGlobalContext)?.toString()?.toDoubleOrNull() ?: 0.0
+        } else max(parseValues(context, caster, "amount", level, 0.0), settings.getDouble("amount"))
 
         val container = settings.getStringList("container")
-        var seconds = parseValues(caster, "seconds", level, -1.0).toLong()
+        var seconds = parseValues(context, caster, "seconds", level, -1.0).toLong()
         seconds = if (seconds > 0) (seconds * 1000) + System.currentTimeMillis() else -1
 
         if (settings.getBool("subtract", false)) {

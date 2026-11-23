@@ -66,7 +66,7 @@ public class AttributeMechanic extends MechanicComponent {
      * @return true if applied to something, false otherwise
      */
     @Override
-    public boolean execute(LivingEntity caster, SkillContext context, int level, List<LivingEntity> targets) {
+    public boolean execute(final SkillContext context, LivingEntity caster, int level, List<LivingEntity> targets) {
 
       //  System.out.println("execute 属性触发者: "+caster.getName());
         String key = settings.getString(KEY, "");
@@ -75,8 +75,8 @@ public class AttributeMechanic extends MechanicComponent {
         }
 
         final Map<String, AttribTask> casterTasks = tasks.computeIfAbsent(caster.getEntityId(), HashMap::new);
-        final int amount = (int) parseValues(caster, AMOUNT, level, 5);
-        final double seconds = parseValues(caster, SECONDS, level, 3.0);
+        final int amount = (int) parseValues(context, caster, AMOUNT, level, 5);
+        final double seconds = parseValues(context, caster, SECONDS, level, 3.0);
         final boolean stackable = settings.getString(STACKABLE, "false").equalsIgnoreCase("true");
         final int ticks = (int) (seconds * 20);
         for (LivingEntity target : targets) {

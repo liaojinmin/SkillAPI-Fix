@@ -38,7 +38,7 @@ public class SkillTakenTrigger extends SkillTrigger<SkillDamageEvent> {
 
     /** {@inheritDoc} */
     @Override
-    public void setValues(final SkillDamageEvent event, final SkillContext context) {
-        context.put("api-taken", event.getDamage());
+    public void setValues(final SkillDamageEvent event, final SkillContext context, boolean useGlobal) {
+        context.set(getCaster(event), "api-taken", event.getDamage(), useGlobal);
     }
 }

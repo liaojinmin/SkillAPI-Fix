@@ -30,11 +30,11 @@ class SkillLinkTrigger: Trigger<SkillLinkEvent> {
         return event.player
     }
 
-    override fun setValues(event: SkillLinkEvent, data: SkillContext) {
-        data[key + "_amount"] = event.link.amount
-        data[key + "_skill"] = event.link.skill.name
-        data[key + "_classification"] = event.link.clazz
-        data[key + "_interval"] = event.intervalMillis
+    override fun setValues(event: SkillLinkEvent, data: SkillContext, useGloabl: Boolean) {
+        data.set(getCaster(event), key + "_amount", event.link.amount, useGloabl)
+        data.set(getCaster(event), key + "_skill", event.link.skill.name, useGloabl)
+        data.set(getCaster(event), key + "_classification", event.link.clazz, useGloabl)
+        data.set(getCaster(event), key + "_interval", event.intervalMillis, useGloabl)
     }
 
     override fun shouldTrigger(event: SkillLinkEvent, level: Int, settings: Settings): Boolean {

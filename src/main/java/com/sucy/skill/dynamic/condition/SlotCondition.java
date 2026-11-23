@@ -26,6 +26,7 @@
  */
 package com.sucy.skill.dynamic.condition;
 
+import com.sucy.skill.api.skills.SkillContext;
 import com.sucy.skill.dynamic.ItemChecker;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
@@ -36,7 +37,7 @@ public class SlotCondition extends ConditionComponent
     private static final String SLOT = "slot";
 
     @Override
-    public boolean test(final LivingEntity caster, final int level, final LivingEntity target) {
+    public boolean test(final SkillContext context, final LivingEntity caster, final int level, final LivingEntity target) {
         if (!(target instanceof Player)) return false;
 
         final PlayerInventory inventory = ((Player) target).getInventory();

@@ -32,18 +32,18 @@ class MythicSummonMechanic: MechanicComponent() {
     // MechanicArmorStand
 
     override fun execute(
-        caster: LivingEntity,
         context: SkillContext,
+        caster: LivingEntity,
         level: Int,
         targets: MutableList<LivingEntity>,
     ): Boolean {
         val type = settings.getString("type")!!
         val useAi = settings.getBool("useAi")
-        val health = caster.maxHealth * parseValues(caster, "health", level, 0.5)
-        val duration = parseValues(caster, "duration", level, 5.0) * 1000
-        val forward = parseValues(caster, "forward", level, 0.0)
-        val upward = parseValues(caster, "upward", level, 0.0)
-        val right = parseValues(caster, "right", level, 0.0)
+        val health = caster.maxHealth * parseValues(context, caster, "health", level, 0.5)
+        val duration = parseValues(context, caster, "duration", level, 5.0) * 1000
+        val forward = parseValues(context, caster, "forward", level, 0.0)
+        val upward = parseValues(context, caster, "upward", level, 0.0)
+        val right = parseValues(context, caster, "right", level, 0.0)
 
         ///val attr: PlayerData = SkillAPI.getPlayerData(caster.uniqueId) ?: return false
 

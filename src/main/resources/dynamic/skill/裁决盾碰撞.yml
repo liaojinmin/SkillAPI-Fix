@@ -1,0 +1,96 @@
+裁决盾碰撞:
+  name: '裁决盾碰撞'
+  type: 'Dynamic'
+  max-level: 1
+  skill-req: ''
+  skill-req-lvl: 1
+  needs-permission: 'False'
+  msg: '&6{player} &2has cast &6{skill}'
+  combo: ''
+  indicator: '2D'
+  icon: 'Acacia Door'
+  icon-data: 0
+  icon-lore:
+  - '&d{name} &7({level}/{max})'
+  - '&2Type: &6{type}'
+  - ''
+  - '{req:level}Level: {attr:level}'
+  - '{req:cost}Cost: {attr:cost}'
+  - ''
+  - '&2Mana: {attr:mana}'
+  - '&2Cooldown: {attr:cooldown}'
+  attributes:
+    level-base: 1
+    level-scale: 0
+    cost-base: 0
+    cost-scale: 0
+    cooldown-base: 0
+    cooldown-scale: 0
+    mana-base: 0
+    mana-scale: 0
+    mana-tick: 2700
+    points-spent-req-base: 0
+    points-spent-req-scale: 0
+    incompatible:
+    - ''
+  components:
+    Cast-a:
+      type: 'trigger'
+      data:
+        icon-key: ''
+      children:
+        Armor Stand-v: 
+          type: 'mechanic'
+          indicator: '3D'
+          data: 
+            icon-key: ''
+            counts: 'True'
+            duration-base: '1.0'
+            duration-scale: '0'
+            name: '裁决盾火星'
+            name-visible: 'False'
+            follow: 'False'
+            gravity: 'False'
+            tiny: 'False'
+            arms: 'False'
+            base: 'False'
+            visible: 'True'
+            marker: 'True'
+            forward-base: '0'
+            forward-scale: '0'
+            upward-base: '0'
+            upward-scale: '0'
+            right-base: '0'
+            right-scale: '0'
+            item_name: 'Armor Stand'
+            item_type: 'Air'
+            indicator: '2D'
+          children:  {}
+        Area-y: 
+          type: 'target'
+          indicator: '3D'
+          data: 
+            icon-key: ''
+            radius-base: '10'
+            radius-scale: '0'
+            group: 'Both'
+            wall: 'False'
+            caster: 'True'
+            max-base: '99'
+            max-scale: '0'
+            indicator: '2D'
+          children: 
+            Sound-w: 
+              type: 'mechanic'
+              indicator: '3D'
+              data: 
+                icon-key: ''
+                counts: 'True'
+                GermSound: 'true'
+                sound: 'yinbao'
+                volume-base: '100'
+                volume-scale: '0'
+                pitch-base: '1'
+                pitch-scale: '0'
+                indicator: '2D'
+              children:  {}

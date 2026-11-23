@@ -6,6 +6,7 @@ import com.sucy.skill.api.enums.ExpSource;
 import com.sucy.skill.api.event.PhysicalDamageEvent;
 import com.sucy.skill.api.player.PlayerData;
 import com.sucy.skill.api.skills.Skill;
+import com.sucy.skill.api.skills.SkillContext;
 import com.sucy.skill.api.util.BuffManager;
 import com.sucy.skill.api.util.Combat;
 import com.sucy.skill.api.util.FlagManager;
@@ -163,8 +164,7 @@ public class MainListener extends SkillAPIListener {
         // 此处不删除flag容器，而是清理flag,要保护冷却缩减功能
         FlagManager.clearFlags(player);
         BuffManager.clearData(player);
-        DynamicSkill.clearCastData(player);
-
+        SkillContext.clearAtContext(player);
         PlayerData data = SkillAPI.getPlayerData(player.getUniqueId());
         if (data == null) return;
         if (data.hasClass() && SkillAPI.getSettings().isWorldEnabled(player.getWorld())) {
@@ -177,7 +177,7 @@ public class MainListener extends SkillAPIListener {
 
     @EventHandler(priority = EventPriority.MONITOR)
     public void onDeath(final EntityDeathEvent event) {
-        DynamicSkill.clearCastData(event.getEntity());
+        SkillContext.clearAtContext(event.getEntity());
         FlagManager.removeFlags(event.getEntity());
         BuffManager.clearData(event.getEntity());
     }
@@ -187,7 +187,7 @@ public class MainListener extends SkillAPIListener {
         for (final Entity entity : event.getChunk().getEntities()) {
             if (entity instanceof LivingEntity && !(entity instanceof Player)) {
                 final LivingEntity livingEntity = (LivingEntity) entity;
-                DynamicSkill.clearCastData(livingEntity);
+                SkillContext.clearAtContext(livingEntity);
                 FlagManager.removeFlags(livingEntity);
                 BuffManager.clearData(livingEntity);
             }

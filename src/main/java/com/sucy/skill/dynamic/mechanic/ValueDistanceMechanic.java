@@ -1,13 +1,10 @@
 package com.sucy.skill.dynamic.mechanic;
 
 import com.sucy.skill.api.skills.SkillContext;
-import com.sucy.skill.dynamic.DynamicSkill;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
 
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 /**
  * SkillAPI © 2017
@@ -32,7 +29,7 @@ public class ValueDistanceMechanic extends MechanicComponent
      * @return true if applied to something, false otherwise
      */
     @Override
-    public boolean execute(final LivingEntity caster, SkillContext context, final int level, final List<LivingEntity> targets)
+    public boolean execute(final SkillContext context, final LivingEntity caster, final int level, final List<LivingEntity> targets)
     {
         if (!settings.has(KEY) || !(caster instanceof Player))
         {
@@ -40,8 +37,7 @@ public class ValueDistanceMechanic extends MechanicComponent
         }
 
         final String key = settings.getString(KEY);
-        final Map<String, Object> data = DynamicSkill.getCastData(caster);
-        data.put(key, targets.get(0).getLocation().distance(caster.getLocation()));
+        context.set(caster, key, targets.get(0).getLocation().distance(caster.getLocation()), useGlobalContext);
         return true;
     }
 }

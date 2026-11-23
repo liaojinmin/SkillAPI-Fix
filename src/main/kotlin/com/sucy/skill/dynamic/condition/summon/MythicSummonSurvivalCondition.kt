@@ -1,6 +1,7 @@
 package com.sucy.skill.dynamic.condition.summon
 
 import com.rit.sucy.config.parse.DataSection
+import com.sucy.skill.api.skills.SkillContext
 import com.sucy.skill.dynamic.DynamicSkill
 import com.sucy.skill.dynamic.condition.ConditionComponent
 import com.sucy.skill.dynamic.mechanic.DamageMechanic
@@ -26,12 +27,12 @@ class MythicSummonSurvivalCondition : ConditionComponent() {
         return "mythic summon survival"
     }
 
-    override fun test(caster: LivingEntity, level: Int, target: LivingEntity): Boolean {
+    override fun test(context: SkillContext, caster: LivingEntity, level: Int, target: LivingEntity): Boolean {
         val data= MythicManager.summonMap[target.uniqueId] ?: return false
         mythicType = settings.getString("mythicType")
-        minAmount = parseValues(caster, "minAmount", level, 0.0).toInt()
-        maxAmount = parseValues(caster, "maxAmount", level, 1.0).toInt()
-        range = parseValues(caster, "range", level, 0.0)
+        minAmount = parseValues(context, caster, "minAmount", level, 0.0).toInt()
+        maxAmount = parseValues(context, caster, "maxAmount", level, 1.0).toInt()
+        range = parseValues(context, caster, "range", level, 0.0)
         val now: Collection<Summon>
         if (range > 0.1) {
             val box = BoundingBox.of(target.location, range, range, range)

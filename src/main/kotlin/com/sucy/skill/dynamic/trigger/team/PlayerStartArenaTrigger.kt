@@ -33,7 +33,7 @@ class PlayerStartArenaTrigger: Trigger<PlayerStartArenaEvent> {
         return event.player
     }
 
-    override fun setValues(event: PlayerStartArenaEvent, data: SkillContext) {
+    override fun setValues(event: PlayerStartArenaEvent, data: SkillContext, useGlobal: Boolean) {
     }
 
     override fun shouldTrigger(event: PlayerStartArenaEvent, level: Int, settings: Settings): Boolean {

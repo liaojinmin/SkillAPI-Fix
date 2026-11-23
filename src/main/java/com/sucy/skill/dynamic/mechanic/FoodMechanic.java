@@ -29,9 +29,9 @@ public class FoodMechanic extends MechanicComponent {
      * @return true if applied to something, false otherwise
      */
     @Override
-    public boolean execute(LivingEntity caster, SkillContext context, int level, List<LivingEntity> targets) {
-        double food = parseValues(caster, FOOD, level, 1.0);
-        double saturation = parseValues(caster, SATURATION, level, 1.0);
+    public boolean execute(final SkillContext context, LivingEntity caster,int level, List<LivingEntity> targets) {
+        double food = parseValues(context, caster, FOOD, level, 1.0);
+        double saturation = parseValues(context, caster, SATURATION, level, 1.0);
         for (LivingEntity target : targets) {
             if (target instanceof Player) {
                 Player player = (Player) target;
@@ -41,6 +41,6 @@ public class FoodMechanic extends MechanicComponent {
                         Math.max(0, player.getSaturation() + (float) saturation)));
             }
         }
-        return targets.size() > 0;
+        return !targets.isEmpty();
     }
 }

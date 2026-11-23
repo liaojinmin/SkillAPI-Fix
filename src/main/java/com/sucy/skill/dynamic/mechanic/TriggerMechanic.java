@@ -54,8 +54,7 @@ public class TriggerMechanic extends MechanicComponent {
     }
 
     @Override
-    public boolean execute(
-            final LivingEntity caster, SkillContext context, final int level, final List<LivingEntity> targets) {
+    public boolean execute(final SkillContext context, final LivingEntity caster, final int level, final List<LivingEntity> targets) {
 
        // 将主动延时删除改为被动式，防止重复触发时刚好移除上下文导致触发器失效。
        // final int ticks = (int)(20 * parseValues(caster, DURATION, level, 5));
@@ -125,7 +124,7 @@ public class TriggerMechanic extends MechanicComponent {
         }
 
         @Override
-        public boolean execute(final LivingEntity caster, SkillContext context, final int level, final List<LivingEntity> targets) {
+        public boolean execute(final SkillContext context, final LivingEntity caster,final int level, final List<LivingEntity> targets) {
             if (!CASTER_MAP.containsKey(caster.getEntityId())) return false;
 
             final List<Context> contexts;
@@ -138,8 +137,8 @@ public class TriggerMechanic extends MechanicComponent {
             targetList.add(caster);
 
             for (final Context context2 : contexts) {
-                DynamicSkill.getCastData(context2.caster).put("listen-target", targetList);
-                TriggerMechanic.this.executeChildren(context2.caster, context, context2.level, targets);
+                context.set(caster, "listen-target", targetList, this.useGlobalContext);
+                TriggerMechanic.this.executeChildren(context, context2.caster, context2.level, targets);
             }
 
             return true;

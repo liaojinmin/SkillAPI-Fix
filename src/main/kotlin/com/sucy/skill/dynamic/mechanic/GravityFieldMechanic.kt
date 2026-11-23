@@ -21,10 +21,10 @@ class GravityFieldMechanic: MechanicComponent() {
         return "gravity field"
     }
 
-    override fun execute(caster: LivingEntity, context: SkillContext, level: Int, targets: MutableList<LivingEntity>): Boolean {
-        val radius = parseValues(caster, "radius", level, 5.0)
-        val pullStrength = parseValues(caster, "pullStrength", level, 0.15)
-        val durationTicks = parseValues(caster, "duration", level, 5.0) * 20
+    override fun execute(context: SkillContext, caster: LivingEntity,level: Int, targets: MutableList<LivingEntity>): Boolean {
+        val radius = parseValues(context, caster, "radius", level, 5.0)
+        val pullStrength = parseValues(context, caster, "pullStrength", level, 0.15)
+        val durationTicks = parseValues(context, caster, "duration", level, 5.0) * 20
         val decayMode = GravityField.Decay
             .valueOf(settings.getString("decayMode", GravityField.Decay.CONSTANT.name).uppercase())
         val targetType = settings.getString("targetType", "all")
@@ -33,7 +33,7 @@ class GravityFieldMechanic: MechanicComponent() {
                 it.location,
                 radius, pullStrength, durationTicks.toLong(), decayMode
             ) { back ->
-                executeChildren(caster, context, level, back.toMutableList())
+                executeChildren(context, caster, level, back.toMutableList())
             }.setTargetFilter { target ->
                 if (target == caster) return@setTargetFilter false
                 if (target is Player && caster is Player && caster.world.name == "spawn") return@setTargetFilter false

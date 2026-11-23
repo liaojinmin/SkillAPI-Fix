@@ -26,6 +26,7 @@
  */
 package com.sucy.skill.dynamic.condition;
 
+import com.sucy.skill.api.skills.SkillContext;
 import org.bukkit.Material;
 import org.bukkit.entity.LivingEntity;
 
@@ -36,7 +37,7 @@ public class WaterCondition extends ConditionComponent {
     private static final String STATE = "state";
 
     @Override
-    public boolean test(final LivingEntity caster, final int level, final LivingEntity target) {
+    public boolean test(final SkillContext context, final LivingEntity caster, final int level, final LivingEntity target) {
         final boolean out = settings.getString(STATE).toLowerCase().equals("out of water");
         final Material block = target.getLocation().getBlock().getType();
         return out != (block.name().contains("WATER"));

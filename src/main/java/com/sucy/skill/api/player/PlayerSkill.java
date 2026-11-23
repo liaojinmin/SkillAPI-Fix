@@ -29,22 +29,14 @@ package com.sucy.skill.api.player;
 import com.sucy.skill.SkillAPI;
 import com.sucy.skill.api.enums.SkillStatus;
 import com.sucy.skill.api.skills.Skill;
-import com.sucy.skill.cast.IIndicator;
-import com.sucy.skill.cast.IndicatorSettings;
 import com.sucy.skill.manager.AttributeManager;
 import org.bukkit.Material;
-import org.bukkit.entity.Player;
-
-import java.util.ArrayList;
-import java.util.List;
 
 /**
  * Represents player-specific data for a skill such as the player's
  * current level for the skill, the cooldown, and other related data.
  */
-public final class PlayerSkill
-{
-    protected final List<IIndicator> indicators = new ArrayList<IIndicator>();
+public final class PlayerSkill {
 
     private Skill       skill;
     private PlayerData  player;

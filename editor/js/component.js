@@ -3,12 +3,12 @@ var hoverSpace;
 var DAMAGE_TYPES = [ 'Block Explosion', 'Contact', 'Cramming', 'Dragon Breath', 'Drowning', 'Entity Attack', 'Entity Explosion', 'Fall', 'Falling Block', 'Fire', 'Fire Tick', 'Fly Into Wall', 'Hot Floor', 'Lava', 'Lightning', 'Magic', 'Melting', 'Poison', 'Projectile', 'Starvation', 'Suffocation', 'Suicide', 'Thorns', 'Void', 'Wither' ];
 
 function canDrop(thing, target) {
-    if (thing == target) return false;
+    if (thing === target) return false;
     
     var temp = target;
     while (temp.parentNode) {
         temp = temp.parentNode;
-        if (temp == thing) return false;
+        if (temp === thing) return false;
     }
     return true;
 }
@@ -56,7 +56,10 @@ var Trigger = {
     ATTRIBUTE_CHANGE  : { name: 'Attribute Change',                    container: true, construct: TriggerAttributeChange,  premium: true},  // 2026/02/1
     KNEE : { name: "Knee",  container:  true, construct: TriggerKnee, premium: true }, // 2026/3/18
     KNEE_END : { name: "Knee End",  container:  true, construct: TriggerEndKnee, premium: true }, // 2026/3/18
-    USE_CONSUME : { name: "Use Consume",  container:  true, construct: TriggerPlayerUseConsume, premium: true } // 2026/4/5
+    USE_CONSUME : { name: "Use Consume",  container:  true, construct: TriggerPlayerUseConsume, premium: true }, // 2026/4/5
+    BOUNCE_COLLISION : { name: "Bounce Collision",  container:  true, construct: TriggerBounceCollision, premium: true }, // 2026/11/24
+    BOUNCE_SPLIT : { name: "Bounce Split",  container:  true, construct: TriggerBounceSplit, premium: true }, // 2026/11/24
+    BOUNCE_END : { name: "Bounce End",  container:  true, construct: TriggerBounceEnd, premium: true } // 2026/11/24
 };
 
 /**
@@ -135,6 +138,7 @@ var Mechanic = {
     ATTRIBUTE:           { name: 'Attribute',           container: false, construct: MechanicAttribute          },
     BLOCK_WALL:          { name: 'Block Wall',          container: false, construct: MechanicBlockWall          },
     BLOCK:               { name: 'Block',               container: false, construct: MechanicBlock              },
+    BOUNCE_PROJECTILE:   { name: 'Bounce Projectile',   container: true,  construct: MechanicBounceProjectile   },
     BUFF:                { name: 'Buff',                container: false, construct: MechanicBuff,              premium: true },
     CANCEL:              { name: 'Cancel',              container: false, construct: MechanicCancel             },
     CHANNEL:             { name: 'Channel',             container: true,  construct: MechanicChannel            },
@@ -202,7 +206,7 @@ var Mechanic = {
     VALUE_MANA:          { name: 'Value Mana',          container: false, construct: MechanicValueMana,         premium: true },
     VALUE_MULTIPLY:      { name: 'Value Multiply',      container: false, construct: MechanicValueMultiply      },
     VALUE_PLACEHOLDER:   { name: 'Value Placeholder',   container: false, construct: MechanicValuePlaceholder,  premium: true },
-    VALUE_MMOITEMS_ATTR:   { name: 'Value MMoItem Attr',   container: false, construct: MechanicValueMMoItemAttr,  premium: true },
+    //VALUE_MMOITEMS_ATTR:   { name: 'Value MMoItem Attr',   container: false, construct: MechanicValueMMoItemAttr,  premium: true },
     VALUE_NEONFLASH_ATTR:   { name: 'Value NeonFlash Attr',   container: false, construct: MechanicValueNeonFlashAttr,  premium: true },
     VALUE_RANDOM:        { name: 'Value Random',        container: false, construct: MechanicValueRandom        },
     VALUE_SET:           { name: 'Value Set',           container: false, construct: MechanicValueSet           },
@@ -266,7 +270,9 @@ function Component(name, type, container, parent) {
     this.components = [];
     this.data = [
         new StringValue('Icon Key', 'icon-key', '')
-            .setTooltip('The key used by the component in the Icon Lore. If this is set to "example" and has a value name of "value", it can be referenced using the string "{attr:example.value}".')
+            .setTooltip('The key used by the component in the Icon Lore. If this is set to "example" and has a value name of "value", it can be referenced using the string "{attr:example.value}".'),
+        new ListValue('全局上下文', 'use-global-context', [ 'True', 'False' ], 'False')
+            .setTooltip('用于确认该组件是否使用全局上下文用于数据交互, 默认使用技能体私有上下文。')
     ];
     if (this.type === Type.MECHANIC) {
         this.data.push(new ListValue('Counts as Cast', 'counts', [ 'True', 'False' ], 'True')
@@ -732,6 +738,45 @@ function TriggerLaunch()
 
     this.data.push(new ListValue('Type', 'type', [ 'Any', 'Arrow', 'Egg', 'Ender Pearl', 'Fireball', 'Fishing Hook', 'Snowball' ], 'Any')
         .setTooltip('The type of projectile that should be launched.')
+    );
+}
+
+extend('TriggerBounceCollision', 'Component');
+function TriggerBounceCollision()
+{
+    this.super('Bounce Collision', Type.TRIGGER, true);
+
+    this.description = '反弹抛射物（Bounce Projectile）碰撞方块或生物时触发。可用值：api-bounce-type（BLOCK/ENTITY）、api-bounce-location、api-bounce-generation、api-bounce-block、api-bounce-target、api-bounce-normal-x/y/z。';
+
+    this.data.push(new ListValue('Collision Type', 'type', [ 'Any', 'Block', 'Entity' ], 'Any')
+        .setTooltip('只响应对应类型的碰撞：Any 全部，Block 只响应撞方块，Entity 只响应命中生物。')
+    );
+    this.data.push(new IntValue('Generation', 'generation', -1)
+        .setTooltip('只响应指定代数的抛射物，-1 表示所有代数；0 为初始母体。')
+    );
+}
+
+extend('TriggerBounceSplit', 'Component');
+function TriggerBounceSplit()
+{
+    this.super('Bounce Split', Type.TRIGGER, true);
+
+    this.description = '反弹抛射物分裂出子体后触发。可用值：api-bounce-generation、api-bounce-count、api-bounce-location。';
+
+    this.data.push(new IntValue('Generation', 'generation', -1)
+        .setTooltip('只响应指定代数的子体分裂，-1 表示所有代数。')
+    );
+}
+
+extend('TriggerBounceEnd', 'Component');
+function TriggerBounceEnd()
+{
+    this.super('Bounce End', Type.TRIGGER, true);
+
+    this.description = '反弹抛射物结束时触发一次（限制、过期、取消等）。可用值：api-bounce-reason、api-bounce-generation、api-bounce-location。';
+
+    this.data.push(new ListValue('Reason', 'reason', [ 'Any', 'BOUNCE_LIMIT', 'UNSUPPORTED_BLOCK', 'NO_REFLECTION', 'SPLIT', 'EXPIRED', 'UNLOADED_CHUNK', 'CANCELLED' ], 'Any')
+        .setTooltip('只响应指定的结束原因：Any 全部，其余为具体原因。')
     );
 }
 
@@ -2751,6 +2796,109 @@ function MechanicParticleEffect()
     addEffectOptions(this, false);
 }
 
+extend('MechanicBounceProjectile', 'Component');
+function MechanicBounceProjectile()
+{
+    this.super('Bounce Projectile', Type.MECHANIC, true);
+
+    this.description = '发射具有物理反弹和递归分裂能力的载体抛射物。碰撞和结束均有对应事件，碰撞时执行子组件；也可配合 Bounce Collision / Bounce Split / Bounce End 触发器使用。';
+
+    addProjectileOptions(this);
+
+    this.data.push(new DoubleValue('Gravity', 'gravity', 0)
+        .setTooltip('每 tick 的垂直速度变化量，负值向下，正值向上。')
+    );
+    this.data.push(new DoubleValue('Lifespan', 'lifespan', 3)
+        .setTooltip('抛射物最长存在时间，单位为秒。')
+    );
+    this.data.push(new DoubleValue('Collision Radius', 'radius', 1.5)
+        .setTooltip('实体碰撞半径。')
+    );
+    this.data.push(new ListValue('Pierce', 'pierce', [ 'True', 'False' ], 'False')
+        .setTooltip('是否穿透实体；同一实体仍只会被同一抛射物命中一次。')
+    );
+
+    this.data.push(new IntValue('Max Bounces', 'max-bounces', 3)
+        .setTooltip('初始抛射物允许的最大反弹次数，-1 表示不限制。')
+    );
+    this.data.push(new DoubleValue('Restitution', 'restitution', 0.85)
+        .setTooltip('碰撞后的法向速度保留比例，范围为 0 到 1。')
+    );
+    this.data.push(new DoubleValue('Tangent Retention', 'tangent-retention', 0.98)
+        .setTooltip('碰撞后的切向速度保留比例，范围为 0 到 1。')
+    );
+    this.data.push(new StringValue('Bounce Blocks', 'bounce-blocks', 'all')
+        .setTooltip('允许反弹的方块材质，使用英文逗号分隔；填写 all 或 * 表示所有实体方块。')
+    );
+    this.data.push(new DoubleValue('Carrier Frequency', 'carrier-frequency', 0.05)
+        .setTooltip('载体位置同步频率，默认 0.05 表示每 tick 更新。')
+    );
+    this.data.push(new DoubleValue('Max Step Distance', 'max-step-distance', 0.25)
+        .setTooltip('单次碰撞采样的最大距离。')
+    );
+    this.data.push(new IntValue('Max Steps Per Tick', 'max-steps-per-tick', 128)
+        .setTooltip('每 tick 的最大碰撞采样次数。')
+    );
+    this.data.push(new DoubleValue('Collision Epsilon', 'collision-epsilon', 0.001)
+        .setTooltip('反弹后将抛射物推离碰撞面的距离。出射位置会自动校验，不会停留在方块内部，0.05 到 0.2 即可。')
+    );
+
+    this.data.push(new ListValue('Split Enabled', 'split-enabled', [ 'True', 'False' ], 'False')
+        .setTooltip('初始抛射物成功反弹后是否分裂。')
+    );
+    this.data.push(new IntValue('Split Count', 'split-count', 2)
+        .setTooltip('初始抛射物分裂时额外生成的子抛射物数量。')
+    );
+    this.data.push(new IntValue('Split Max Depth', 'split-max-depth', 1)
+        .setTooltip('最大分裂代数：0 禁止分裂，1 仅初始体分裂，2 允许第一代子体继续分裂。')
+    );
+    this.data.push(new ListValue('Split Mode', 'split-mode', [ 'Horizontal', 'Flat', 'Cone' ], 'Horizontal')
+        .setTooltip('Horizontal 保留父体 Y；Flat 强制子代 Y=0；Cone 使用 3D 圆锥分裂。')
+    );
+    this.data.push(new DoubleValue('Split Angle', 'split-angle', 35)
+        .setTooltip('Horizontal 模式为水平扇形半角；Cone 模式为 3D 圆锥角。范围 0 到 180 度。')
+    );
+    this.data.push(new DoubleValue('Split Speed Retention', 'split-speed-retention', 1)
+        .setTooltip('子抛射物继承父抛射物速度的比例，0 表示静止，大于 1 表示加速。')
+    );
+    this.data.push(new ListValue('Split Parent Continues', 'split-parent-continue', [ 'True', 'False' ], 'True')
+        .setTooltip('分裂后父抛射物是否继续运动；False 表示父体结束，仅保留子体。')
+    );
+    this.data.push(new ListValue('Split Repeat', 'split-repeat', [ 'True', 'False' ], 'False')
+        .setTooltip('同一抛射物是否在后续反弹中继续分裂；False 表示每个抛射物只在第一次有效碰撞分裂一次。')
+    );
+    this.data.push(new ListValue('Child Split Enabled', 'split-child-enabled', [ 'True', 'False' ], 'False')
+        .setTooltip('分裂产生的子抛射物是否允许继续分裂，仍受最大分裂代数限制。')
+    );
+    this.data.push(new IntValue('Child Split Count', 'split-child-count', 2)
+        .setTooltip('子代及后续代数分裂时生成的数量。')
+    );
+    this.data.push(new IntValue('Child Max Bounces', 'split-child-max-bounces', 3)
+        .setTooltip('子代及后续代数允许的最大反弹次数，-1 表示不限制。')
+    );
+    this.data.push(new StringValue('Child Carrier Name', 'split-child-name', '')
+        .setTooltip('子代及后续代数使用的载体名称；留空则继承父体的 name。')
+    );
+    this.data.push(new StringValue('Collision Skill', 'collision-skill', '')
+        .setTooltip('初始抛射物碰撞时通过 SkillCastAPI 调用；发射者为施法者，命中实体为目标，留空不触发。')
+    );
+    this.data.push(new StringValue('Split Collision Skill', 'split-collision-skill', '')
+        .setTooltip('分裂体碰撞时通过 SkillCastAPI 调用；发射者为施法者，命中实体为目标，留空不触发。')
+    );
+
+    this.data.push(new StringValue('载体名称', 'name', 'Bounce Projectile'));
+    this.data.push(new StringValue('实体类型', 'entity_type', 'ARMOR_STAND'));
+    this.data.push(new ListValue('名称显示', 'name-visible', [ 'True', 'False' ], 'False'));
+    this.data.push(new ListValue('小型盔甲架', 'small', [ 'True', 'False' ], 'False'));
+    this.data.push(new ListValue('是否可见', 'visible', [ 'True', 'False' ], 'True'));
+    this.data.push(new ListValue('标记', 'marker', [ 'True', 'False' ], 'False'));
+    this.data.push(new StringValue('萌芽特效', 'germ_effect', ''));
+    this.data.push(new StringValue('物品名称', 'item_name', 'Bounce Projectile'));
+    this.data.push(new ListValue('物品种类', 'item_type', materialList, 'AIR'));
+
+    addEffectOptions(this, true);
+}
+
 extend('MechanicParticleProjectile', 'Component');
 function MechanicParticleProjectile()
 {
@@ -3302,27 +3450,6 @@ function MechanicValuePlaceholder()
     );
     this.data.push(new StringValue('Placeholder', 'placeholder', '%player_food_level%')
         .setTooltip('The placeholder string to use. Can contain multiple placeholders if using the String type.')
-    );
-}
-
-extend('MechanicValueMMoItemAttr', 'Component');
-function MechanicValueMMoItemAttr()
-{
-    this.super('Value MMoItem Attr', Type.MECHANIC, false);
-
-    this.description = '取指定槽位装备的MMO物品属性';
-
-    this.data.push(new StringValue('Key', 'key', 'value')
-        .setTooltip('储存的KEY，取得数据后储存')
-    );
-    this.data.push(new StringValue('Nbt', 'nbt', "ATTACK_DAMAGE")
-        .setTooltip('要取的 MMoitem 属性 nbt 键')
-    );
-    this.data.push(
-        new ListValue(
-            'Slot', 'slot',
-        [ 'HAND', 'OFF_HAND' , 'HELMET', 'CHEST_PLATE', 'LEGGINGS', 'BOOTS'], "HAND"
-        ).setTooltip('要取的装备槽位')
     );
 }
 

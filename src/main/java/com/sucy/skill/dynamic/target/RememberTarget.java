@@ -28,10 +28,8 @@ package com.sucy.skill.dynamic.target;
 
 import com.google.common.collect.ImmutableList;
 import com.sucy.skill.api.skills.SkillContext;
-import com.sucy.skill.cast.IIndicator;
 import com.sucy.skill.dynamic.DynamicSkill;
 import org.bukkit.entity.LivingEntity;
-import org.bukkit.entity.Player;
 
 import java.util.List;
 
@@ -43,19 +41,12 @@ public class RememberTarget extends TargetComponent {
 
     /** {@inheritDoc} */
     @Override
-    public void makeIndicators(final SkillContext context, List<IIndicator> list, Player caster, LivingEntity target, int level) {
-        final List<LivingEntity> targets = getTargets(context, caster, level, null);
-        if (!targets.isEmpty()) { makeCircleIndicator(context, list, targets.get(0), 0.5); }
-    }
-
-    /** {@inheritDoc} */
-    @Override
     List<LivingEntity> getTargets(final SkillContext context, final LivingEntity caster, final int level, final List<LivingEntity> targets) {
-        return remember(caster, settings.getString(KEY));
+        return remember(context, caster, settings.getString(KEY));
     }
 
-    public static List<LivingEntity> remember(final LivingEntity caster, final String key) {
-        final Object data = DynamicSkill.getCastData(caster).get(key);
+    public List<LivingEntity> remember(final SkillContext context, final LivingEntity caster, final String key) {
+        final Object data = context.get(caster, key, this.useGlobalContext);
         //noinspection unchecked - proper skill setup should cause this to work
         return data == null ? ImmutableList.of() : (List<LivingEntity>) data;
     }

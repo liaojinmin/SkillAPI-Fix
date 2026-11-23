@@ -2,6 +2,7 @@ package com.sucy.skill.dynamic.condition
 
 import com.rit.sucy.config.parse.DataSection
 import com.sucy.skill.SkillAPI
+import com.sucy.skill.api.skills.SkillContext
 import com.sucy.skill.dynamic.DynamicSkill
 import org.bukkit.attribute.Attribute
 import org.bukkit.entity.LivingEntity
@@ -19,9 +20,9 @@ class HealthScaleCondition : ConditionComponent() {
         return "health scale"
     }
 
-    override fun test(caster: LivingEntity, level: Int, target: LivingEntity): Boolean {
+    override fun test(context: SkillContext, caster: LivingEntity, level: Int, target: LivingEntity): Boolean {
         much = settings.getBool("much", much)
-        scale = parseValues(caster, "scale", level, 0.0)
+        scale = parseValues(context, caster, "scale", level, 0.0)
         if (scale <= 0.0) return false
         if (!target.isValid || target.isDead) return false
 

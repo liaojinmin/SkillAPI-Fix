@@ -25,13 +25,13 @@ public class MythicCastMechanic extends MechanicComponent{
 
 
     @Override
-    public boolean execute(LivingEntity caster, SkillContext context, int level, List<LivingEntity> targets) {
+    public boolean execute(final SkillContext context, LivingEntity caster, int level, List<LivingEntity> targets) {
         if (!settings.has(SKILLNAME)) {
             return false;
         }
 
         String key = settings.getString(SKILLNAME).replace("{uuid}", caster.getUniqueId().toString());
-        float power = (float) parseValues(caster, POWER, level, 1);
+        float power = (float) parseValues(context, caster, POWER, level, 1);
         for (LivingEntity target : targets) {
             MythicMobsHook.castSkill(target, key, power);
         }

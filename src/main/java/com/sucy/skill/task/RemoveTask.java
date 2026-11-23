@@ -4,6 +4,7 @@ package com.sucy.skill.task;
 import com.sucy.skill.SkillAPI;
 import com.sucy.skill.api.skills.PassiveSkill;
 import com.sucy.skill.api.skills.Skill;
+import com.sucy.skill.api.skills.SkillContext;
 import com.sucy.skill.api.util.BuffManager;
 import com.sucy.skill.api.util.FlagManager;
 import com.sucy.skill.dynamic.DynamicSkill;
@@ -50,7 +51,7 @@ public class RemoveTask extends BukkitRunnable {
                     }
                 }
 
-                DynamicSkill.clearCastData((LivingEntity) entity);
+                SkillContext.clearAtContext((LivingEntity) entity);
                 FlagManager.removeFlags((LivingEntity) entity);
                 BuffManager.clearData((LivingEntity) entity);
             }

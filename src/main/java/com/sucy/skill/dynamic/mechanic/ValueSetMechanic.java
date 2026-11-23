@@ -58,15 +58,14 @@ public class ValueSetMechanic extends MechanicComponent {
      * @return true if applied to something, false otherwise
      */
     @Override
-    public boolean execute(LivingEntity caster, SkillContext context, int level, List<LivingEntity> targets) {
+    public boolean execute(final SkillContext context, LivingEntity caster,int level, List<LivingEntity> targets) {
         if (targets.isEmpty() || !settings.has(KEY)) {
             return false;
         }
 
         String key = settings.getString(KEY);
-        double value = parseValues(caster, VALUE, level, 1);
-        Map<String, Object> data = DynamicSkill.getCastData(caster);
-        data.put(key, value);
+        double value = parseValues(context, caster, VALUE, level, 1);
+        context.set(caster, key, value, useGlobalContext);
         Bukkit.getPluginManager().callEvent(
                 new ValueMechanicChangeEvent(ValueMechanicChangeEvent.ValueAction.SET, caster, key, value)
         );

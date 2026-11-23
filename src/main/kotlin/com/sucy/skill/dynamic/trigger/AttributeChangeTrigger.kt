@@ -30,19 +30,19 @@ class AttributeChangeTrigger: Trigger<AttributeChangeEvent> {
         return event.attributePlayer.player
     }
 
-    override fun setValues(event: AttributeChangeEvent, data: SkillContext) {
+    override fun setValues(event: AttributeChangeEvent, data: SkillContext, useGloabl: Boolean) {
         val oldValue = event.oldData?.getSourceAttributeValue() ?: 0.0
         val newValue = event.newData?.getSourceAttributeValue() ?: 0.0
         val base = event.baseValue
         val delta = if (oldValue <= 0) newValue else newValue - oldValue
         val deltaRate = if (base != 0.0) delta / base * 100 else 0.0
         val totalRate = if (base != 0.0 && newValue > 0.0) newValue / base * 100 else 0.0
-        data["nf_oldValue"] = oldValue // 旧值
-        data["nf_newValue"] = newValue // 新值
-        data["nf_baseValue"] = base // 基础值
-        data["nf_delta"] = delta // 变化值
-        data["nf_deltaRate"] = deltaRate // 本次比例
-        data["nf_totalRate"] = totalRate // 累计比例
+        data.set(getCaster(event), "nf_oldValue", oldValue, useGloabl) // 旧值
+        data.set(getCaster(event), "nf_newValue", newValue, useGloabl) // 新值
+        data.set(getCaster(event), "nf_baseValue", base, useGloabl) // 基础值
+        data.set(getCaster(event), "nf_delta", delta, useGloabl) // 变化值
+        data.set(getCaster(event), "nf_deltaRate", deltaRate, useGloabl) // 本次比例
+        data.set(getCaster(event), "nf_totalRate", totalRate, useGloabl) // 累计比例
     }
 
     override fun shouldTrigger(event: AttributeChangeEvent, level: Int, settings: Settings): Boolean {

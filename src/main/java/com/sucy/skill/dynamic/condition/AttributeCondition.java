@@ -27,40 +27,24 @@
 package com.sucy.skill.dynamic.condition;
 
 import com.sucy.skill.api.attribute.AttributeAPI;
+import com.sucy.skill.api.skills.SkillContext;
 import org.bukkit.entity.LivingEntity;
 
-public class AttributeCondition extends ConditionComponent
-{
+public class AttributeCondition extends ConditionComponent {
+
     private static final String ATTR = "attribute";
     private static final String MIN  = "min";
     private static final String MAX  = "max";
 
-
     @Override
-    public boolean test(final LivingEntity caster, final int level, final LivingEntity target) {
+    public boolean test(final SkillContext context, final LivingEntity caster, final int level, final LivingEntity target) {
         final String attr = settings.getString(ATTR, null);
-        final int min = (int) parseValues(caster, MIN, level, 0);
-        final int max = (int) parseValues(caster, MAX, level, Integer.MAX_VALUE);
+        final int min = (int) parseValues(context, caster, MIN, level, 0);
+        final int max = (int) parseValues(context, caster, MAX, level, Integer.MAX_VALUE);
 
         final double value = AttributeAPI.getAttribute(target,attr);
         return value >= min && value <= max;
     }
-
-    /*
-    @Override
-    boolean test(final LivingEntity caster, final int level, final LivingEntity target) {
-        if (!(target instanceof Player)) return false;
-
-        final String attr = settings.getString(ATTR, null);
-        final int min = (int) parseValues(caster, MIN, level, 0);
-        final int max = (int) parseValues(caster, MAX, level, 999);
-
-        final PlayerData data = SkillAPI.getPlayerData((Player) target);
-        final int value = data.getAttribute(attr);
-        return value >= min && value <= max;
-    }
-
-     */
 
     @Override
     public String getKey() {

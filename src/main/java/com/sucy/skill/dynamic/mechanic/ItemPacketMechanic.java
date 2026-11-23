@@ -77,11 +77,11 @@ public class ItemPacketMechanic extends MechanicComponent {
      * @return true if applied to something, false otherwise
      */
     @Override
-    public boolean execute(LivingEntity caster, SkillContext context, int level, List<LivingEntity> targets) {
+    public boolean execute(final SkillContext context, LivingEntity caster, int level, List<LivingEntity> targets) {
 
         String neonFlash = settings.getString(NeonFlash, "").toUpperCase();
         ArmorType slot = ArmorType.valueOf(settings.getString(SLOT).toUpperCase());
-        double seconds = parseValues(caster, SECONDS, level, 2.0);
+        double seconds = parseValues(context, caster, SECONDS, level, 2.0);
 
         Material material;
         try {

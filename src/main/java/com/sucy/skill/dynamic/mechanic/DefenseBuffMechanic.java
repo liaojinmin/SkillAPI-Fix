@@ -58,13 +58,13 @@ public class DefenseBuffMechanic extends MechanicComponent {
      * @return true if applied to something, false otherwise
      */
     @Override
-    public boolean execute(LivingEntity caster, SkillContext context, int level, List<LivingEntity> targets) {
-        if (targets.size() == 0) { return false; }
+    public boolean execute(final SkillContext context, LivingEntity caster,  int level, List<LivingEntity> targets) {
+        if (targets.isEmpty()) { return false; }
 
         boolean skill = settings.getString(SKILL, "false").equalsIgnoreCase("true");
         boolean percent = settings.getString(TYPE, "flat").toLowerCase().equals("multiplier");
-        double value = parseValues(caster, VALUE, level, 1.0);
-        double seconds = parseValues(caster, SECONDS, level, 3.0);
+        double value = parseValues(context,  caster, VALUE, level, 1.0);
+        double seconds = parseValues(context, caster, SECONDS, level, 3.0);
         int ticks = (int) (seconds * 20);
         for (LivingEntity target : targets) {
             BuffManager.addBuff(
@@ -73,6 +73,6 @@ public class DefenseBuffMechanic extends MechanicComponent {
                     new Buff(this.skill.getName(), value, percent),
                     ticks);
         }
-        return targets.size() > 0;
+        return !targets.isEmpty();
     }
 }

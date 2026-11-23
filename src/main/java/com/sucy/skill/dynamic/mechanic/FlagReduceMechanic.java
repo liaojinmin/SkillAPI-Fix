@@ -55,14 +55,14 @@ public class FlagReduceMechanic extends MechanicComponent
      * @return true if applied to something, false otherwise
      */
     @Override
-    public boolean execute(LivingEntity caster, SkillContext context, int level, List<LivingEntity> targets) {
+    public boolean execute(final SkillContext context, LivingEntity caster, int level, List<LivingEntity> targets) {
         if (targets.isEmpty() || !settings.has(KEY)) {
             return false;
         }
 
         List<String> keys = settings.getStringList(KEY);
         if (keys.isEmpty()) return false;
-        double scale = parseValues(caster, SCALE, level, 0.5);
+        double scale = parseValues(context, caster, SCALE, level, 0.5);
 
         for (LivingEntity target : targets) {
             for (String key : keys) {

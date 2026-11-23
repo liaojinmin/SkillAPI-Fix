@@ -1,5 +1,6 @@
 package com.sucy.skill.dynamic.condition;
 
+import com.sucy.skill.api.skills.SkillContext;
 import org.bukkit.Location;
 import org.bukkit.World;
 import org.bukkit.entity.LivingEntity;
@@ -12,7 +13,7 @@ public class WeatherCondition extends ConditionComponent {
     private String TYPE = "type";
 
     @Override
-    public boolean test(final LivingEntity caster, final int level, final LivingEntity target) {
+    public boolean test(final SkillContext context, final LivingEntity caster, final int level, final LivingEntity target) {
         final String type = settings.getString(TYPE).toLowerCase();
         final World world = target.getWorld();
         final Location loc = target.getLocation();

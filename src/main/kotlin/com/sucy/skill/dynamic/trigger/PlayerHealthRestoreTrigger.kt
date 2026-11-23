@@ -30,8 +30,8 @@ class PlayerHealthRestoreTrigger: Trigger<HealthRestoreEvent> {
         return event.player
     }
 
-    override fun setValues(event: HealthRestoreEvent, data: SkillContext) {
-        data[key] = event.amount.toDouble()
+    override fun setValues(event: HealthRestoreEvent, data: SkillContext, useGlobal: Boolean) {
+        data.set(getCaster(event), key, event.amount.toDouble(), useGlobal)
     }
 
     override fun shouldTrigger(event: HealthRestoreEvent, level: Int, settings: Settings): Boolean {

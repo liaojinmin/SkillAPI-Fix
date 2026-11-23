@@ -30,6 +30,7 @@ import com.rit.sucy.config.parse.DataSection;
 import com.sucy.skill.SkillAPI;
 import com.sucy.skill.api.player.PlayerClass;
 import com.sucy.skill.api.player.PlayerData;
+import com.sucy.skill.api.skills.SkillContext;
 import com.sucy.skill.dynamic.DynamicSkill;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
@@ -54,7 +55,7 @@ public class ClassLevelCondition extends ConditionComponent
     }
 
     @Override
-    public boolean test(final LivingEntity caster, final int level, final LivingEntity target) {
+    public boolean test(final SkillContext context, final LivingEntity caster, final int level, final LivingEntity target) {
         if (!(target instanceof Player)) return false;
         final PlayerData playerData = SkillAPI.getPlayerData(target.getUniqueId());
         if (playerData == null) {

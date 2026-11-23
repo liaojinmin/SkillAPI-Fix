@@ -1,5 +1,6 @@
 package com.sucy.skill.dynamic.condition
 
+import com.sucy.skill.api.skills.SkillContext
 import org.bukkit.attribute.Attribute
 import org.bukkit.entity.LivingEntity
 
@@ -9,9 +10,9 @@ class HealthIntervalCondition : ConditionComponent() {
         return "health interval"
     }
 
-    override fun test(caster: LivingEntity, level: Int, target: LivingEntity): Boolean {
-        val min: Double = parseValues(caster,  "min", level, 1.0)
-        val max: Double = parseValues(caster,  "max", level, 1.0)
+    override fun test(context: SkillContext, caster: LivingEntity, level: Int, target: LivingEntity): Boolean {
+        val min: Double = parseValues(context, caster,  "min", level, 1.0)
+        val max: Double = parseValues(context, caster,  "max", level, 1.0)
 
         if (max <= 0.0 || min < 0.0 || min > max) return false
 

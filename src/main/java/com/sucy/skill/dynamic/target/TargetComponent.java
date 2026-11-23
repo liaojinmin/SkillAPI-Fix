@@ -4,23 +4,14 @@ import com.rit.sucy.config.parse.DataSection;
 import com.sucy.skill.SkillAPI;
 import com.sucy.skill.api.armorstand.ArmorStandEntity;
 import com.sucy.skill.api.skills.SkillContext;
-import com.sucy.skill.cast.CircleIndicator;
-import com.sucy.skill.cast.ConeIndicator;
-import com.sucy.skill.cast.IIndicator;
-import com.sucy.skill.cast.IndicatorType;
-import com.sucy.skill.cast.SphereIndicator;
 import com.sucy.skill.dynamic.ComponentType;
 import com.sucy.skill.dynamic.DynamicSkill;
 import com.sucy.skill.dynamic.EffectComponent;
 import com.sucy.skill.dynamic.TempEntity;
-import com.sucy.skill.listener.MechanicListener;
 import com.sucy.skill.utils.target.TargetHelper;
-import org.bukkit.Location;
 import org.bukkit.entity.LivingEntity;
-import org.bukkit.entity.Player;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 import java.util.function.Function;
 
@@ -77,53 +68,6 @@ public abstract class TargetComponent extends EffectComponent {
             final List<LivingEntity> targets);
 
 
-    abstract void makeIndicators(final SkillContext context, final List<IIndicator> list, final Player caster, final LivingEntity target, final int level);
-
-    /**
-     * Creates the list of indicators for the skill
-     *
-     * @param list   list to store indicators in
-     * @param caster caster reference
-     * @param targets location to base location on
-     * @param level  the level of the skill to create for
-     */
-    @Override
-    public void makeIndicators(final SkillContext context, List<IIndicator> list, Player caster, List<LivingEntity> targets, int level) {
-        targets.forEach(target -> makeIndicators(context, list, caster, target, level));
-        List<LivingEntity> childTargets = null;
-        for (final EffectComponent component : children) {
-            if (component.hasEffect) {
-                if (childTargets == null) { childTargets = getTargets(context, caster, level, targets); }
-
-                component.makeIndicators(context, list, caster, childTargets, level);
-            }
-        }
-    }
-
-    void makeConeIndicator(final SkillContext context, final List<IIndicator> list, final LivingEntity target, final double range, final double angle) {
-        if (indicatorType != IndicatorType.NONE) {
-            Location loc = target.getLocation();
-            ConeIndicator indicator = new ConeIndicator(angle, range);
-            indicator.moveTo(loc.getX(), loc.getY() + 0.1, loc.getZ());
-            indicator.setDirection(loc.getYaw());
-            list.add(indicator);
-        }
-    }
-
-    void makeCircleIndicator(final SkillContext context, final List<IIndicator> list, final LivingEntity source, final double radius) {
-        if (indicatorType == IndicatorType.DIM_3) {
-            final Location loc = source.getLocation();
-            IIndicator indicator = new SphereIndicator(radius);
-            indicator.moveTo(loc.getX(), loc.getY() + 0.1, loc.getZ());
-            list.add(indicator);
-        } else if (indicatorType == IndicatorType.DIM_2) {
-            final Location loc = source.getLocation();
-            IIndicator indicator = new CircleIndicator(radius);
-            indicator.moveTo(loc.getX(), loc.getY() + 0.1, loc.getZ());
-            list.add(indicator);
-        }
-    }
-
     List<LivingEntity> determineTargets(
             final SkillContext context,
             final LivingEntity caster,
@@ -133,7 +77,7 @@ public abstract class TargetComponent extends EffectComponent {
                     List<LivingEntity>> conversion
     ) {
 
-        final double max = parseValues(caster, MAX, level, 99);
+        final double max = parseValues(context, caster, MAX, level, 99);
 
         final List<LivingEntity> list = new ArrayList<>();
         from.forEach(target -> {

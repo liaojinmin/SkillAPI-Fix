@@ -33,7 +33,7 @@ public class PhysicalDealtTrigger extends PhysicalTrigger {
 
     /** {@inheritDoc} */
     @Override
-    public void setValues(final PhysicalDamageEvent event, final SkillContext context) {
-        context.put("api-dealt", event.getDamage());
+    public void setValues( final PhysicalDamageEvent event, final SkillContext context, final boolean useGloabl) {
+        context.set(getCaster(event), "api-dealt", event.getDamage(), useGloabl);
     }
 }

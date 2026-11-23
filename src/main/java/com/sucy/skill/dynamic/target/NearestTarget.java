@@ -28,10 +28,8 @@ package com.sucy.skill.dynamic.target;
 
 import com.sucy.skill.api.skills.SkillContext;
 import com.sucy.skill.api.util.Nearby;
-import com.sucy.skill.cast.IIndicator;
 import org.bukkit.Location;
 import org.bukkit.entity.LivingEntity;
-import org.bukkit.entity.Player;
 
 import java.util.ArrayList;
 import java.util.Comparator;
@@ -50,7 +48,7 @@ public class NearestTarget extends TargetComponent {
             final SkillContext context,
             final LivingEntity caster, final int level, final List<LivingEntity> targets) {
 
-        final double radius = parseValues(caster, RADIUS, level, 3.0);
+        final double radius = parseValues(context, caster, RADIUS, level, 3.0);
         final List<LivingEntity> result = new ArrayList<>();
         for (LivingEntity target : targets) {
             final Comparator<LivingEntity> comparator = new DistanceComparator(target.getLocation());
@@ -60,12 +58,6 @@ public class NearestTarget extends TargetComponent {
 
         }
         return result;
-    }
-
-    /** {@inheritDoc} */
-    @Override
-    void makeIndicators(final SkillContext context, final List<IIndicator> list, final Player caster, final LivingEntity target, final int level) {
-        makeCircleIndicator(context, list, target, parseValues(caster, RADIUS, level, 3.0));
     }
 
     @Override

@@ -40,16 +40,14 @@ import org.bukkit.inventory.ItemStack;
  * <p>You should not use this class as it is meant for dynamic usage
  * and any other usage would only be an extra layer.</p>
  */
-public class DynamicClass extends RPGClass
-{
+public class DynamicClass extends RPGClass {
     /**
      * Constructs a new dynamic class
      *
      * @param api API reference
      * @param key key for the class
      */
-    public DynamicClass(SkillAPI api, String key)
-    {
-        super(key, new ItemStack(Material.APPLE), 20);
+    public DynamicClass(SkillAPI api, String key) {
+        super(key, 20);
     }
 }

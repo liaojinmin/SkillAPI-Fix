@@ -30,7 +30,7 @@ class TrailHurtTrigger: Trigger<TrailHurtEvent> {
         return event.trailEntity.livingEntity
     }
 
-    override fun setValues(event: TrailHurtEvent, data: SkillContext) {
+    override fun setValues(event: TrailHurtEvent, data: SkillContext, useGlobal: Boolean) {
     }
 
     override fun shouldTrigger(event: TrailHurtEvent, level: Int, settings: Settings): Boolean {

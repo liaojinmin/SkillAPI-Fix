@@ -51,10 +51,10 @@ public class BlockWallMechanic extends MechanicComponent {
     }
 
     @Override
-    public boolean execute(LivingEntity caster, SkillContext context, int level, List<LivingEntity> targets) {
+    public boolean execute(final SkillContext context, LivingEntity caster, int level, List<LivingEntity> targets) {
         final int length = settings.getInt(LENGTH, 0);
         int height = settings.getInt(HEIGHT, 1);
-        final long ticks = (long) (20 * parseValues(caster, SECONDS, level, 5));
+        final long ticks = (long) (20 * parseValues(context, caster, SECONDS, level, 5));
         final String[] name = settings.getString(NAME, "Armor Stand Packet").split(",");
         Material block = Material.STONE;
         try {
@@ -123,7 +123,7 @@ public class BlockWallMechanic extends MechanicComponent {
         final RevertTask task = new RevertTask(caster, old);
         task.runTaskLater(SkillAPI.singleton(), ticks);
         tasks.computeIfAbsent(caster.getEntityId(), ArrayList::new).add(task);
-        executeChildren(caster, context, level,
+        executeChildren(context, caster, level,
                 old.stream()
                         .map(it -> new TempEntity(it.blockLocation))
                         .collect(Collectors.toList())

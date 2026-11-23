@@ -60,15 +60,15 @@ public class WarpRandomMechanic extends MechanicComponent {
      * @return true if applied to something, false otherwise
      */
     @Override
-    public boolean execute(LivingEntity caster, SkillContext context, int level, List<LivingEntity> targets) {
-        if (targets.size() == 0) {
+    public boolean execute(final SkillContext context, LivingEntity caster,  int level, List<LivingEntity> targets) {
+        if (targets.isEmpty()) {
             return false;
         }
 
         // Get the world
         boolean throughWalls = settings.getString(WALL, "false").toLowerCase().equals("true");
         boolean horizontal = !settings.getString(HORIZONTAL, "true").toLowerCase().equals("false");
-        double distance = parseValues(caster, DISTANCE, level, 3.0);
+        double distance = parseValues(context, caster, DISTANCE, level, 3.0);
 
         for (LivingEntity target : targets) {
             Location loc;
@@ -86,7 +86,7 @@ public class WarpRandomMechanic extends MechanicComponent {
             }
             target.teleport(loc.subtract(0, 1, 0));
         }
-        return targets.size() > 0;
+        return !targets.isEmpty();
     }
 
     private double rand(double distance) {

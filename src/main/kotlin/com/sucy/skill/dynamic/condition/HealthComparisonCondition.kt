@@ -1,6 +1,7 @@
 package com.sucy.skill.dynamic.condition
 
 import com.rit.sucy.config.parse.DataSection
+import com.sucy.skill.api.skills.SkillContext
 import com.sucy.skill.dynamic.DynamicSkill
 import org.bukkit.attribute.Attribute
 import org.bukkit.entity.LivingEntity
@@ -18,9 +19,9 @@ class HealthComparisonCondition : ConditionComponent() {
         return "health comparison"
     }
 
-    override fun test(caster: LivingEntity, level: Int, target: LivingEntity): Boolean {
+    override fun test(context: SkillContext, caster: LivingEntity, level: Int, target: LivingEntity): Boolean {
         direction = settings.getString("direction", "higher").lowercase()
-        scale = parseValues(caster,  "scale", level, 1.0)
+        scale = parseValues(context, caster,  "scale", level, 1.0)
         if (scale <= 0.0) return false
         if (caster.entityId == target.entityId) return false
         if (!caster.isValid || caster.isDead) return false

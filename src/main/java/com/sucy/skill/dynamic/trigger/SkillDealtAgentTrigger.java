@@ -38,7 +38,7 @@ public class SkillDealtAgentTrigger extends SkillTrigger<SkillDamageAgentEvent> 
 
     /** {@inheritDoc} */
     @Override
-    public void setValues(final SkillDamageAgentEvent event, final SkillContext context) {
-        context.put("api-dealt", event.getDamage());
+    public void setValues(final SkillDamageAgentEvent event, final SkillContext context, boolean useGloabl) {
+        context.set(getCaster(event), "api-dealt", event.getDamage(), useGloabl);
     }
 }

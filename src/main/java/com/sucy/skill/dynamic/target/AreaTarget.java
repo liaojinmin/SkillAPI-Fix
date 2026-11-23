@@ -5,7 +5,6 @@ import com.sucy.skill.SkillAPI;
 import com.sucy.skill.api.armorstand.ArmorStandEntity;
 import com.sucy.skill.api.skills.SkillContext;
 import com.sucy.skill.api.util.Nearby;
-import com.sucy.skill.cast.IIndicator;
 import com.sucy.skill.dynamic.TempEntity;
 import com.sucy.skill.utils.target.TargetHelper;
 import org.bukkit.entity.LivingEntity;
@@ -30,15 +29,9 @@ public class AreaTarget extends TargetComponent {
     @Override
     List<LivingEntity> getTargets(final SkillContext context, final LivingEntity caster, final int level, final List<LivingEntity> targets) {
 
-        final double radius = parseValues(caster, RADIUS, level, 3.0);
+        final double radius = parseValues(context, caster, RADIUS, level, 3.0);
         final boolean random = settings.getBool(RANDOM, false);
         return determineTargets(context, caster, level, targets, t -> shuffle(Nearby.getLivingNearAABBby(t.getLocation(), radius), random));
-    }
-
-    /** {@inheritDoc} */
-    @Override
-    void makeIndicators(final SkillContext context, final List<IIndicator> list, final Player caster, final LivingEntity target, final int level) {
-        makeCircleIndicator(context, list, target, parseValues(caster, RADIUS, level, 3.0));
     }
 
     private boolean isValidTargets(final LivingEntity caster, final LivingEntity from, final LivingEntity target) {
@@ -64,7 +57,7 @@ public class AreaTarget extends TargetComponent {
             final Function<LivingEntity, List<LivingEntity>> conversion
     ) {
 
-        final double max = parseValues(caster, MAX, level, 99);
+        final double max = parseValues(context, caster, MAX, level, 99);
 
         final List<LivingEntity> list = new ArrayList<>();
         from.forEach(target -> {

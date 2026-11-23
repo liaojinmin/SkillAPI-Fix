@@ -33,7 +33,7 @@ public class DeathTrigger implements Trigger<EntityDeathEvent> {
 
     /** {@inheritDoc} */
     @Override
-    public void setValues(final EntityDeathEvent event, final SkillContext context) { }
+    public void setValues(final EntityDeathEvent event, final SkillContext context, final boolean useGlobal) { }
 
     /** {@inheritDoc} */
     @Override

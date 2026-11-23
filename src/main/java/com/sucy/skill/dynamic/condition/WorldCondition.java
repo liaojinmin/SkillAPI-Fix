@@ -1,6 +1,7 @@
 package com.sucy.skill.dynamic.condition;
 
 import com.rit.sucy.config.parse.DataSection;
+import com.sucy.skill.api.skills.SkillContext;
 import com.sucy.skill.dynamic.DynamicSkill;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
@@ -35,7 +36,7 @@ public class WorldCondition extends ConditionComponent {
     }
 
     @Override
-    public boolean test(final LivingEntity caster, final int level, final LivingEntity target) {
+    public boolean test(final SkillContext context, final LivingEntity caster, final int level, final LivingEntity target) {
         // 没设置 world，直接通过
         if (world == null || world.isEmpty()) {
             return true;

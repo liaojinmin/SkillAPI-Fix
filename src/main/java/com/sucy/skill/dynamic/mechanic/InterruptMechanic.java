@@ -52,11 +52,10 @@ public class InterruptMechanic extends MechanicComponent {
      * @return true if applied to something, false otherwise
      */
     @Override
-    public boolean execute(LivingEntity caster, SkillContext context, int level, List<LivingEntity> targets) {
+    public boolean execute(final SkillContext context, LivingEntity caster,  int level, List<LivingEntity> targets) {
         boolean worked = false;
         for (LivingEntity target : targets) {
             if (FlagManager.hasFlag(target, StatusFlag.CHANNEL)) {
-                System.out.println("删除目标: "+ target.getName() +" StatusFlag.CHANNEL");
                 FlagManager.removeFlag(target, StatusFlag.CHANNEL);
                 FlagManager.removeFlag(target, StatusFlag.CHANNELING);
                 worked = true;

@@ -55,16 +55,16 @@ public class ValueLoreSlotMechanic extends MechanicComponent {
      * @return true if applied to something, false otherwise
      */
     @Override
-    public boolean execute(LivingEntity caster, SkillContext context, int level, List<LivingEntity> targets) {
-        if (targets.size() == 0 || !settings.has(KEY) || !(caster instanceof Player)) { return false; }
+    public boolean execute(final SkillContext context, LivingEntity caster,int level, List<LivingEntity> targets) {
+        if (targets.isEmpty() || !settings.has(KEY) || !(caster instanceof Player)) { return false; }
 
         String key = settings.getString(KEY);
-        double multiplier = parseValues(caster, MULTIPLIER, level, 1);
+        double multiplier = parseValues(context, caster, MULTIPLIER, level, 1);
         int slot = settings.getInt(SLOT);
         String regex = settings.getString(REGEX, "Damage: {value}");
 
         ItemStack item = ((Player) caster).getInventory().getItem(slot);
 
-        return ItemChecker.findLore(caster, item, regex, key, multiplier);
+        return ItemChecker.findLore(context, caster, item, regex, key, multiplier);
     }
 }

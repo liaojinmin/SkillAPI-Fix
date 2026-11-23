@@ -55,7 +55,7 @@ public class MessageMechanic extends MechanicComponent
      * @return true if applied to something, false otherwise
      */
     @Override
-    public boolean execute(LivingEntity caster, SkillContext context, int level, List<LivingEntity> targets)
+    public boolean execute(final SkillContext context, LivingEntity caster, int level, List<LivingEntity> targets)
     {
 
         if (targets.isEmpty() || !settings.has(MESSAGE)) {
@@ -68,7 +68,7 @@ public class MessageMechanic extends MechanicComponent
 
         if (settings.getBool("useCaster", false)) {
             if (caster instanceof Player) {
-                caster.sendMessage(filter(caster, targets.get(0), message));
+                caster.sendMessage(filter(context, caster, targets.get(0), message));
             }
             return true;
         } else {
@@ -77,7 +77,7 @@ public class MessageMechanic extends MechanicComponent
             for (LivingEntity target : targets) {
                 if (target instanceof Player) {
                     Player player = (Player) target;
-                    player.sendMessage(filter(caster, target, message));
+                    player.sendMessage(filter(context, caster, target, message));
                     worked = true;
                 }
             }

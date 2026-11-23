@@ -23,16 +23,20 @@ public abstract class ConditionComponent extends EffectComponent {
     /** {@inheritDoc} */
     @Override
     public boolean execute(
-            final LivingEntity caster, SkillContext context, final int level, final List<LivingEntity> targets) {
+            final SkillContext context,
+            final LivingEntity caster,
+            final int level,
+            final List<LivingEntity> targets
+    ) {
 
         final List<LivingEntity> filtered = targets.stream()
-                .filter(t -> test(caster, level, t))
+                .filter(t -> test(context, caster, level, t))
                 .collect(Collectors.toList());
 
-        return !filtered.isEmpty() && executeChildren(caster, context, level, filtered);
+        return !filtered.isEmpty() && executeChildren(context, caster, level, filtered);
     }
 
-    public boolean test(final LivingEntity caster, final int level, final LivingEntity target) {
+    public boolean test(final SkillContext context, final LivingEntity caster, final int level, final LivingEntity target) {
         return true;
     }
 

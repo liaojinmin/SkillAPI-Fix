@@ -1,6 +1,7 @@
 package com.sucy.skill.hook.mythic.mechanic;
 
 import com.sucy.skill.api.projectile.EntityProjectile;
+import com.sucy.skill.api.skills.SkillContext;
 import io.lumine.xikage.mythicmobs.adapters.AbstractEntity;
 import io.lumine.xikage.mythicmobs.adapters.AbstractLocation;
 import io.lumine.xikage.mythicmobs.adapters.bukkit.BukkitAdapter;
@@ -54,10 +55,10 @@ public class MythicEntitySpreadMechanic extends SkillMechanic implements ITarget
     }
 
     private boolean apply(SkillMetadata meta, AbstractLocation location, @Nullable Entity entity) {
-        try {
+        try (SkillContext skillContext = new SkillContext()) {
             LivingEntity cast = (LivingEntity) meta.getCaster().getEntity().getBukkitEntity();
             Location targetLocation = BukkitAdapter.adapt(location);
-            EntityProjectile ne = new EntityProjectile(
+            EntityProjectile ne = new EntityProjectile(skillContext,
                     cast,
                     targetLocation,
                     entity,

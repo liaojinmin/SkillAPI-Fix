@@ -71,7 +71,7 @@ public class WolfMechanic extends MechanicComponent {
      * @return true if applied to something, false otherwise
      */
     @Override
-    public boolean execute(LivingEntity caster, SkillContext context, int level, List<LivingEntity> targets) {
+    public boolean execute(final SkillContext context, LivingEntity caster, int level, List<LivingEntity> targets) {
         if (!(caster instanceof Player)) {
             return false;
         }
@@ -81,10 +81,10 @@ public class WolfMechanic extends MechanicComponent {
         final Player player = (Player) caster;
 
         String color = settings.getString(COLOR);
-        double health = parseValues(player, HEALTH, level, 10.0);
+        double health = parseValues(context, player, HEALTH, level, 10.0);
         String name = TextFormatter.colorString(settings.getString(NAME, "").replace("{player}", player.getName()));
-        double damage = parseValues(player, DAMAGE, level, 3.0);
-        double amount = parseValues(player, AMOUNT, level, 1.0);
+        double damage = parseValues(context, player, DAMAGE, level, 3.0);
+        double amount = parseValues(context, player, AMOUNT, level, 1.0);
         boolean sitting = settings.getString(SITTING, "false").equalsIgnoreCase("true");
         List<String> skills = settings.getStringList(SKILLS);
 
@@ -95,7 +95,7 @@ public class WolfMechanic extends MechanicComponent {
             } catch (Exception ex) { /* Invalid color */ }
         }
 
-        double seconds = parseValues(player, SECONDS, level, 10.0);
+        double seconds = parseValues(context, player, SECONDS, level, 10.0);
         int ticks = (int) (seconds * 20);
         List<LivingEntity> wolves = new ArrayList<>();
         for (LivingEntity target : targets) {
@@ -109,12 +109,13 @@ public class WolfMechanic extends MechanicComponent {
 
                 List<LivingEntity> owner = new ArrayList<>(1);
                 owner.add(player);
-                DynamicSkill.getCastData(wolf).put("api-owner", owner);
 
+                //DynamicSkill.getCastData(wolf).put("api-owner", owner);
+                context.set(caster, "api-owner", owner, useGlobalContext);
                 if (dye != null) {
                     wolf.setCollarColor(dye);
                 }
-                if (name.length() > 0) {
+                if (!name.isEmpty()) {
                     wolf.setCustomName(name);
                     wolf.setCustomNameVisible(true);
                 }
@@ -137,8 +138,8 @@ public class WolfMechanic extends MechanicComponent {
         tasks.put(caster.getEntityId(), task);
 
         // Apply children to the wolves
-        if (wolves.size() > 0) {
-            executeChildren(player, context, level, wolves);
+        if (!wolves.isEmpty()) {
+            executeChildren(context, player, level, wolves);
             return true;
         }
         return false;

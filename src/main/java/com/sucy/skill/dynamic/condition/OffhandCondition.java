@@ -26,6 +26,7 @@
  */
 package com.sucy.skill.dynamic.condition;
 
+import com.sucy.skill.api.skills.SkillContext;
 import com.sucy.skill.dynamic.ItemChecker;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
@@ -36,7 +37,7 @@ import org.bukkit.inventory.EntityEquipment;
  */
 public class OffhandCondition extends ConditionComponent {
     @Override
-    public boolean test(final LivingEntity caster, final int level, final LivingEntity target) {
+    public boolean test(final SkillContext context, final LivingEntity caster, final int level, final LivingEntity target) {
         final EntityEquipment equipment = target.getEquipment();
         return equipment != null && ItemChecker.check(target.getEquipment().getItemInOffHand(), level, settings);
     }

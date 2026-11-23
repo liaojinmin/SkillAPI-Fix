@@ -31,10 +31,10 @@ class PlayerKillerEntityTrigger: Trigger<PlayerKillerEntityEvent> {
         return event.player
     }
 
-    override fun setValues(event: PlayerKillerEntityEvent, data: SkillContext) {
-        data[key + "_classification"] = event.class_
-        data[key + "_skill"] = event.skill
-        data[key + "_isBehind"] = event.isBehind
+    override fun setValues(event: PlayerKillerEntityEvent, data: SkillContext, useGlobal: Boolean) {
+        data.set(getCaster(event), key + "_classification", event.class_, useGlobal)
+        data.set(getCaster(event), key + "_skill", event.skill, useGlobal)
+        data.set(getCaster(event), key + "_isBehind", event.isBehind, useGlobal)
     }
 
     override fun shouldTrigger(event: PlayerKillerEntityEvent, level: Int, settings: Settings): Boolean {

@@ -27,7 +27,7 @@ class KneeTrigger : Trigger<PlayerKneeEvent> {
     }
 
     /** {@inheritDoc}  */
-    override fun setValues(event: PlayerKneeEvent, data: SkillContext) {
+    override fun setValues(event: PlayerKneeEvent, data: SkillContext, useGlobal: Boolean) {
 
     }
 

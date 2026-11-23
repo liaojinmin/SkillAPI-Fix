@@ -30,7 +30,7 @@ class CombatEnterTrigger: Trigger<CombatManager.PlayerEnterCombatEvent> {
         return event.player
     }
 
-    override fun setValues(event: CombatManager.PlayerEnterCombatEvent, data: SkillContext) {
+    override fun setValues(event: CombatManager.PlayerEnterCombatEvent, data: SkillContext, useGlobal: Boolean) {
     }
 
     override fun shouldTrigger(event: CombatManager.PlayerEnterCombatEvent, level: Int, settings: Settings): Boolean {

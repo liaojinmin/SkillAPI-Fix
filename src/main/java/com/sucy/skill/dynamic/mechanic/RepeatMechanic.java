@@ -50,14 +50,11 @@ public class RepeatMechanic extends MechanicComponent {
 
     private final Map<Integer, List<RepeatTask>> tasks = new HashMap<>();
 
-    private SkillContext skillContext = null;
-
     @Override
-    public boolean execute(LivingEntity caster, SkillContext context, int level, List<LivingEntity> targets) {
-        skillContext = context;
+    public boolean execute(final SkillContext context, LivingEntity caster, int level, List<LivingEntity> targets) {
        // System.out.println("RepeatMechanic");
         if (!targets.isEmpty()) {
-            int count = (int) parseValues(caster, REPETITIONS, level, 3.0);
+            int count = (int) parseValues(context, caster, REPETITIONS, level, 3.0);
             if (count <= 0) {
                 return false;
             }
@@ -68,7 +65,7 @@ public class RepeatMechanic extends MechanicComponent {
             final int delay = (int) (settings.getDouble(DELAY, 0.0) * 20);
             final int period = (int) (settings.getDouble(PERIOD, 1.0) * 20);
             final boolean stopOnFail = settings.getBool(STOP_ON_FAIL, false);
-            final RepeatTask task = new RepeatTask(caster, targets, count, delay, period, stopOnFail);
+            final RepeatTask task = new RepeatTask(context, caster, targets, count, delay, period, stopOnFail);
             tasks.computeIfAbsent(caster.getEntityId(), ArrayList::new).add(task);
 
             return true;
@@ -93,16 +90,19 @@ public class RepeatMechanic extends MechanicComponent {
         private final List<LivingEntity> targets;
         private final LivingEntity       caster;
         private final boolean            stopOnFail;
+        private final SkillContext skillContext;
 
         private int count;
 
         RepeatTask(
+                final SkillContext context,
                 LivingEntity caster,
                 List<LivingEntity> targets,
                 int count,
                 int delay,
                 int period,
                 boolean stopOnFail) {
+            this.skillContext = context;
             this.targets = new ArrayList<>(targets);
             this.caster = caster;
             this.count = count;
@@ -148,10 +148,7 @@ public class RepeatMechanic extends MechanicComponent {
                 if (caster instanceof Player) {
                     level = skill.getActiveLevel(caster);
                 } else level = 1;
-                if (skillContext == null) {
-                    skillContext = new SkillContext();
-                }
-                boolean success = executeChildren(caster, skillContext, level, targets);
+                boolean success = executeChildren(skillContext, caster, level, targets);
 
                 if (--count <= 0 || (!success && stopOnFail)) {
                     cancel();

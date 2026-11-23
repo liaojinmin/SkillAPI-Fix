@@ -248,7 +248,30 @@ public class ReturnMechanic extends MechanicComponent {
         return entityMark != null && entityMark.delMark(mark);
     }
 
-    public static void applyDeny(
+    @Override
+    public String getKey() {
+        return "return";
+    }
+
+    @Override
+    public boolean execute(final SkillContext context, LivingEntity caster, int level, List<LivingEntity> targets) {
+        final String[] mark = settings.getString(MARK, "").split(";");
+        if (mark.length == 0) return false;
+        String germAction = settings.getString(DENY_GERM_ACTION, "");
+        List<String> commands = settings.getStringList(DENY_COMMANDS);
+
+        //context.del(caster, "trigger_mark", useGlobalContext);
+
+        for (LivingEntity target : targets) {
+            if (delMark(target, mark)) {
+                applyDeny(context, caster, target, germAction, commands);
+            }
+        }
+        return true;
+    }
+
+    public void applyDeny(
+            @NotNull SkillContext context,
             @NotNull LivingEntity caster,
             @NotNull LivingEntity target,
             @NotNull String germAction,
@@ -260,7 +283,7 @@ public class ReturnMechanic extends MechanicComponent {
         if (commands.isEmpty()) return;
         try {
             for (String cmd : commands) {
-                final String finalCommand = parseVars(caster, target, cmd);
+                final String finalCommand = parseVars(context, caster, target, cmd);
                 Bukkit.getScheduler().runTask(SkillAPI.singleton(), () ->
                         Bukkit.dispatchCommand(Bukkit.getConsoleSender(), finalCommand)
                 );
@@ -268,28 +291,6 @@ public class ReturnMechanic extends MechanicComponent {
         } catch (Exception e) {
             e.printStackTrace();
         }
-    }
-
-    @Override
-    public String getKey() {
-        return "return";
-    }
-
-    @Override
-    public boolean execute(LivingEntity caster, SkillContext context, int level, List<LivingEntity> targets) {
-        final String[] mark = settings.getString(MARK, "").split(";");
-        if (mark.length == 0) return false;
-        String germAction = settings.getString(DENY_GERM_ACTION, "");
-        List<String> commands = settings.getStringList(DENY_COMMANDS);
-        context.remove("trigger_mark");
-        for (LivingEntity target : targets) {
-            if (delMark(target, mark)) {
-                //System.out.println("ReturnMechanic caster: " + caster.getName() + " target: "+target.getName() + " mark >> "+ Arrays.toString(mark));
-                //System.out.println("  执行动作: "+germAction);
-                applyDeny(caster, target, germAction, commands);
-            }
-        }
-        return true;
     }
 
 }

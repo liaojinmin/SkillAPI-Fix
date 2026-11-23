@@ -26,6 +26,7 @@
  */
 package com.sucy.skill.dynamic.condition;
 
+import com.sucy.skill.api.skills.SkillContext;
 import org.bukkit.entity.LivingEntity;
 
 /**
@@ -35,7 +36,7 @@ public class FireCondition extends ConditionComponent {
     private static final String TYPE = "type";
 
     @Override
-    public boolean test(final LivingEntity caster, final int level, final LivingEntity target) {
+    public boolean test(final SkillContext context, final LivingEntity caster, final int level, final LivingEntity target) {
         final boolean onFire = !settings.getString(TYPE, "on fire").toLowerCase().equals("not on fire");
         return (target.getFireTicks() > 0) == onFire;
     }

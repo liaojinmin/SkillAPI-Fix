@@ -20,14 +20,12 @@ public class EntitySpreadMechanic extends MechanicComponent {
         return "entity spread";
     }
 
-    private SkillContext skillContext = null;
 
     private Integer Level = 0;
 
     @Override
-    public boolean execute(LivingEntity caster, SkillContext context, int level, List<LivingEntity> targets) {
+    public boolean execute(final SkillContext context, LivingEntity caster, int level, List<LivingEntity> targets) {
         if (targets.isEmpty()) return false;
-        skillContext = context;
         this.Level = level;
         LivingEntity tar = targets.get(0);
         if (tar instanceof TempEntity) {
@@ -35,19 +33,19 @@ public class EntitySpreadMechanic extends MechanicComponent {
         }
         //System.out.println("caster: "+caster.getName());
         //System.out.println("target: "+tar.getName() + " type: "+tar.getType());
-        final double step = parseValues(caster, "step", level, 0.5);
-        final double gravity = parseValues(caster, "gravity", level, 0.0);
-        final double angle = parseValues(caster, "angle", level, 0.0);
-        final double speed = parseValues(caster, "speed", level, 0.05);
+        final double step = parseValues(context, caster, "step", level, 0.5);
+        final double gravity = parseValues(context, caster, "gravity", level, 0.0);
+        final double angle = parseValues(context, caster, "angle", level, 0.0);
+        final double speed = parseValues(context, caster, "speed", level, 0.05);
         final boolean trace = settings.getBool("trace", false);
         final boolean lock = settings.getBool("lock", true);
-        final double left = parseValues(caster, "left", level, 0.0);
-        final double right = parseValues(caster, "right", level, 0.0);
-        final double upward = parseValues(caster, "upward", level, 0.0);
-        final double forward = parseValues(caster, "forward", level, 0.0);
+        final double left = parseValues(context, caster, "left", level, 0.0);
+        final double right = parseValues(context, caster, "right", level, 0.0);
+        final double upward = parseValues(context, caster, "upward", level, 0.0);
+        final double forward = parseValues(context, caster, "forward", level, 0.0);
         final double distance = caster.getLocation().distance(tar.getLocation());
         try {
-            EntityProjectile ne = new EntityProjectile(
+            EntityProjectile ne = new EntityProjectile(context,
                     caster,
                     tar.getLocation(),
                     tar,
@@ -85,7 +83,7 @@ public class EntitySpreadMechanic extends MechanicComponent {
                         } else {
                             tar.setAI(true);
                         }
-                        callback(caster, tar);
+                        callback(context, caster, tar);
                     };
                 } else {
                     runnable = it -> {
@@ -102,7 +100,7 @@ public class EntitySpreadMechanic extends MechanicComponent {
                             KeyListener.delSpecialGlobalDisable((Player) tar);
                             GermPacketAPI.sendUnlockPlayerMove((Player) tar);
                         }
-                        callback(caster, tar);
+                        callback(context, caster, tar);
                     };
                 }
                 ne.registerHit(runnable);
@@ -133,13 +131,12 @@ public class EntitySpreadMechanic extends MechanicComponent {
     }
 
 
-    public void callback(LivingEntity projectile, LivingEntity hit) {
+    public void callback(final SkillContext context, LivingEntity projectile, LivingEntity hit) {
         if (hit == null) {
             hit = new TempEntity(projectile.getLocation());
         }
         ArrayList<LivingEntity> targets = new ArrayList<>();
         targets.add(hit);
-        if (skillContext == null) skillContext = new SkillContext();
-        executeChildren(projectile, skillContext, Level, targets);
+        executeChildren(context, projectile, Level, targets);
     }
 }

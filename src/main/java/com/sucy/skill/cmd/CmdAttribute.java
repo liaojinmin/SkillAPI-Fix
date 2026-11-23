@@ -38,8 +38,7 @@ import org.bukkit.plugin.Plugin;
 /**
  * A command that allows a player to view their skill tree
  */
-public class CmdAttribute implements IFunction
-{
+public class CmdAttribute implements IFunction {
     private static final String CANNOT_USE = "cannot-use";
     private static final String DISABLED   = "world-disabled";
 
@@ -48,7 +47,7 @@ public class CmdAttribute implements IFunction
      *
      * @param cmd    command that was executed
      * @param plugin plugin reference
-     * @param sender sender of the command
+     * @param sender sender of the comma
      * @param args   argument list
      */
     @Override

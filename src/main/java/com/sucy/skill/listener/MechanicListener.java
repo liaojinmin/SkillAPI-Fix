@@ -7,6 +7,7 @@ import com.sucy.skill.api.event.FlagApplyEvent;
 import com.sucy.skill.api.event.FlagExpireEvent;
 import com.sucy.skill.api.event.PlayerLandEvent;
 import com.sucy.skill.api.projectile.ItemProjectile;
+import com.sucy.skill.api.skills.SkillContext;
 import com.sucy.skill.dynamic.mechanic.BlockMechanic;
 import com.sucy.skill.dynamic.mechanic.BlockWallMechanic;
 import com.sucy.skill.dynamic.mechanic.PotionProjectileMechanic;
@@ -14,6 +15,7 @@ import com.sucy.skill.dynamic.mechanic.ProjectileMechanic;
 import com.sucy.skill.hook.DisguiseHook;
 import com.sucy.skill.hook.PluginChecker;
 import com.sucy.skill.hook.VaultHook;
+import com.sucy.skill.utils.Pair;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.entity.*;
@@ -38,7 +40,7 @@ public class MechanicListener extends SkillAPIListener {
     public static final String SUMMON_DAMAGE     = "sapiSumDamage";
     public static final String P_CALL            = "pmCallback";
     public static final String POTION_PROJECTILE = "potionProjectile";
-    public static final String ITEM_PROJECTILE = "itemProjectile";
+    public static final String ITEM_PROJECTILE   = "itemProjectile";
     public static final String SKILL_LEVEL       = "skill_level";
     public static final String SKILL_CASTER      = "caster";
     public static final String SPEED_KEY         = "sapiSpeedKey";
@@ -137,8 +139,10 @@ public class MechanicListener extends SkillAPIListener {
         if (event.getEntity().hasMetadata(P_CALL))
             SkillAPI.schedule(() -> {
                 final Object obj = SkillAPI.getMeta(event.getEntity(), P_CALL);
-                if (obj != null)
-                    ((ProjectileMechanic) obj).callback(event.getEntity(), null);
+                if (obj instanceof Pair<?, ?>) {
+                    Pair<SkillContext, ProjectileMechanic> pair = (Pair<SkillContext, ProjectileMechanic>) obj;
+                    pair.value.callback(pair.key, event.getEntity(), null);
+                }
             }, 1);
     }
 
@@ -150,9 +154,10 @@ public class MechanicListener extends SkillAPIListener {
     @EventHandler
     public void onItemLand(final InventoryPickupItemEvent event) {
         final Object meta = SkillAPI.getMeta(event.getItem(), ITEM_PROJECTILE);
-        if (meta != null) {
+        if (meta instanceof Pair<?, ?>) {
+            Pair<SkillContext, ItemProjectile> pair = (Pair<SkillContext, ItemProjectile>) meta;
             event.setCancelled(true);
-            ((ItemProjectile) meta).applyLanded();
+            pair.value.applyLanded();
         }
     }
 
@@ -178,9 +183,13 @@ public class MechanicListener extends SkillAPIListener {
         if (event.getDamager() instanceof Projectile) {
             Projectile p = (Projectile) event.getDamager();
             if (p.hasMetadata(P_CALL) && event.getEntity() instanceof LivingEntity) {
-                ((ProjectileMechanic) SkillAPI.getMeta(p, P_CALL))
-                    .callback(p, (LivingEntity) event.getEntity());
-                event.setCancelled(true);
+
+                final Object obj = SkillAPI.getMeta(event.getEntity(), P_CALL);
+                if (obj instanceof Pair<?, ?>) {
+                    Pair<SkillContext, ProjectileMechanic> pair = (Pair<SkillContext, ProjectileMechanic>) obj;
+                    pair.value.callback(pair.key, p, (LivingEntity) event.getEntity());
+                    event.setCancelled(true);
+                }
             }
         }
     }
@@ -205,12 +214,15 @@ public class MechanicListener extends SkillAPIListener {
     @EventHandler
     public void onSplash(PotionSplashEvent event)
     {
-        if (event.getEntity().hasMetadata(POTION_PROJECTILE))
-        {
-            event.setCancelled(true);
-            ((PotionProjectileMechanic) SkillAPI.getMeta(event.getEntity(), POTION_PROJECTILE))
-                .callback(event.getEntity(), event.getAffectedEntities());
-            event.getAffectedEntities().clear();
+        if (event.getEntity().hasMetadata(POTION_PROJECTILE)) {
+            final Object obj = SkillAPI.getMeta(event.getEntity(), POTION_PROJECTILE);
+            if (obj instanceof Pair<?, ?>) {
+                event.setCancelled(true);
+                Pair<SkillContext, PotionProjectileMechanic> pair = (Pair<SkillContext, PotionProjectileMechanic>) obj;
+                pair.value.callback(pair.key, event.getEntity(), event.getAffectedEntities());
+                event.getAffectedEntities().clear();
+            }
+
         }
     }
 

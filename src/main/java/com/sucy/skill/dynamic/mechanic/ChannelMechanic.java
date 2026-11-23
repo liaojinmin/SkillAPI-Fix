@@ -56,12 +56,12 @@ public class ChannelMechanic extends MechanicComponent {
      * @return true if applied to something, false otherwise
      */
     @Override
-    public boolean execute(final LivingEntity caster, SkillContext context, final int level, final List<LivingEntity> targets) {
-        if (targets.size() == 0) {
+    public boolean execute(final SkillContext context, final LivingEntity caster,final int level, final List<LivingEntity> targets) {
+        if (targets.isEmpty()) {
             return false;
         }
         boolean still = settings.getBool(STILL);
-        int ticks = (int) (20 * parseValues(caster, SECONDS, level, 2.0));
+        int ticks = (int) (20 * parseValues(context, caster, SECONDS, level, 2.0));
         if (still) {
             FlagManager.addFlag(caster, StatusFlag.CHANNELING, ticks + 2);
         }
@@ -70,7 +70,7 @@ public class ChannelMechanic extends MechanicComponent {
                     if (FlagManager.hasFlag(caster, StatusFlag.CHANNEL)) {
                         FlagManager.removeFlag(caster, StatusFlag.CHANNEL);
                         FlagManager.removeFlag(caster, StatusFlag.CHANNELING);
-                        executeChildren(caster, context, level, targets);
+                        executeChildren(context, caster, level, targets);
                     }
                 }, ticks
         );

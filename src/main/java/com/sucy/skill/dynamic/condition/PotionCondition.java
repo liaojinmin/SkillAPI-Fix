@@ -27,6 +27,7 @@
 package com.sucy.skill.dynamic.condition;
 
 import com.rit.sucy.version.VersionManager;
+import com.sucy.skill.api.skills.SkillContext;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
@@ -43,14 +44,14 @@ public class PotionCondition extends ConditionComponent {
     private static final String MAX_RANK = "max-rank";
 
     @Override
-    public boolean test(final LivingEntity caster, final int level, final LivingEntity target) {
+    public boolean test(final SkillContext context, final LivingEntity caster, final int level, final LivingEntity target) {
         final boolean active = !settings.getString(TYPE, "active").toLowerCase().equals("not active");
         final Collection<PotionEffect> effects = target.getActivePotionEffects();
         if (effects.isEmpty()) return !active;
 
         final String potion = settings.getString(POTION, "").toUpperCase().replace(' ', '_');
-        final int minRank = (int) parseValues(caster, MIN_RANK, level, 0);
-        final int maxRank = (int) parseValues(caster, MAX_RANK, level, 999);
+        final int minRank = (int) parseValues(context, caster, MIN_RANK, level, 0);
+        final int maxRank = (int) parseValues(context, caster, MAX_RANK, level, 999);
         try {
             final PotionEffectType type = PotionEffectType.getByName(potion);
             return has(target, type, minRank, maxRank) == active;

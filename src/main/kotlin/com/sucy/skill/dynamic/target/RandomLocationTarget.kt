@@ -1,18 +1,14 @@
 package com.sucy.skill.dynamic.target
 
 import com.sucy.skill.api.skills.SkillContext
-import com.sucy.skill.cast.IIndicator
 import com.sucy.skill.dynamic.TempEntity
-import me.neon.libs.util.item.isAir
 import org.bukkit.Location
 import org.bukkit.Material
 import org.bukkit.World
 import org.bukkit.entity.LivingEntity
-import org.bukkit.entity.Player
 import java.util.concurrent.ThreadLocalRandom
 import kotlin.math.cos
 import kotlin.math.sin
-import kotlin.math.sqrt
 
 /**
  * SkillAPI-Fix
@@ -36,18 +32,14 @@ class RandomLocationTarget: TargetComponent() {
         val ground: Boolean,
     )
 
-    override fun makeIndicators(context: SkillContext, list: List<IIndicator>, caster: Player, target: LivingEntity, level: Int) {
-        makeCircleIndicator(context, list, caster, 0.5)
-    }
-
     /** {@inheritDoc}  */
     override fun getTargets(context: SkillContext, caster: LivingEntity, level: Int, targets: List<LivingEntity>): List<LivingEntity> {
-        val minRange = parseValues(caster, "minRange", level, 1.0)
-        val maxRange = parseValues(caster, "maxRange", level, 5.0)
+        val minRange = parseValues(context, caster, "minRange", level, 1.0)
+        val maxRange = parseValues(context, caster, "maxRange", level, 5.0)
         val minAmount = settings.getInt("minAmount", 1)
         val maxAmount = settings.getInt("maxAmount", 1)
-        val minDistance = parseValues(caster, "minDistance", level, 0.0)
-        val maxDistance = parseValues(caster, "maxDistance", level, 5.0)
+        val minDistance = parseValues(context, caster, "minDistance", level, 0.0)
+        val maxDistance = parseValues(context, caster, "maxDistance", level, 5.0)
         val data = LocationData(minRange, maxRange, minAmount, maxAmount, minDistance, maxDistance, settings.getBool("ground", true))
         val list = mutableListOf<LivingEntity>()
         targets.forEach { list.addAll(parseTarget(caster, it, data)) }

@@ -108,21 +108,21 @@ public class TriggerHandler implements Listener {
             return;
         }
 
-        try (SkillContext skillContext = new SkillContext()) {
-            final LivingEntity target = trigger.getTarget(event, component.settings);
-            trigger.setValues(event, skillContext);
-            trigger(skillContext, caster, target, level);
+        SkillContext skillContext = new SkillContext();
+        final LivingEntity target = trigger.getTarget(event, component.settings);
+        trigger.setValues(event, skillContext, component.useGlobalContext);
+        trigger(skillContext, caster, target, level);
 
-            if (event instanceof Cancellable) {
-                skill.applyCancelled((Cancellable) event);
-            }
-            trigger.postProcess(event, skill);
-
-            // 被动删除，如果有的话
-            if (c != null) {
-                c.run();
-            }
+        if (event instanceof Cancellable) {
+            skill.applyCancelled((Cancellable) event);
         }
+        trigger.postProcess(event, skill);
+
+        // 被动删除，如果有的话
+        if (c != null) {
+            c.run();
+        }
+
     }
 
     void trigger(final SkillContext skillContext, final LivingEntity user, final LivingEntity target, final int level) {

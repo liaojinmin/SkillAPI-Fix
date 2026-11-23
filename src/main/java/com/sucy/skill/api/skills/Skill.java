@@ -1,10 +1,8 @@
 
 package com.sucy.skill.api.skills;
 
-import com.rit.sucy.config.Filter;
 import com.rit.sucy.config.FilterType;
 import com.rit.sucy.config.parse.DataSection;
-import com.rit.sucy.config.parse.NumberParser;
 import com.rit.sucy.text.TextFormatter;
 import com.sucy.skill.SkillAPI;
 import com.sucy.skill.api.ReadOnlySettings;
@@ -14,39 +12,21 @@ import com.sucy.skill.api.event.SkillDamageEvent;
 import com.sucy.skill.api.event.TrueDamageEvent;
 import com.sucy.skill.api.player.PlayerData;
 import com.sucy.skill.api.player.PlayerSkill;
-import com.sucy.skill.api.util.DamageLoreRemover;
-import com.sucy.skill.api.util.Data;
-import com.sucy.skill.cast.IIndicator;
 import com.sucy.skill.data.Permissions;
 import com.sucy.skill.dynamic.TempEntity;
 import com.sucy.skill.gui.IconHolder;
 import com.sucy.skill.hook.mythic.MythicManager;
 import com.sucy.skill.language.NotificationNodes;
-import com.sucy.skill.language.RPGFilter;
-import com.sucy.skill.language.SkillNodes;
-import com.sucy.skill.log.Logger;
 import com.sucy.skill.utils.target.TargetHelper;
 import me.neon.libs.util.MetaKt;
 import org.bukkit.Bukkit;
-import org.bukkit.ChatColor;
-import org.bukkit.Location;
-import org.bukkit.Material;
-import org.bukkit.entity.Hanging;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
-import org.bukkit.event.Cancellable;
-import org.bukkit.event.Event;
-import org.bukkit.event.HandlerList;
-import org.bukkit.event.entity.EntityDamageByEntityEvent;
-import org.bukkit.inventory.ItemStack;
-import org.bukkit.inventory.meta.ItemMeta;
-import org.bukkit.plugin.RegisteredListener;
 
 import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Consumer;
-import java.util.function.Function;
 
 /**
  * Represents a template for a skill used in the RPG system. This is
@@ -57,8 +37,6 @@ public abstract class Skill implements IconHolder {
 
     private final ArrayList<String> description = new ArrayList<>();
 
-    private List<String> iconLore;
-    private ItemStack    indicator;
     private String       key;
     private String       name;
     private String       type;
@@ -76,64 +54,11 @@ public abstract class Skill implements IconHolder {
     protected final Settings         settings         = new Settings();
     private final   ReadOnlySettings readOnlySettings = new ReadOnlySettings(settings);
 
-    /**
-     * Initializes a new skill that doesn't require any other skill.
-     *
-     * @param name      name of the skill
-     * @param type      descriptive type of the skill
-     * @param indicator indicator to represent the skill
-     * @param maxLevel  max level the skill can reach
-     */
-    public Skill(String name, String type, Material indicator, int maxLevel)
-    {
-        this(name, type, new ItemStack(indicator), maxLevel, null, 0);
+    public Skill(String name, String type, int maxLevel) {
+        this(name, type, maxLevel, null, 0);
     }
 
-    /**
-     * Initializes a skill that requires another skill to be upgraded
-     * before it can be upgraded itself.
-     *
-     * @param name          name of the skill
-     * @param type          descriptive type of the skill
-     * @param indicator     indicator to represent the skill
-     * @param maxLevel      max level the skill can reach
-     * @param skillReq      name of the skill required to raise this one
-     * @param skillReqLevel level of the required skill needed
-     */
-    public Skill(String name, String type, Material indicator, int maxLevel, String skillReq, int skillReqLevel)
-    {
-        this(name, type, new ItemStack(indicator), maxLevel, skillReq, skillReqLevel);
-    }
-
-    /**
-     * Initializes a new skill that doesn't require any other skill.
-     * The indicator's display name and lore will be used as the layout
-     * for the skill tree display.
-     *
-     * @param name      name of the skill
-     * @param type      descriptive type of the skill
-     * @param indicator indicator to respresent the skill
-     * @param maxLevel  max level the skill can reach
-     */
-    public Skill(String name, String type, ItemStack indicator, int maxLevel)
-    {
-        this(name, type, indicator, maxLevel, null, 0);
-    }
-
-    /**
-     * Initializes a skill that requires another skill to be upgraded
-     * before it can be upgraded itself. The indicator's display name
-     * and lore will be used as the layout for the skill tree display.
-     *
-     * @param name          name of the skill
-     * @param type          descriptive type of the skill
-     * @param indicator     indicator to represent the skill
-     * @param maxLevel      max level the skill can reach
-     * @param skillReq      name of the skill required to raise this one
-     * @param skillReqLevel level of the required skill needed
-     */
-    public Skill(String name, String type, ItemStack indicator, int maxLevel, String skillReq, int skillReqLevel)
-    {
+    public Skill(String name, String type, int maxLevel, String skillReq, int skillReqLevel) {
         if (name == null)
         {
             throw new IllegalArgumentException("Skill name cannot be null");
@@ -144,10 +69,6 @@ public abstract class Skill implements IconHolder {
         {
             type = "Unknown type";
         }
-        if (indicator == null)
-        {
-            indicator = new ItemStack(Material.APPLE);
-        }
         if (maxLevel < 1)
         {
             maxLevel = 1;
@@ -156,14 +77,12 @@ public abstract class Skill implements IconHolder {
         this.key = name.toLowerCase();
         this.type = type;
         this.name = name;
-        this.indicator = indicator;
         this.maxLevel = maxLevel;
         this.skillReq = skillReq;
         this.skillReqLevel = skillReqLevel;
         this.needsPermission = false;
 
         this.message = SkillAPI.getLanguage().getMessage(NotificationNodes.CAST, true, FilterType.COLOR).get(0);
-        this.iconLore = SkillAPI.getLanguage().getMessage(SkillNodes.LAYOUT, true, FilterType.COLOR);
     }
 
 
@@ -250,16 +169,6 @@ public abstract class Skill implements IconHolder {
     public boolean needsPermission()
     {
         return needsPermission;
-    }
-
-    /**
-     * Retrieves the indicator representing the skill for menus
-     *
-     * @return indicator for the skill
-     */
-    public ItemStack getIndicator()
-    {
-        return indicator;
     }
 
     /**
@@ -394,23 +303,6 @@ public abstract class Skill implements IconHolder {
         return readOnlySettings;
     }
 
-    /**
-     * Fetches the icon for the skill for the player
-     *
-     * @param data player to get for
-     *
-     * @return the skill icon
-     */
-    @Override
-    public ItemStack getIcon(PlayerData data)
-    {
-        PlayerSkill skill = data.getSkill(name);
-        if (skill != null)
-            return getIndicator(skill, false);
-        else
-            return getIndicator();
-    }
-
     @Override
     public boolean isAllowed(final Player player) {
         return !needsPermission()
@@ -447,128 +339,6 @@ public abstract class Skill implements IconHolder {
         return playerData.getInvestedSkillPoints() >= reqPoints;
     }
 
-    /**
-     * Retrieves the indicator for the skill while applying filters to match
-     * the player-specific data.
-     *
-     * @param skillData player data
-     *
-     * @return filtered skill indicator
-     */
-    public ItemStack getIndicator(PlayerSkill skillData, boolean brief) {
-        Player player = skillData.getPlayerData().getPlayer();
-
-        ItemStack item = indicator.clone();
-        item.setAmount(Math.max(1, skillData.getLevel()));
-        ItemMeta meta = item.hasItemMeta() ? item.getItemMeta() : Bukkit.getItemFactory().getItemMeta(item.getType());
-        ArrayList<String> lore = new ArrayList<String>();
-
-        String MET = SkillAPI.getLanguage().getMessage(SkillNodes.REQUIREMENT_MET, true, FilterType.COLOR).get(0);
-        String NOT_MET = SkillAPI.getLanguage().getMessage(SkillNodes.REQUIREMENT_NOT_MET, true, FilterType.COLOR).get(0);
-        MET = MET.substring(0, MET.length() - 2);
-        NOT_MET = NOT_MET.substring(0, NOT_MET.length() - 2);
-
-        final String lvlReq = skillData.getLevelReq() <= skillData.getPlayerClass().getLevel() ? MET : NOT_MET;
-        final String costReq = skillData.getCost() <= skillData.getPlayerClass().getPoints() ? MET : NOT_MET;
-        final String spentReq = hasInvestedEnough(skillData.getPlayerData()) ? MET : NOT_MET;
-        final String branchReq = isCompatible(skillData.getPlayerData()) ? MET : NOT_MET;
-        final String skillReq = isCompatible(skillData.getPlayerData()) ? MET : NOT_MET;
-
-        String attrChanging = SkillAPI.getLanguage().getMessage(SkillNodes.ATTRIBUTE_CHANGING, true, FilterType.COLOR).get(0);
-        String attrStatic = SkillAPI.getLanguage().getMessage(SkillNodes.ATTRIBUTE_NOT_CHANGING, true, FilterType.COLOR).get(0);
-
-        for (String line : iconLore)
-        {
-            try
-            {
-                // General data
-                line = line.replace("{level}", "" + skillData.getLevel())
-                        .replace("{req:lvl}", lvlReq)
-                        .replace("{req:level}", lvlReq)
-                        .replace("{req:cost}", costReq)
-                        .replace("{req:spent}", spentReq)
-                        .replace("{req:branch}", branchReq)
-                        .replace("{req:skill}", skillReq)
-                        .replace("{max}", "" + maxLevel)
-                        .replace("{name}", name)
-                        .replace("{type}", type);
-
-                // Attributes
-                while (line.contains("{attr:"))
-                {
-                    int start = line.indexOf("{attr:");
-                    int end = line.indexOf("}", start);
-                    String attr = line.substring(start + 6, end);
-                    Object currValue = getAttr(player, attr, Math.max(1, skillData.getLevel()));
-                    Object nextValue = getAttr(player, attr, Math.min(skillData.getLevel() + 1, maxLevel));
-                    if (attr.equals("level") || attr.equals("cost"))
-                    {
-                        nextValue = (int) Math.floor(NumberParser.parseDouble(nextValue.toString()));
-                        currValue = nextValue;
-                    }
-
-                    if (currValue.equals(nextValue) || brief)
-                    {
-                        line = line.replace("{attr:" + attr + "}", attrStatic.replace("{name}", getAttrName(attr)).replace("{value}", currValue.toString()));
-                    }
-                    else
-                    {
-                        line = line.replace("{attr:" + attr + "}", attrChanging.replace("{name}", getAttrName(attr)).replace("{value}", currValue.toString()).replace("{new}", nextValue.toString()));
-                    }
-                }
-
-                // Full description
-                if (line.contains("{desc}"))
-                {
-                    for (String descLine : description)
-                    {
-                        lore.add(line.replace("{desc}", descLine));
-                    }
-                    continue;
-                }
-
-                // Description segments
-                if (line.contains("{desc:"))
-                {
-                    int start = line.indexOf("{desc:");
-                    int end = line.indexOf("}", start);
-                    String lineInfo = line.substring(start + 6, end);
-                    String[] split = lineInfo.contains("-") ? lineInfo.split("-") : new String[] { lineInfo, lineInfo };
-                    start = Integer.parseInt(split[0]) - 1;
-                    end = (split[1].equals("x") ? description.size() : Integer.parseInt(split[1]));
-                    for (int i = start; i < end && i < description.size(); i++)
-                    {
-                        lore.add(line.replace("{desc:" + lineInfo + "}", description.get(i)));
-                    }
-                    continue;
-                }
-
-                lore.add(line);
-            }
-
-            // Lines with invalid filters are ignored
-            catch (Exception ex)
-            {
-                Logger.invalid("Skill icon filter for the skill \"" + name + "\" is invalid (Line = \"" + line + "\") - " + ex.getMessage());
-            }
-        }
-
-        // Binds
-        if (SkillAPI.getSettings().isShowBinds() && skillData.getBind() != null) {
-            lore.add("");
-            final String type = TextFormatter.format(skillData.getBind().name().replace("LEGACY_", ""));
-            lore.add(SkillAPI.getSettings().getBindText().replace("{material}", type));
-        }
-
-        if (lore.size() > 0)
-        {
-            meta.setDisplayName(lore.remove(0));
-        }
-
-        meta.setLore(lore);
-        item.setItemMeta(meta);
-        return DamageLoreRemover.removeAttackDmg(item);
-    }
 
     /**
      * Formats an attribute name for applying to the indicator
@@ -577,8 +347,7 @@ public abstract class Skill implements IconHolder {
      *
      * @return formatted attribute name
      */
-    protected String getAttrName(String key)
-    {
+    protected String getAttrName(String key) {
         return TextFormatter.format(key);
     }
 
@@ -591,8 +360,7 @@ public abstract class Skill implements IconHolder {
      *
      * @return attribute value
      */
-    protected Object getAttr(LivingEntity caster, String key, int level)
-    {
+    protected Object getAttr(final SkillContext context, LivingEntity caster, String key, int level) {
         Object result = settings.getObj(key, level);
         if (result instanceof Double)
         {
@@ -608,36 +376,12 @@ public abstract class Skill implements IconHolder {
      *
      * @return formatted double value
      */
-    protected String format(double value)
-    {
+    protected String format(double value) {
         String result = FORMAT.format(value);
         if (result.endsWith(".0"))
             return result.substring(0, result.length() - 2);
         else
             return result;
-    }
-
-    /**
-     * Sends the skill message if one is present from the player to entities
-     * within the given radius.
-     *
-     * @param player player to project the message from
-     * @param radius radius to include targets of the message
-     */
-    public void sendMessage(Player player, double radius)
-    {
-        if (hasMessage())
-        {
-            radius *= radius;
-            Location l = player.getLocation();
-            for (Player p : player.getWorld().getPlayers())
-            {
-                if (p.getLocation().distanceSquared(l) < radius)
-                {
-                    p.sendMessage(RPGFilter.SKILL.setReplacement(getName()).apply(Filter.PLAYER.setReplacement(player.getName()).apply(message)));
-                }
-            }
-        }
     }
 
     /**
@@ -761,7 +505,6 @@ public abstract class Skill implements IconHolder {
 
     private static final String NAME      = "name";
     private static final String TYPE      = "type";
-    private static final String LAYOUT    = "icon-lore";
     private static final String MAX       = "max-level";
     private static final String REQ       = "skill-req";
     private static final String REQLVL    = "skill-req-lvl";
@@ -779,7 +522,6 @@ public abstract class Skill implements IconHolder {
     public void load(DataSection config) {
         name = config.getString(NAME, name);
         type = TextFormatter.colorString(config.getString(TYPE, name));
-        indicator = Data.parseIcon(config);
         maxLevel = config.getInt(MAX, maxLevel);
         skillReq = config.getString(REQ);
         if (skillReq == null || skillReq.length() == 0) skillReq = null;
@@ -791,11 +533,6 @@ public abstract class Skill implements IconHolder {
             description.clear();
             description.addAll(config.getList(DESC));
         }
-        if (config.isList(LAYOUT))
-        {
-            iconLore = TextFormatter.colorStringList(config.getList(LAYOUT));
-        }
-
         settings.load(config.getSection(ATTR));
     }
 }

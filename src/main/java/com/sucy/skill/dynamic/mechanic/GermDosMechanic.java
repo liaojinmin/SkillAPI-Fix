@@ -23,7 +23,7 @@ public class GermDosMechanic extends MechanicComponent {
     }
 
     @Override
-    public boolean execute(LivingEntity caster, SkillContext context, int level, List<LivingEntity> targets) {
+    public boolean execute(final SkillContext context, LivingEntity caster, int level, List<LivingEntity> targets) {
         if (targets.isEmpty() || !settings.has(DOS)) {
             return false;
         }

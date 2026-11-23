@@ -26,7 +26,6 @@
  */
 package com.sucy.skill.dynamic;
 
-import com.google.common.collect.ImmutableList;
 import com.rit.sucy.config.parse.DataSection;
 import com.rit.sucy.text.TextFormatter;
 import com.sucy.skill.SkillAPI;
@@ -34,21 +33,18 @@ import com.sucy.skill.api.skills.PassiveSkill;
 import com.sucy.skill.api.skills.Skill;
 import com.sucy.skill.api.skills.SkillContext;
 import com.sucy.skill.api.skills.SkillShot;
-import com.sucy.skill.cast.IIndicator;
 import com.sucy.skill.dynamic.trigger.TriggerComponent;
 import com.sucy.skill.log.Logger;
-import org.bukkit.Material;
 import org.bukkit.entity.LivingEntity;
-import org.bukkit.entity.Player;
 import org.bukkit.event.Cancellable;
 import org.bukkit.event.Listener;
+import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * A skill implementation for the Dynamic system
@@ -57,8 +53,6 @@ public class DynamicSkill extends Skill implements SkillShot, PassiveSkill, List
     private final List<TriggerHandler>         triggers   = new ArrayList<>();
     private final Map<String, EffectComponent> attribKeys = new HashMap<>();
     private final Map<Integer, Integer>        active     = new HashMap<>();
-
-    private static final HashMap<Integer, ConcurrentHashMap<String, Object>> castData   = new HashMap<>();
 
     private TriggerComponent castTrigger;
     private TriggerComponent initializeTrigger;
@@ -74,7 +68,7 @@ public class DynamicSkill extends Skill implements SkillShot, PassiveSkill, List
      * @param name name of the skill
      */
     public DynamicSkill(final String name) {
-        super(name, "Dynamic", Material.JACK_O_LANTERN, 1);
+        super(name, "Dynamic", 1);
     }
 
     /**
@@ -145,33 +139,6 @@ public class DynamicSkill extends Skill implements SkillShot, PassiveSkill, List
     }
 
     /**
-     * Retrieves the cast data for the caster
-     *
-     * @param caster caster to get the data for
-     *
-     * @return cast data for the caster
-     */
-    public static Map<String, Object> getCastData(final LivingEntity caster) {
-        if (caster == null) { return null; }
-        ConcurrentHashMap<String, Object> map = castData.get(caster.getEntityId());
-        if (map == null) {
-            map = new ConcurrentHashMap<>();
-            map.put("caster", caster);
-            castData.put(caster.getEntityId(), map);
-        }
-        return map;
-    }
-
-    /**
-     * Clears any stored cast data for the entity
-     *
-     * @param entity entity to clear cast data for
-     */
-    public static void clearCastData(final LivingEntity entity) {
-        castData.remove(entity.getEntityId());
-    }
-
-    /**
      * Registers needed events for the skill, ignoring any unused events for efficiency
      *
      * @param plugin plugin reference
@@ -205,9 +172,8 @@ public class DynamicSkill extends Skill implements SkillShot, PassiveSkill, List
      * @param level skill level
      */
     @Override
-    public void initialize(final LivingEntity user, final int level) {
-        trigger(user, user, level, initializeTrigger);
-       // System.out.println("initialize "+user.getName() + " by active put");
+    public void initialize(SkillContext context, final LivingEntity user, final int level) {
+        trigger(context, user, user, level, initializeTrigger);
         active.put(user.getEntityId(), level);
         for (final TriggerHandler triggerHandler : triggers) {
             triggerHandler.init(user, level);
@@ -229,7 +195,7 @@ public class DynamicSkill extends Skill implements SkillShot, PassiveSkill, List
         cleanup(user, castTrigger);
         cleanup(user, initializeTrigger);
 
-        trigger(user, user, 1, cleanupTrigger);
+        trigger(new SkillContext(), user, user, 1, cleanupTrigger);
     }
 
     private void cleanup(final LivingEntity user, final TriggerComponent component) {
@@ -246,12 +212,12 @@ public class DynamicSkill extends Skill implements SkillShot, PassiveSkill, List
      */
     @Override
     public boolean cast(final LivingEntity user, int level) {
-        return cast(user, level, null);
+        return cast(new SkillContext(), user, level, null);
     }
 
     @Override
-    public boolean cast(final LivingEntity user, int level, @Nullable LivingEntity target) {
-        return trigger(user, target == null ? user : target, level, castTrigger);
+    public boolean cast(@NotNull final SkillContext context, @NotNull final LivingEntity user, int level, @Nullable LivingEntity target) {
+        return trigger(context, user, target == null ? user : target, level, castTrigger);
     }
 
     /**
@@ -282,22 +248,22 @@ public class DynamicSkill extends Skill implements SkillShot, PassiveSkill, List
      * @return attribute value or 0 if invalid dynamic path
      */
     @Override
-    protected Object getAttr(final LivingEntity caster, final String key, final int level) {
+    protected Object getAttr(final SkillContext context, final LivingEntity caster, final String key, final int level) {
         // Dynamic attribute paths use periods
         if (key.contains(".")) {
             final String[] path = key.split("\\.");
             final String attr = path[1].toLowerCase();
             if (attribKeys.containsKey(path[0]) && attribKeys.get(path[0]).settings.has(attr)) {
-                return format(attribKeys.get(path[0]).parseValues(caster, attr, level, 0));
+                return format(attribKeys.get(path[0]).parseValues(context, caster, attr, level, 0));
             } else { return 0; }
         }
 
         // Otherwise get the attribute normally
-        else { return super.getAttr(caster, key, level); }
+        else { return super.getAttr(context, caster, key, level); }
     }
 
-    private boolean trigger(final LivingEntity user, final LivingEntity target, final int level, final TriggerComponent component) {
-        return component != null && component.trigger(new SkillContext(), user, target, level);
+    private boolean trigger(SkillContext context, final LivingEntity user, final LivingEntity target, final int level, final TriggerComponent component) {
+        return component != null && component.trigger(context, user, target, level);
     }
 
     /**

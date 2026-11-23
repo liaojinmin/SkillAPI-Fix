@@ -40,12 +40,12 @@ public class PermissionCondition extends ConditionComponent {
     }
 
     @Override
-    public boolean execute(LivingEntity caster, SkillContext context, int level, List<LivingEntity> targets) {
-        return test(caster, level, null) && executeChildren(caster, context, level, targets);
+    public boolean execute(final SkillContext context, LivingEntity caster, int level, List<LivingEntity> targets) {
+        return test(context, caster, level, null) && executeChildren(context, caster, level, targets);
     }
 
     @Override
-    public boolean test(final LivingEntity caster, final int level, final LivingEntity target) {
+    public boolean test(final SkillContext context, final LivingEntity caster, final int level, final LivingEntity target) {
         return caster.hasPermission(settings.getString(PERM));
     }
 }

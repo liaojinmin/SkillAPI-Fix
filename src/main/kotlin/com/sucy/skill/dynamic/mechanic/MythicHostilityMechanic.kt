@@ -26,14 +26,14 @@ class MythicHostilityMechanic: MechanicComponent() {
     }
 
     override fun execute(
-        caster: LivingEntity,
         context: SkillContext,
+        caster: LivingEntity,
         level: Int,
         targets: MutableList<LivingEntity>,
     ): Boolean {
         val faction = settings.getString("faction")!!
         val filterPlayer: Boolean = settings.getBool("excludePlayer")
-        val duration = parseValues(caster, "duration", level, 5.0) * 20
+        val duration = parseValues(context, caster, "duration", level, 5.0) * 20
 
         val mobs: List<ActiveMobRec> = targets.mapNotNull {
             val ac = MythicManager.api.getActiveMob(it.uniqueId)

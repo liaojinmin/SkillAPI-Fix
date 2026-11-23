@@ -26,6 +26,7 @@
  */
 package com.sucy.skill.dynamic.condition;
 
+import com.sucy.skill.api.skills.SkillContext;
 import org.bukkit.entity.LivingEntity;
 
 import java.util.regex.Pattern;
@@ -39,7 +40,7 @@ public class NameCondition extends ConditionComponent {
     private static final String STRING   = "str";
 
     @Override
-    public boolean test(final LivingEntity caster, final int level, final LivingEntity target) {
+    public boolean test(final SkillContext context, final LivingEntity caster, final int level, final LivingEntity target) {
         boolean contains = !settings.getString(CONTAINS, "true").toLowerCase().equals("false");
         boolean regex = settings.getString(REGEX, "false").toLowerCase().equals("true");
         String str = settings.getString(STRING, "");

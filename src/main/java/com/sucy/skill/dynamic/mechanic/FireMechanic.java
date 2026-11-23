@@ -52,11 +52,11 @@ public class FireMechanic extends MechanicComponent {
      * @return true if applied to something, false otherwise
      */
     @Override
-    public boolean execute(LivingEntity caster, SkillContext context, int level, List<LivingEntity> targets) {
-        if (targets.size() == 0) {
+    public boolean execute(final SkillContext context, LivingEntity caster, int level, List<LivingEntity> targets) {
+        if (targets.isEmpty()) {
             return false;
         }
-        double seconds = parseValues(caster, SECONDS, level, 3.0);
+        double seconds = parseValues(context, caster, SECONDS, level, 3.0);
         int ticks = (int) (seconds * 20);
         for (LivingEntity target : targets) {
             int newTicks = ticks <= 0 ? 0 : Math.max(ticks, target.getFireTicks());

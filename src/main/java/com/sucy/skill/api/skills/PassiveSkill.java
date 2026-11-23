@@ -33,7 +33,11 @@ public interface PassiveSkill {
      * @param user  user to initialize the effects for
      * @param level skill level
      */
-    void initialize(LivingEntity user, int level);
+    void initialize(SkillContext context, LivingEntity user, int level);
+
+    default void initialize(LivingEntity user, int level) {
+        initialize(new SkillContext(), user, level);
+    }
 
     /**
      * <p>Stops the effects when the player goes offline

@@ -29,6 +29,7 @@ package com.sucy.skill.api.projectile;
 import com.rit.sucy.reflect.Reflection;
 import com.sucy.skill.SkillAPI;
 import com.sucy.skill.api.particle.target.Followable;
+import com.sucy.skill.api.skills.SkillContext;
 import com.sucy.skill.dynamic.ArmorStandCarrier;
 import com.sucy.skill.log.Logger;
 import com.sucy.skill.utils.target.TargetHelper;
@@ -101,18 +102,21 @@ public abstract class CustomProjectile extends BukkitRunnable implements Metadat
 
     private ProjectileCallback callback;
     private final LivingEntity thrower;
+    private final SkillContext context;
 
     private boolean enemy = true;
     private boolean ally = false;
     private boolean valid = true;
 
-    public CustomProjectile(LivingEntity thrower) {
+    public CustomProjectile(SkillContext context, LivingEntity thrower) {
         this.thrower = thrower;
+        this.context = context;
         runTaskTimer(Bukkit.getPluginManager().getPlugin("SkillAPI"), 1, 1);
     }
 
-    public CustomProjectile(LivingEntity thrower, boolean start) {
+    public CustomProjectile(SkillContext context, LivingEntity thrower, boolean start) {
         this.thrower = thrower;
+        this.context = context;
         if (start) {
             runTaskTimer(Bukkit.getPluginManager().getPlugin("SkillAPI"), 1, 1);
         }
@@ -184,7 +188,7 @@ public abstract class CustomProjectile extends BukkitRunnable implements Metadat
             cancel();
             Bukkit.getPluginManager().callEvent(land());
             if (callback != null)
-                callback.callback(this, null);
+                callback.callback(context, this, null);
         }
     }
 
@@ -206,7 +210,7 @@ public abstract class CustomProjectile extends BukkitRunnable implements Metadat
             Bukkit.getPluginManager().callEvent(hit(entity));
 
             if (callback != null)
-                callback.callback(this, entity);
+                callback.callback(context, this, entity);
 
             if (!pierce) {
                 cancel();

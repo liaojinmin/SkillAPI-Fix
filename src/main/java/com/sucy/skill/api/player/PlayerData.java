@@ -1,7 +1,6 @@
 package com.sucy.skill.api.player;
 
 import com.rit.sucy.config.FilterType;
-import com.rit.sucy.player.TargetHelper;
 import com.rit.sucy.version.VersionPlayer;
 import com.sucy.skill.SkillAPI;
 import com.sucy.skill.api.classes.RPGClass;
@@ -9,6 +8,7 @@ import com.sucy.skill.api.event.*;
 import com.sucy.skill.api.enums.*;
 import com.sucy.skill.api.skills.PassiveSkill;
 import com.sucy.skill.api.skills.Skill;
+import com.sucy.skill.api.skills.SkillContext;
 import com.sucy.skill.api.skills.SkillShot;
 import com.sucy.skill.data.GroupSettings;
 import com.sucy.skill.language.ErrorNodes;
@@ -17,7 +17,6 @@ import com.sucy.skill.listener.AttributeListener;
 import com.sucy.skill.log.Logger;
 import com.sucy.skill.manager.AttributeManager;
 import com.sucy.skill.screen.AttributeGermScreen;
-import com.sucy.skill.screen.AttributeScreenKt;
 import com.sucy.skill.utils.AttributeParseUtils;
 import com.sucy.skill.utils.ExpiringMap;
 import me.neon.flash.attribute.Attribute;
@@ -568,9 +567,7 @@ public class PlayerData {
     public void openAttributeMenu(boolean isGerm) {
         Player player = getPlayer();
         if (player != null) {
-            if (isGerm) {
-                new AttributeGermScreen(player, this).openGui(player);
-            } else AttributeScreenKt.openAttributeScreen(player, this);
+            new AttributeGermScreen(player, this).openGui(player);
         }
     }
 
@@ -1446,7 +1443,6 @@ public class PlayerData {
         bonusAttrib.clear();
     }
 
-
     ///////////////////////////////////////////////////////
     //                                                   //
     //                     Functions                     //
@@ -1472,11 +1468,12 @@ public class PlayerData {
     }
 
     private PlayerSkill passiveSkill;
+    // NeonECore 在用
     public void startPassives(Player player, PlayerSkill skill) {
-      //  System.out.println("PlayerSkill "+skill.getData().getName());
-      //  System.out.println("PlayerSkill Class "+skill.getData().getClass());
+        //  System.out.println("PlayerSkill "+skill.getData().getName());
+        //  System.out.println("PlayerSkill Class "+skill.getData().getClass());
         if (skill.getData() instanceof PassiveSkill) {
-         //   System.out.println("skill 是被动技能 "+skill.getData().getName());
+            //   System.out.println("skill 是被动技能 "+skill.getData().getName());
             endPassives(player);
             passiveSkill = skill;
             ((PassiveSkill) passiveSkill.getData()).initialize(player, 1);
@@ -1521,30 +1518,18 @@ public class PlayerData {
      * @return true if successfully cast the skill, false otherwise
      */
     public boolean cast(String skillName) {
-        return cast(skillName, null);
+        return cast(new SkillContext(), skillName, null);
     }
 
     public boolean cast(String skillName, LivingEntity target) {
-        return cast(skills.get(skillName.toLowerCase()), target);
+        return cast(new SkillContext(), skillName, target);
     }
 
-    /**
-     * Casts a skill for the player. In order to cast the skill,
-     * the player must be online, have the skill unlocked, have enough mana,
-     * have the skill off cooldown, and have a proper target if applicable.
-     *
-     * @param skill skill to cast
-     *
-     * @return true if successfully cast the skill, false otherwise
-     */
-    public boolean cast(PlayerSkill skill) {
-        return cast(skill, null);
+    public boolean cast(@NotNull SkillContext context,String skillName, LivingEntity target) {
+        return cast(context, skills.get(skillName.toLowerCase()), target);
     }
 
-    public boolean cast(PlayerSkill skill, LivingEntity target) {
-        // Invalid skill
-        if (skill == null) { throw new IllegalArgumentException("Skill cannot be null"); }
-
+    public boolean cast(@NotNull SkillContext context, @NotNull PlayerSkill skill, @Nullable LivingEntity target) {
         int level = skill.getLevel();
 
         // Not unlocked or on cooldown
@@ -1574,7 +1559,7 @@ public class PlayerData {
             // Make sure it isn't cancelled
             if (!event.isCancelled()) {
                 try {
-                    if (((SkillShot) skill.getData()).cast(p, level, target)) {
+                    if (((SkillShot) skill.getData()).cast(context, p, level, target)) {
                         boolean accept = applyUse(p, skill, event.getManaCost());
                         if (accept) {
                             PlayerCastSkillEndEvent event2 = new PlayerCastSkillEndEvent(this, skill, p);

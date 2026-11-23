@@ -26,16 +26,12 @@
  */
 package com.sucy.skill.dynamic.mechanic;
 
-import com.sucy.skill.SkillAPI;
 import com.sucy.skill.api.attribute.AttributeAPI;
 import com.sucy.skill.api.skills.SkillContext;
-import com.sucy.skill.dynamic.DynamicSkill;
 import org.bukkit.entity.LivingEntity;
-import org.bukkit.entity.Player;
 
-import java.util.HashMap;
+
 import java.util.List;
-import java.util.Map;
 
 /**
  * Adds to a cast data value
@@ -60,7 +56,7 @@ public class ValueAttributeMechanic extends MechanicComponent
      * @return true if applied to something, false otherwise
      */
     @Override
-    public boolean execute(LivingEntity caster, SkillContext context, int level, List<LivingEntity> targets)
+    public boolean execute(final SkillContext context, LivingEntity caster, int level, List<LivingEntity> targets)
     {
         if (!settings.has(KEY) || !settings.has(ATTR)) {
             return false;
@@ -68,14 +64,12 @@ public class ValueAttributeMechanic extends MechanicComponent
 
         String key = settings.getString(KEY);
         String attr = settings.getString(ATTR);
-        Map<String, Object> data = DynamicSkill.getCastData(caster);
         if (targets.isEmpty()) {
-           // System.out.println("-------- "+key + " --------- TARGET EMPTY");
-            data.put(key, 0.0);
+            context.set(caster, key, 0.0, useGlobalContext);
             return true;
         }
         double attribute = AttributeAPI.getAttribute(targets.get(0), attr);
-        data.put(key, attribute);
+        context.set(caster, key, attribute, useGlobalContext);
 
         return true;
     }

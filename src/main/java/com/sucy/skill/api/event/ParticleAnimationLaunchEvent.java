@@ -41,11 +41,6 @@ public class ParticleAnimationLaunchEvent extends Event
 
     /**
      * <p>Initializes a new event.</p>
-     * @param particleTask
-     */
-
-    /**
-     * <p>Initializes a new event.</p>
      *
      * @param particleTask
      */

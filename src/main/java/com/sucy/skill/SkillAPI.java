@@ -9,6 +9,7 @@ import com.sucy.skill.api.particle.EffectManager;
 import com.sucy.skill.api.particle.Particle;
 import com.sucy.skill.api.player.PlayerData;
 import com.sucy.skill.api.skills.Skill;
+import com.sucy.skill.api.skills.SkillContext;
 import com.sucy.skill.api.util.BuffManager;
 import com.sucy.skill.api.util.Combat;
 import com.sucy.skill.api.util.FlagManager;
@@ -388,7 +389,7 @@ public class SkillAPI extends JavaPlugin {
             FlagManager.removeFlags(player);
             BuffManager.clearData(player);
             Combat.clearData(player);
-            DynamicSkill.clearCastData(player);
+            SkillContext.clearAtContext(player);
             player.getAttribute(Attribute.GENERIC_MAX_HEALTH).setBaseValue(20);
             player.setWalkSpeed(0.2f);
         }

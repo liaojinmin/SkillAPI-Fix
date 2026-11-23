@@ -30,7 +30,7 @@ class MagicPulseTrigger: Trigger<MagicPulseUseEvent> {
         return event.player
     }
 
-    override fun setValues(event: MagicPulseUseEvent, data: SkillContext) {
+    override fun setValues(event: MagicPulseUseEvent, data: SkillContext, useGlobal: Boolean) {
     }
 
     override fun shouldTrigger(event: MagicPulseUseEvent, level: Int, settings: Settings): Boolean {

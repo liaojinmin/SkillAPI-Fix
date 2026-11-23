@@ -63,7 +63,7 @@ public class DisguiseMechanic extends MechanicComponent {
      * @return true if applied to something, false otherwise
      */
     @Override
-    public boolean execute(LivingEntity caster, SkillContext context, int level, List<LivingEntity> targets) {
+    public boolean execute(final SkillContext context, LivingEntity caster, int level, List<LivingEntity> targets) {
         if (!PluginChecker.isDisguiseActive()) { return false; }
 
         String type = settings.getString(TYPE);
@@ -101,7 +101,7 @@ public class DisguiseMechanic extends MechanicComponent {
         else { return false; }
 
         // Apply Flag duration
-        int ticks = (int) (parseValues(caster, DURATION, level, -1) * 20);
+        int ticks = (int) (parseValues(context, caster, DURATION, level, -1) * 20);
         for (LivingEntity target : targets) {
             if (!(target instanceof TempEntity)) { FlagManager.addFlag(target, MechanicListener.DISGUISE_KEY, ticks); }
         }

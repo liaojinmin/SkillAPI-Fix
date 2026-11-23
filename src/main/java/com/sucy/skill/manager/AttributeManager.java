@@ -3,7 +3,6 @@ package com.sucy.skill.manager;
 import com.sucy.skill.SkillAPI;
 import com.sucy.skill.api.player.PlayerData;
 import com.sucy.skill.api.util.DamageLoreRemover;
-import com.sucy.skill.api.util.Data;
 import com.sucy.skill.data.formula.Formula;
 import com.sucy.skill.data.formula.value.CustomValue;
 import com.sucy.skill.dynamic.ComponentType;
@@ -207,8 +206,6 @@ public class AttributeManager {
         // Attribute description
         private final String    key;
         private final String    display;
-        public final int iconPriority;
-        private final ItemStack icon;
         private final int       max;
 
         // Dynamic global modifiers
@@ -227,8 +224,6 @@ public class AttributeManager {
         public Attribute(ConfigurationSection data, String key) {
             this.key = key.toLowerCase();
             this.display = data.getString(DISPLAY, key).toLowerCase();
-            this.iconPriority = data.getInt("icon-priority", 0);
-            this.icon = Data.parseIconAtSection(data);
             this.max = Integer.parseInt(data.getString(MAX, "999"));
             // Load dynamic global settings
             ConfigurationSection globals = data.getConfigurationSection(GLOBAL);
@@ -265,49 +260,9 @@ public class AttributeManager {
             return display;
         }
 
-
-        public String getIconDisplay(PlayerData data) {
-            return filter(data, icon.getItemMeta().getDisplayName());
-        }
-
-        public List<String> getIconLore(PlayerData data) {
-            List<String> lore = icon.getItemMeta().getLore();
-            if (lore != null) {
-                lore.replaceAll(text -> filter(data, text));
-            }
-            return lore;
-        }
-
-        @Override
-        public ItemStack getIcon(PlayerData data) {
-            ItemStack item = icon.clone();
-            ItemMeta meta = item.getItemMeta();
-            meta.setDisplayName(filter(data, meta.getDisplayName()));
-            List<String> lore = meta.getLore();
-            if (lore != null) {
-                lore.replaceAll(text -> filter(data, text));
-                meta.setLore(lore);
-            }
-            item.setItemMeta(meta);
-            return DamageLoreRemover.removeAttackDmg(item);
-        }
-
         @Override
         public boolean isAllowed(final Player player) {
             return true;
-        }
-
-        /**
-         * Filters a line of the icon according to the player data
-         *
-         * @param data player data to use
-         * @param text line of text to filter
-         *
-         * @return filtered line
-         */
-        private String filter(PlayerData data, String text) {
-            return text.replace("{amount}", "" + data.getInvestedAttribute(key))
-                    .replace("{total}", "" + data.getAttribute(key));
         }
 
 

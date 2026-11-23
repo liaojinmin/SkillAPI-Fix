@@ -28,8 +28,8 @@ class RunicReduceMechanic: MechanicComponent() {
     }
 
     override fun execute(
-        caster: LivingEntity,
         context: SkillContext,
+        caster: LivingEntity,
         level: Int,
         targets: List<LivingEntity>,
     ): Boolean {
@@ -39,7 +39,7 @@ class RunicReduceMechanic: MechanicComponent() {
 
         val keys = settings.getStringList(KEY)
         if (keys.isEmpty()) return false
-        val scale = parseValues(caster, SCALE, level, 0.5)
+        val scale = parseValues(context, caster, SCALE, level, 0.5)
 
         for (target in targets) {
             if (target is Player) {

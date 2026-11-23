@@ -43,23 +43,23 @@ public class DataCondition extends ConditionComponent {
     }
 
     @Override
-    public boolean execute(LivingEntity caster, SkillContext context, int level, List<LivingEntity> targets) {
+    public boolean execute(final SkillContext context, LivingEntity caster, int level, List<LivingEntity> targets) {
         for (LivingEntity target : targets) {
 
-            if (target != null && !test(caster, level, target)) {
+            if (target != null && !test(context, caster, level, target)) {
                 return false;
             }
 
         }
-        return executeChildren(caster, context,  level, targets);
+        return executeChildren(context, caster,  level, targets);
     }
 
     @Override
-    public boolean test(final LivingEntity caster, final int level, final LivingEntity target) {
+    public boolean test(final SkillContext context, final LivingEntity caster, final int level, final LivingEntity target) {
         final String key = settings.getString(KEY)
                 .replace("{caster}", caster.getName());
-        final double min = parseValues(caster, MIN, level, 1);
-        final double max = parseValues(caster, MAX, level, 999);
+        final double min = parseValues(context, caster, MIN, level, 1);
+        final double max = parseValues(context, caster, MAX, level, 999);
         double value = DataSkills.getValue(target.getUniqueId(), key);
         return value >= min && value <= max;
     }

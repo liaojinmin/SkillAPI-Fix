@@ -55,13 +55,13 @@ public class FlagMechanic extends MechanicComponent
      * @return true if applied to something, false otherwise
      */
     @Override
-    public boolean execute(LivingEntity caster, SkillContext context, int level, List<LivingEntity> targets) {
+    public boolean execute(final SkillContext context, LivingEntity caster, int level, List<LivingEntity> targets) {
         if (targets.isEmpty() || !settings.has(KEY)) {
             return false;
         }
 
         String key = settings.getString(KEY);
-        double seconds = parseValues(caster, SECONDS, level, 3.0);
+        double seconds = parseValues(context, caster, SECONDS, level, 3.0);
         int ticks = (int) (seconds * 20);
         for (LivingEntity target : targets) {
             FlagManager.addFlag(target, key, ticks);

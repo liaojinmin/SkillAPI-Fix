@@ -55,19 +55,19 @@ public class PermissionMechanic extends MechanicComponent {
      * @return true if applied to something, false otherwise
      */
     @Override
-    public boolean execute(LivingEntity caster, SkillContext context, int level, List<LivingEntity> targets) {
-        if (targets.size() == 0 || !settings.has(PERM) || !PluginChecker.isVaultActive()) {
+    public boolean execute(final SkillContext context, LivingEntity caster, int level, List<LivingEntity> targets) {
+        if (targets.isEmpty() || !settings.has(PERM) || !PluginChecker.isVaultActive()) {
             return false;
         }
 
         String key = settings.getString(PERM);
-        double seconds = parseValues(caster, SECONDS, level, 3.0);
+        double seconds = parseValues(context, caster, SECONDS, level, 3.0);
         int ticks = (int) (seconds * 20);
         for (LivingEntity target : targets) {
             if (!target.hasPermission(key)) {
                 FlagManager.addFlag(target, "perm:" + key, ticks);
             }
         }
-        return targets.size() > 0;
+        return !targets.isEmpty();
     }
 }

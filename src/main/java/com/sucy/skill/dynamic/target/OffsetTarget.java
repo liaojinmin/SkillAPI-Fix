@@ -28,10 +28,8 @@ package com.sucy.skill.dynamic.target;
 
 import com.google.common.collect.ImmutableList;
 import com.sucy.skill.api.skills.SkillContext;
-import com.sucy.skill.cast.IIndicator;
 import com.sucy.skill.dynamic.TempEntity;
 import org.bukkit.entity.LivingEntity;
-import org.bukkit.entity.Player;
 import org.bukkit.util.Vector;
 
 import java.util.List;
@@ -49,23 +47,17 @@ public class OffsetTarget extends TargetComponent {
 
     /** {@inheritDoc} */
     @Override
-    public void makeIndicators(final SkillContext context, List<IIndicator> list, Player caster, LivingEntity target, int level) {
-        makeCircleIndicator(context, list, getTargetLoc(caster, level, target), 0.5);
-    }
-
-    /** {@inheritDoc} */
-    @Override
     List<LivingEntity> getTargets(
             final SkillContext context,
             final LivingEntity caster, final int level, final List<LivingEntity> targets) {
-        return determineTargets(context, caster, level, targets, t -> ImmutableList.of(getTargetLoc(caster, level, t)));
+        return determineTargets(context, caster, level, targets, t -> ImmutableList.of(getTargetLoc(context, caster, level, t)));
     }
 
-    private TempEntity getTargetLoc(LivingEntity caster, int level, LivingEntity t) {
+    private TempEntity getTargetLoc(final SkillContext context, LivingEntity caster, int level, LivingEntity t) {
         final boolean horizontal = settings.getBool(HORIZONTAL, false);
-        final double forward = parseValues(caster, FORWARD, level, 0);
-        final double upward = parseValues(caster, UPWARD, level, 0);
-        final double right = parseValues(caster, RIGHT, level, 0);
+        final double forward = parseValues(context, caster, FORWARD, level, 0);
+        final double upward = parseValues(context, caster, UPWARD, level, 0);
+        final double right = parseValues(context, caster, RIGHT, level, 0);
 
         final Vector dir = t.getLocation().getDirection().setY(0).normalize();
         if (horizontal) { dir.setY(0).normalize(); }

@@ -32,9 +32,7 @@ import com.sucy.skill.SkillAPI;
 import com.sucy.skill.api.ReadOnlySettings;
 import com.sucy.skill.api.Settings;
 import com.sucy.skill.api.enums.ExpSource;
-import com.sucy.skill.api.player.PlayerData;
 import com.sucy.skill.api.skills.Skill;
-import com.sucy.skill.api.util.Data;
 import com.sucy.skill.data.GroupSettings;
 import com.sucy.skill.data.Permissions;
 import com.sucy.skill.gui.IconHolder;
@@ -45,7 +43,6 @@ import org.bukkit.Material;
 import org.bukkit.entity.Player;
 import org.bukkit.event.Listener;
 import org.bukkit.inventory.ItemStack;
-import org.bukkit.inventory.meta.ItemMeta;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -62,7 +59,6 @@ public abstract class RPGClass implements IconHolder
 
     private final HashSet<Material> blacklist = new HashSet<Material>();
     private String    parent;
-    private ItemStack icon;
     private String    name;
     private String    prefix;
     private String    group;
@@ -95,12 +91,11 @@ public abstract class RPGClass implements IconHolder
      * classes but is rather a starting class.
      *
      * @param name     name of the class
-     * @param icon     icon representing the class in menus
      * @param maxLevel max level the class can reach
      */
-    protected RPGClass(String name, ItemStack icon, int maxLevel)
+    protected RPGClass(String name, int maxLevel)
     {
-        this(name, icon, maxLevel, null, null);
+        this(name, maxLevel, null, null);
     }
 
     /**
@@ -108,13 +103,12 @@ public abstract class RPGClass implements IconHolder
      * class when that class reaches its max level.
      *
      * @param name     name of the class
-     * @param icon     icon representing the class in menus
      * @param maxLevel max level the class can reach
      * @param parent   parent class to profess from
      */
-    protected RPGClass(String name, ItemStack icon, int maxLevel, String parent)
+    protected RPGClass(String name, int maxLevel, String parent)
     {
-        this(name, icon, maxLevel, null, parent);
+        this(name, maxLevel, null, parent);
     }
 
     /**
@@ -129,14 +123,12 @@ public abstract class RPGClass implements IconHolder
      * time, giving the player the stats and skills from both.
      *
      * @param name     name of the class
-     * @param icon     icon representing the class in menus
      * @param maxLevel max level the class can reach
      * @param group    class group
      * @param parent   parent class to profess from
      */
-    protected RPGClass(String name, ItemStack icon, int maxLevel, String group, String parent) {
+    protected RPGClass(String name, int maxLevel, String group, String parent) {
         this.parent = parent;
-        this.icon = icon;
         this.name = name;
         this.prefix = name;
         this.group = group == null ? "class" : group.toLowerCase();
@@ -249,66 +241,12 @@ public abstract class RPGClass implements IconHolder
         return root;
     }
 
-    /**
-     * Retrieves the icon representing this class for menus
-     *
-     * @return icon representation of the class
-     */
-    public ItemStack getIcon()
-    {
-        return icon;
-    }
-
-    /**
-     * @return map of skills for use in menus
-     */
-    public HashMap<String, Skill> getSkillMap()
-    {
-        if (skillMap.isEmpty())
-        {
-            RPGClass current = this;
-            while (current != null)
-            {
-                for (Skill skill : current.skills)
-                    skillMap.put(skill.getName().toLowerCase(), skill);
-                current = current.getParent();
-            }
-        }
-        return skillMap;
-    }
-
-    /**
-     * Retrieves the icon representing this class for menus
-     *
-     * @param data player to get the icon for
-     *
-     * @return icon representation of the class
-     */
-    @Override
-    public ItemStack getIcon(PlayerData data)
-    {
-        return getIcon();
-    }
 
     @Override
     public boolean isAllowed(final Player player) {
         return !needsPermission
                 || player.hasPermission(Permissions.CLASS)
                 || player.hasPermission(Permissions.CLASS + "." + name.toLowerCase().replace(" ", "-"));
-    }
-
-    /**
-     * Gets the indicator for the class for the GUI tools
-     *
-     * @return GUI tool indicator
-     */
-    public ItemStack getToolIcon()
-    {
-        ItemStack item = icon.clone();
-        ItemMeta meta = item.getItemMeta();
-        meta.setDisplayName(name);
-        item.setItemMeta(meta);
-        return item;
     }
 
 
@@ -617,51 +555,8 @@ public abstract class RPGClass implements IconHolder
     private static final String REGEN  = "mana-regen";
     private static final String PERM   = "needs-permission";
     private static final String ATTR   = "attributes";
-    private static final String TREE   = "tree";
     private static final String BLACKLIST = "blacklist";
 
-    /**
-     * Saves the class template data to the config
-     *
-     * @param config config to save to
-     */
-    public void save(DataSection config) {
-        config.set(NAME, name);
-        config.set(PREFIX, prefix.replace(ChatColor.COLOR_CHAR, '&'));
-        config.set(GROUP, group);
-        config.set(MANA, mana.replace(ChatColor.COLOR_CHAR, '&'));
-        config.set(MAX, maxLevel);
-        config.set(PARENT, parent);
-        config.set(PERM, needsPermission);
-        settings.save(config.createSection(ATTR));
-        config.set(REGEN, manaRegen);
-        config.set(BLACKLIST, new ArrayList<Material>(blacklist));
-
-        ArrayList<String> skillNames = new ArrayList<String>();
-        for (Skill skill : skills)
-        {
-            skillNames.add(skill.getName());
-        }
-        config.set(SKILLS, skillNames);
-
-        Data.serializeIcon(icon, config);
-        config.set(EXP, expSources);
-    }
-
-    /**
-     * Saves some of the class template data to the config, avoiding
-     * overwriting any existing data.
-     *
-     * @param config config to save to
-     */
-    public void softSave(DataSection config)
-    {
-        boolean neededOnly = config.keys().size() > 0;
-        if (!neededOnly)
-        {
-            save(config);
-        }
-    }
 
     /**
      * Loads class template data from the configuration
@@ -670,7 +565,6 @@ public abstract class RPGClass implements IconHolder
      */
     public void load(DataSection config) {
         parent = config.getString(PARENT);
-        icon = Data.parseIcon(config);
         name = config.getString(NAME, name);
         prefix = TextFormatter.colorString(config.getString(PREFIX, prefix));
         group = config.getString(GROUP, "class");

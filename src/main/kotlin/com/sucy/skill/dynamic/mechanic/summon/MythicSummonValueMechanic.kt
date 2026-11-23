@@ -23,8 +23,8 @@ class MythicSummonValueMechanic: MechanicComponent() {
     }
 
     override fun execute(
-        caster: LivingEntity,
         context: SkillContext,
+        caster: LivingEntity,
         level: Int,
         targets: MutableList<LivingEntity>,
     ): Boolean {
@@ -33,13 +33,11 @@ class MythicSummonValueMechanic: MechanicComponent() {
 
         targets.forEach { le ->
             val value = MythicManager.summonMap[le.uniqueId]?.getAmount(type) ?: 0
-            val valueData = DynamicSkill.getCastData(le)
-            if (valueData != null) {
-                valueData[key] = value.toDouble()
-                Bukkit.getPluginManager().callEvent(
-                    ValueMechanicChangeEvent(ValueMechanicChangeEvent.ValueAction.SET, caster, key, value.toDouble())
-                )
-            }
+            context.set(caster, key, value.toDouble(), useGlobalContext)
+            Bukkit.getPluginManager().callEvent(
+                ValueMechanicChangeEvent(ValueMechanicChangeEvent.ValueAction.SET, caster, key, value.toDouble())
+            )
+
         }
         return true
     }

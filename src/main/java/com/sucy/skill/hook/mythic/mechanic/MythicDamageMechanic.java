@@ -30,9 +30,7 @@ public class MythicDamageMechanic extends SkillMechanic implements ITargetedEnti
     protected PlaceholderString type;
     protected Boolean trueDamage = false;
 
-    protected Skill skill = new Skill("MythicMobs_Cast_Damage", "Dynamic", Material.ICE, 1) {
-
-    };
+    protected Skill skill = new Skill("MythicMobs_Cast_Damage", "Dynamic", 1) {};
 
     public MythicDamageMechanic(String line, MythicLineConfig mlc) {
         super(line, mlc);

@@ -25,7 +25,9 @@ public class DurabilityMechanic extends MechanicComponent {
 
     @Override
     public boolean execute(
-            final LivingEntity caster, SkillContext context, final int level, final List<LivingEntity> targets) {
+            final SkillContext context,
+            final LivingEntity caster,
+            final int level, final List<LivingEntity> targets) {
 
         if (!(caster instanceof Player)) {
             return false;
@@ -33,7 +35,7 @@ public class DurabilityMechanic extends MechanicComponent {
 
         final Player player = (Player) caster;
         final boolean offhand = settings.getBool(OFFHAND, false);
-        final short amount = (short) (parseValues(caster, AMOUNT, level, 1) * targets.size());
+        final short amount = (short) (parseValues(context, caster, AMOUNT, level, 1) * targets.size());
 
         final ItemStack item;
         if (offhand && VersionManager.isVersionAtLeast(VersionManager.V1_9_0)) {

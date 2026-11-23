@@ -26,6 +26,7 @@
  */
 package com.sucy.skill.dynamic.condition;
 
+import com.sucy.skill.api.skills.SkillContext;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.inventory.EntityEquipment;
 
@@ -37,7 +38,7 @@ public class ToolCondition extends ConditionComponent {
     private static final String TOOL     = "tool";
 
     @Override
-    public boolean test(final LivingEntity caster, final int level, final LivingEntity target) {
+    public boolean test(final SkillContext context, final LivingEntity caster, final int level, final LivingEntity target) {
         final String material = settings.getString(MATERIAL, "").toUpperCase();
         final String tool = "_" + settings.getString(TOOL, "").toUpperCase().replace("SHOVEL", "SPADE");
 

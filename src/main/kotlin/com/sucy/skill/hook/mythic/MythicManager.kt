@@ -4,10 +4,6 @@ import com.sucy.skill.SkillAPI
 import com.sucy.skill.api.event.MythicMobsKillerEvent
 import com.sucy.skill.api.event.SkillDamageAgentEvent
 import com.sucy.skill.api.event.SkillDamageEvent
-import com.sucy.skill.api.event.value.ValueMechanicChangeEvent
-import com.sucy.skill.dynamic.DynamicSkill
-import com.sucy.skill.dynamic.mechanic.MythicHostilityMechanic.ActiveMobRec
-import com.sucy.skill.dynamic.trigger.team.PlayerTeamStartTrigger
 import com.sucy.skill.hook.mythic.condition.SkFactionCondition
 import com.sucy.skill.hook.mythic.mechanic.*
 import com.sucy.skill.utils.toFormatString
@@ -22,9 +18,6 @@ import io.lumine.xikage.mythicmobs.mobs.entities.SpawnReason
 import io.lumine.xikage.mythicmobs.skills.SkillTrigger
 import io.lumine.xikage.mythicmobs.skills.TriggeredSkill
 import me.geek.team.api.chemdah.AgentMythicMobDeathEvent
-import me.geek.team.api.event.PlayerStartGameEvent
-import me.neon.libs.util.getMeta
-import me.neon.libs.util.getMetaFirst
 import me.neon.libs.util.getMetaFirstOrNull
 import me.neon.libs.util.setMeta
 import org.bukkit.Bukkit

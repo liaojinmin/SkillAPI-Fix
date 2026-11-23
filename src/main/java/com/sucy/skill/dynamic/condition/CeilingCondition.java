@@ -1,5 +1,6 @@
 package com.sucy.skill.dynamic.condition;
 
+import com.sucy.skill.api.skills.SkillContext;
 import org.bukkit.block.Block;
 import org.bukkit.entity.LivingEntity;
 
@@ -9,9 +10,9 @@ public class CeilingCondition extends ConditionComponent
     private static final String AT_LEAST = "at-least";
 
     @Override
-    public boolean test(final LivingEntity caster, final int level, final LivingEntity target) {
+    public boolean test(final SkillContext context, final LivingEntity caster, final int level, final LivingEntity target) {
         final boolean atLeast = settings.getBool(AT_LEAST, true);
-        final int distance = (int) parseValues(caster, DISTANCE, level, 5);
+        final int distance = (int) parseValues(context, caster, DISTANCE, level, 5);
 
         final Block block = target.getLocation().getBlock();
         boolean ceiling = false;

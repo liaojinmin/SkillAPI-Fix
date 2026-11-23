@@ -31,6 +31,7 @@ import com.sucy.skill.SkillAPI;
 import com.sucy.skill.api.skills.SkillContext;
 import com.sucy.skill.dynamic.TempEntity;
 import com.sucy.skill.listener.MechanicListener;
+import com.sucy.skill.utils.Pair;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.entity.Entity;
@@ -61,11 +62,9 @@ public class PotionProjectileMechanic extends MechanicComponent
         return "potion projectile";
     }
 
-    private SkillContext skillContext = null;
 
     @Override
-    public boolean execute(LivingEntity caster, SkillContext context, int level, List<LivingEntity> targets) {
-        skillContext = context;
+    public boolean execute(final SkillContext context, LivingEntity caster, int level, List<LivingEntity> targets) {
         // Get common values
         String potion = settings.getString(POTION, "slowness").toUpperCase().replace(" ", "_");
         boolean linger = settings.getString(LINGER, "false").toLowerCase().equals("true") && VersionManager.isVersionAtLeast(VersionManager.V1_9_0);
@@ -102,7 +101,7 @@ public class PotionProjectileMechanic extends MechanicComponent
             ThrownPotion thrown = target.launchProjectile(linger ? LingeringPotion.class : ThrownPotion.class);
             SkillAPI.setMeta(thrown, MechanicListener.SKILL_LEVEL, level);
             SkillAPI.setMeta(thrown, MechanicListener.SKILL_CASTER, caster);
-            SkillAPI.setMeta(thrown, MechanicListener.POTION_PROJECTILE, this);
+            SkillAPI.setMeta(thrown, MechanicListener.POTION_PROJECTILE, new Pair<>(context, this));
             thrown.setItem(item);
         }
 
@@ -115,7 +114,7 @@ public class PotionProjectileMechanic extends MechanicComponent
      * @param entity potion effect
      * @param hit    the entity hit by the projectile, if any
      */
-    public void callback(Entity entity, Collection<LivingEntity> hit)
+    public void callback(final SkillContext context, Entity entity, Collection<LivingEntity> hit)
     {
         ArrayList<LivingEntity> targets = new ArrayList<LivingEntity>(hit);
         String group = settings.getString(ALLY, "enemy").toLowerCase();
@@ -132,12 +131,10 @@ public class PotionProjectileMechanic extends MechanicComponent
                 i--;
             }
         }
-        if (targets.size() == 0)
-        {
+        if (targets.isEmpty()) {
             LivingEntity locTarget = new TempEntity(loc);
             targets.add(locTarget);
         }
-        if (skillContext == null) skillContext = new SkillContext();
-        executeChildren(caster, skillContext, level, targets);
+        executeChildren(context, caster, level, targets);
     }
 }

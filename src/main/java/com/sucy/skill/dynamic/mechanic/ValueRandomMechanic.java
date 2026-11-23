@@ -58,19 +58,18 @@ public class ValueRandomMechanic extends MechanicComponent {
      * @return true if applied to something, false otherwise
      */
     @Override
-    public boolean execute(LivingEntity caster, SkillContext context, int level, List<LivingEntity> targets) {
-        if (targets.size() == 0 || !settings.has(KEY)) {
+    public boolean execute(final SkillContext context, LivingEntity caster, int level, List<LivingEntity> targets) {
+        if (targets.isEmpty() || !settings.has(KEY)) {
             return false;
         }
 
         String key = settings.getString(KEY);
         boolean triangular = settings.getString(TYPE).toUpperCase().equals("triangular");
-        double min = parseValues(caster, MIN, level, 1);
-        double max = parseValues(caster, MAX, level, 1);
+        double min = parseValues(context, caster, MIN, level, 1);
+        double max = parseValues(context, caster, MAX, level, 1);
 
-        Map<String, Object> data = DynamicSkill.getCastData(caster);
         double rand = triangular ? 0.5 * (Math.random() + Math.random()) : Math.random();
-        data.put(key, rand * (max - min) + min);
+        context.set(caster, key, rand * (max - min) + min, useGlobalContext);
         return true;
     }
 }

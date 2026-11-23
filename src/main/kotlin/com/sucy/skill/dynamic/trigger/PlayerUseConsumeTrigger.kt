@@ -31,8 +31,8 @@ class PlayerUseConsumeTrigger: Trigger<PlayerUseConsumeEvent> {
         return event.player
     }
 
-    override fun setValues(event: PlayerUseConsumeEvent, data: SkillContext) {
-        data["consume_name"] = event.itemStack.itemMeta.displayName
+    override fun setValues(event: PlayerUseConsumeEvent, data: SkillContext, useGloabl: Boolean) {
+        data.set(getCaster(event), "consume_name", event.itemStack.itemMeta.displayName, useGloabl)
     }
 
     override fun shouldTrigger(event: PlayerUseConsumeEvent, level: Int, settings: Settings): Boolean {

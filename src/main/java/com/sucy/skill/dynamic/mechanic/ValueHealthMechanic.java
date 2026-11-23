@@ -53,24 +53,23 @@ public class ValueHealthMechanic extends MechanicComponent {
      * @return true if applied to something, false otherwise
      */
     @Override
-    public boolean execute(LivingEntity caster, SkillContext context, int level, List<LivingEntity> targets) {
+    public boolean execute(final SkillContext context, LivingEntity caster, int level, List<LivingEntity> targets) {
         final String key = settings.getString(KEY);
         final String type = settings.getString(TYPE, "current").toLowerCase();
-        final Map<String, Object> data = DynamicSkill.getCastData(caster);
 
         final LivingEntity target = targets.get(0);
         switch (type) {
             case "max":
-                data.put(key, target.getMaxHealth());
+                context.set(caster, key, target.getMaxHealth(), useGlobalContext);
                 break;
             case "percent":
-                data.put(key, target.getHealth() / target.getMaxHealth());
+                context.set(caster, key, target.getHealth() / target.getMaxHealth(), useGlobalContext);
                 break;
             case "missing":
-                data.put(key, target.getMaxHealth() - target.getHealth());
+                context.set(caster, key, target.getMaxHealth() - target.getHealth(), useGlobalContext);
                 break;
             default: // current
-                data.put(key, target.getHealth());
+                context.set(caster, key, target.getHealth(), useGlobalContext);
         }
         return true;
     }

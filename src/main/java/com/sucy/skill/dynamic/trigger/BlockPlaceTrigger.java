@@ -36,9 +36,9 @@ public class BlockPlaceTrigger implements Trigger<BlockPlaceEvent> {
 
     /** {@inheritDoc} */
     @Override
-    public void setValues(final BlockPlaceEvent event, final SkillContext context) {
-        context.put("api-block-type", event.getBlock().getType().name());
-        context.put("api-block-loc", event.getBlock().getLocation());
+    public void setValues(final BlockPlaceEvent event, final SkillContext context, final boolean useGlobal) {
+        context.set(getCaster(event), "api-block-type", event.getBlock().getType().name(), useGlobal);
+        context.set(getCaster(event), "api-block-loc", event.getBlock().getLocation(), useGlobal);
     }
 
     /** {@inheritDoc} */

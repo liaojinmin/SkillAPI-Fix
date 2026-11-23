@@ -27,6 +27,7 @@
 package com.sucy.skill.dynamic.condition;
 
 import com.rit.sucy.config.parse.DataSection;
+import com.sucy.skill.api.skills.SkillContext;
 import com.sucy.skill.dynamic.DynamicSkill;
 import org.bukkit.entity.LivingEntity;
 
@@ -59,7 +60,7 @@ public class EntityExcludeCondition extends ConditionComponent {
     }
 
     @Override
-    public boolean test(final LivingEntity caster, final int level, final LivingEntity target) {
+    public boolean test(final SkillContext context, final LivingEntity caster, final int level, final LivingEntity target) {
         if (types.isEmpty() || names.isEmpty()) return true;
         return !types.contains(target.getType().name()) && !names.contains(target.getName());
     }

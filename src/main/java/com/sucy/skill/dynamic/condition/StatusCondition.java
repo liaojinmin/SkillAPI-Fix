@@ -26,6 +26,7 @@
  */
 package com.sucy.skill.dynamic.condition;
 
+import com.sucy.skill.api.skills.SkillContext;
 import com.sucy.skill.api.util.FlagManager;
 import com.sucy.skill.api.util.StatusFlag;
 import org.bukkit.entity.LivingEntity;
@@ -40,7 +41,7 @@ public class StatusCondition extends ConditionComponent {
     private static final String STATUS = "status";
 
     @Override
-    public boolean test(final LivingEntity caster, final int level, final LivingEntity target) {
+    public boolean test(final SkillContext context, final LivingEntity caster, final int level, final LivingEntity target) {
         final boolean active = !settings.getString(TYPE, "active").equals("not active");
         final String status = settings.getString(STATUS).toLowerCase();
 

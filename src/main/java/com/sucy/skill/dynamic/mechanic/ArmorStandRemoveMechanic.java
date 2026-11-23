@@ -54,7 +54,7 @@ public class ArmorStandRemoveMechanic extends MechanicComponent {
     }
 
     @Override
-    public boolean execute(LivingEntity caster, SkillContext context, int level, List<LivingEntity> targets) {
+    public boolean execute(final SkillContext context, LivingEntity caster, int level, List<LivingEntity> targets) {
         boolean target = settings.getBool(TARGET, false);
         List<Integer> list = context.delIntegerList("armor stand");
         if (target) {
@@ -64,7 +64,7 @@ public class ArmorStandRemoveMechanic extends MechanicComponent {
         } else {
             remove(caster, list);
         }
-        executeChildren(caster, context, level, targets);
+        executeChildren(context, caster, level, targets);
         return true;
     }
 }

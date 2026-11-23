@@ -26,6 +26,7 @@
  */
 package com.sucy.skill.dynamic.condition;
 
+import com.sucy.skill.api.skills.SkillContext;
 import org.bukkit.entity.LivingEntity;
 
 import java.util.Random;
@@ -36,8 +37,8 @@ public class ChanceCondition extends ConditionComponent
     private static final Random random = new Random();
 
     @Override
-    public boolean test(final LivingEntity caster, final int level, final LivingEntity target) {
-        final double chance = parseValues(caster, CHANCE, level, 25) / 100.0;
+    public boolean test(final SkillContext context, final LivingEntity caster, final int level, final LivingEntity target) {
+        final double chance = parseValues(context, caster, CHANCE, level, 25) / 100.0;
         return random.nextDouble() < chance;
     }
 

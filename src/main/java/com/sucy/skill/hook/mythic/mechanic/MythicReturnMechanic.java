@@ -33,7 +33,7 @@ public class MythicReturnMechanic extends SkillMechanic implements ITargetedEnti
 
     public MythicReturnMechanic(String skill, MythicLineConfig mlc) {
         super(skill, mlc);
-        this.mark = mlc.getString(new String[]{"mark", "mk"}, "null").split(",");
+        this.mark = mlc.getString(new String[]{"mark", "mk"}, "default").split(",");
     }
 
     @Override

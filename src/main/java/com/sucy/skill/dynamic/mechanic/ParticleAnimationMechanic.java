@@ -70,21 +70,22 @@ public class ParticleAnimationMechanic extends MechanicComponent
      * @return true if applied to something, false otherwise
      */
     @Override
-    public boolean execute(LivingEntity caster, SkillContext context, int level, List<LivingEntity> targets) {
-        if (targets.size() == 0) {
+    public boolean execute(final SkillContext context, LivingEntity caster, int level, List<LivingEntity> targets) {
+        if (targets.isEmpty()) {
             return false;
         }
 
         final Settings copy = new Settings(settings);
-        copy.set(ParticleHelper.PARTICLES_KEY, parseValues(caster, ParticleHelper.PARTICLES_KEY, level, 1), 0);
-        copy.set(ParticleHelper.RADIUS_KEY, parseValues(caster, ParticleHelper.RADIUS_KEY, level, 0), 0);
+        copy.set(ParticleHelper.PARTICLES_KEY, parseValues(context, caster, ParticleHelper.PARTICLES_KEY, level, 1), 0);
+        copy.set(ParticleHelper.RADIUS_KEY, parseValues(context, caster, ParticleHelper.RADIUS_KEY, level, 0), 0);
         copy.set("level", level);
-        new ParticleTask(caster, targets, level, copy);
-        return targets.size() > 0;
+        new ParticleTask(context, caster, targets, level, copy);
+        return !targets.isEmpty();
     }
 
     private class ParticleTask extends BukkitRunnable {
 
+        private final SkillContext context;
         private List<LivingEntity> targets;
         private double[]           rots;
         private Vector             offset;
@@ -111,8 +112,9 @@ public class ParticleAnimationMechanic extends MechanicComponent
 
         private Settings settings;
 
-        ParticleTask(LivingEntity caster, List<LivingEntity> targets, int level, Settings settings)
+        ParticleTask(final SkillContext context, LivingEntity caster, List<LivingEntity> targets, int level, Settings settings)
         {
+            this.context = context;
             this.targets = targets;
             this.settings = settings;
 
@@ -124,10 +126,10 @@ public class ParticleAnimationMechanic extends MechanicComponent
             this.freq = (int) (settings.getDouble(FREQ, 1.0) * 20);
             this.angle = settings.getInt(ANGLE, 0);
             this.startAngle = settings.getInt(START, 0);
-            this.duration = steps * (int) (20 * parseValues(caster, DURATION, level, 3.0));
+            this.duration = steps * (int) (20 * parseValues(context, caster, DURATION, level, 3.0));
             this.life = 0;
-            this.ht = parseValues(caster, H_TRANS, level, 0);
-            this.vt = parseValues(caster, V_TRANS, level, 0);
+            this.ht = parseValues(context, caster, H_TRANS, level, 0);
+            this.vt = parseValues(context, caster, V_TRANS, level, 0);
             this.hc = settings.getInt(H_CYCLES, 1);
             this.vc = settings.getInt(V_CYCLES, 1);
             this.hl = duration / hc;

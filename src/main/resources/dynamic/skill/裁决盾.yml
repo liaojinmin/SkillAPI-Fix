@@ -1,0 +1,139 @@
+裁决盾:
+  name: '裁决盾'
+  type: 'Dynamic'
+  max-level: 1
+  skill-req: ''
+  skill-req-lvl: 1
+  needs-permission: 'False'
+  msg: '&6{player} &2has cast &6{skill}'
+  combo: ''
+  indicator: '2D'
+  icon: 'Acacia Door'
+  icon-data: 0
+  icon-lore:
+  - '&d{name} &7({level}/{max})'
+  - '&2Type: &6{type}'
+  - ''
+  - '{req:level}Level: {attr:level}'
+  - '{req:cost}Cost: {attr:cost}'
+  - ''
+  - '&2Mana: {attr:mana}'
+  - '&2Cooldown: {attr:cooldown}'
+  attributes:
+    level-base: 1
+    level-scale: 0
+    cost-base: 0
+    cost-scale: 0
+    cooldown-base: 0
+    cooldown-scale: 0
+    mana-base: 0
+    mana-scale: 0
+    mana-tick: 2700
+    points-spent-req-base: 0
+    points-spent-req-scale: 0
+    incompatible:
+    - ''
+  components:
+    Cast-a:
+      type: 'trigger'
+      data:
+        icon-key: ''
+      children:
+        Self-b:
+          type: 'target'
+          data:
+            icon-key: ''
+          children:
+            Bounce Projectile-s:
+              type: 'mechanic'
+              data:
+                # 阵营过滤：Enemy 只命中敌方，Ally 只命中友方。
+                group: 'Enemy'
+                # 发射形态：Cone 锥形、Horizontal Cone 水平锥形、Rain 雨幕。
+                spread: 'Cone'
+                # 每个目标发射的抛射物数量。
+                amount-base: 1
+                # 初速度，单位格/tick；越大飞得越快。
+                velocity-base: 2
+                # 锥形散射角，单位度；只对 Cone / Horizontal Cone 生效。
+                angle-base: 30
+                # 生成点相对目标朝向的前后偏移，单位格。
+                forward-base: 0.5
+                # 生成点相对目标的向上偏移，单位格；不会改变飞行方向。
+                upward-base: 0.8
+                # 每 tick 的垂直加速度：0 无重力，负数向下，正数向上。
+                gravity: 0
+                # 是否穿透实体；False 命中一个实体后结束。
+                pierce: 'False'
+                # 最长存在时间，单位秒。
+                lifespan: 5
+                # 实体碰撞半径，单位格；不影响方块反弹。
+                radius: 0.5
+                # 初始抛射物最多反弹次数；-1 表示无限。
+                max-bounces: 3
+                # 反弹后保留的法向速度比例，0-1；越小反弹越弱。
+                restitution: 0.85
+                # 反弹后保留的切向速度比例，0-1；越小越容易贴墙减速。
+                tangent-retention: 0.98
+                # 允许反弹的方块材质，逗号分隔；all 或 * 表示所有实体方块。
+                bounce-blocks: 'all'
+                # 反弹后沿法线推出碰撞面的距离，避免同一方块重复碰撞。
+                # 该位置会自动校验，不会停留在方块内部；0.05-0.2 足够。
+                collision-epsilon: 0.1
+                # 单个碰撞采样段的最大长度，单位格；越小越精确但开销越高。
+                max-step-distance: 0.25
+                # 初始抛射物成功反弹后是否分裂。
+                split-enabled: 'True'
+                # 初始抛射物每次分裂额外生成的子体数量。
+                split-count: 3
+                # 最大分裂代数：0 禁止，1 仅初始体，2 允许第一代继续分裂。
+                split-max-depth: 2
+                # 子体围绕反射方向分布的圆锥角，单位度，范围 0-180。
+                split-angle: 35
+                # 子体继承父体速度的比例；大于 1 会加速。
+                split-speed-retention: 0.9
+                # 分裂后父体是否继续运动；False 时父体结束，仅保留子体。
+                split-parent-continue: 'True'
+                # 同一抛射物是否在后续反弹中继续分裂；False 表示只分裂一次。
+                split-repeat: 'False'
+                # 子代及后续代数是否允许继续分裂，仍受 split-max-depth 限制。
+                split-child-enabled: 'True'
+                # 子代及后续代数每次分裂的数量。
+                split-child-count: 2
+                # 子代及后续代数最多反弹次数；-1 表示无限。
+                split-child-max-bounces: 1
+                # 子代及后续代数使用的载体名称；留空则继承父体 name。
+                split-child-name: '裁决盾小锯轮'
+                 # 分裂方向：Horizontal 保留父体 Y；Flat 强制子代 Y=0；Cone 为原 3D 圆锥。
+                split-mode: 'Flat'
+                # 初始抛射物碰撞时调用的子技能名称；留空不触发。
+                collision-skill: '裁决盾碰撞'
+                # 分裂体碰撞时调用的子技能名称；留空不触发。
+                split-collision-skill: '裁决盾碰撞'
+                # 载体实体类型；BounceProjectile 固定使用 CarrierProjectile。
+                entity_type: 'ARMOR_STAND'
+                # 是否为小型盔甲架。
+                small: 'True'
+                # 盔甲架是否可见；False 时只保留名称/装备/特效。
+                visible: 'False'
+                # 是否为 Marker 盔甲架；Marker 没有碰撞箱，通常配合隐形使用。
+                marker: 'False'
+                # 盔甲架或手持物品的显示名称。
+                name: "裁决盾大锯轮"
+              children:
+                Damage-u:
+                  type: 'mechanic'
+                  data:
+                    icon-key: ''
+                    # Damage 为固定伤害；也可改为 Multiplier、Percent Left、Percent Missing。
+                    type: 'Damage'
+                    # 每次命中造成的基础伤害，可升级缩放。
+                    value-base: 2
+                    value-scale: 0
+                    # 是否无视护甲和插件减伤。
+                    true: 'False'
+                    # 伤害分类，交给伤害统计/减伤系统识别。
+                    classifier: 'default'
+                    # 关闭击退，方便观察反弹和连续命中。
+                    knockback: 'False'
+                  children: {}

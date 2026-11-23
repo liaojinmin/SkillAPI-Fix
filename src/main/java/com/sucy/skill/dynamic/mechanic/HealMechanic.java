@@ -60,16 +60,16 @@ public class HealMechanic extends MechanicComponent {
      * @return true if applied to something, false otherwise
      */
     @Override
-    public boolean execute(LivingEntity caster, SkillContext context, int level, List<LivingEntity> targets) {
+    public boolean execute(final SkillContext context, LivingEntity caster, int level, List<LivingEntity> targets) {
         boolean percent = settings.getString(TYPE, "health").equalsIgnoreCase("percent");
 
         double value = 0;
         LivingEntity other = caster;
         if (caster instanceof ArmorStandEntity) {
             other = ((ArmorStandEntity) caster).getOwner();
-            value = parseValues(other, VALUE, level, 1.0);
+            value = parseValues(context, other, VALUE, level, 1.0);
         } else  {
-            value = parseValues(caster, VALUE, level, 1.0);
+            value = parseValues(context, caster, VALUE, level, 1.0);
         }
 
 
@@ -88,30 +88,7 @@ public class HealMechanic extends MechanicComponent {
                 VersionManager.heal(target, event.getAmount());
             }
         }
-        return targets.size() > 0;
-    }
-    /*
-    @Override
-    public boolean execute(LivingEntity caster, int level, List<LivingEntity> targets) {
-        boolean percent = settings.getString(TYPE, "health").toLowerCase().equals("percent");
-        double value = parseValues(caster, VALUE, level, 1.0);
-        if (value < 0) { return false; }
-        for (LivingEntity target : targets) {
-            if (target.isDead()) { continue; }
-
-            double amount = value;
-            if (percent) {
-                amount = target.getMaxHealth() * value / 100;
-            }
-
-            SkillHealEvent event = new SkillHealEvent(caster, target, amount);
-            Bukkit.getPluginManager().callEvent(event);
-            if (!event.isCancelled()) {
-                VersionManager.heal(target, event.getAmount());
-            }
-        }
-        return targets.size() > 0;
+        return !targets.isEmpty();
     }
 
-     */
 }

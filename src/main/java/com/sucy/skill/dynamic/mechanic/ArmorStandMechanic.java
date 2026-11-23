@@ -53,8 +53,8 @@ public class ArmorStandMechanic extends MechanicComponent {
     }
 
     @Override
-    public boolean execute(LivingEntity caster, SkillContext context, int level, List<LivingEntity> targets) {
-        int duration = (int) (20 * parseValues(caster, DURATION, level, 5));
+    public boolean execute(final SkillContext context, LivingEntity caster, int level, List<LivingEntity> targets) {
+        int duration = (int) (20 * parseValues(context, caster, DURATION, level, 5));
         String name = settings.getString(NAME, "Armor Stand");
         boolean nameVisible = settings.getBool(NAME_VISIBLE, false);
         boolean follow = settings.getBool(FOLLOW, false);
@@ -64,9 +64,9 @@ public class ArmorStandMechanic extends MechanicComponent {
         boolean base = settings.getBool(BASE, false);
         boolean visible = settings.getBool(VISIBLE, true);
         boolean marker = settings.getBool(MARKER, false);
-        double forward = parseValues(caster, FORWARD, level, 0);
-        double upward = parseValues(caster, UPWARD, level, 0);
-        double right = parseValues(caster, RIGHT, level, 0);
+        double forward = parseValues(context, caster, FORWARD, level, 0);
+        double upward = parseValues(context, caster, UPWARD, level, 0);
+        double right = parseValues(context, caster, RIGHT, level, 0);
 
         List<LivingEntity> armorStands = new ArrayList<>();
         List<Integer> keys = context.getIntegerList(getKey());
@@ -119,7 +119,7 @@ public class ArmorStandMechanic extends MechanicComponent {
             instance.setRunnable(it ->
                     Bukkit.getScheduler().runTask(SkillAPI.singleton(), () -> {
                         if (it.get()) {
-                            executeChildren(caster, context, level, armorStands);
+                            executeChildren(context, caster, level,armorStands);
                         }
                     })
             );

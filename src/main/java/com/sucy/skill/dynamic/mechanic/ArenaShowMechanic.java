@@ -19,11 +19,11 @@ public class ArenaShowMechanic extends MechanicComponent {
     }
 
     @Override
-    public boolean execute(LivingEntity caster, SkillContext context, int level, List<LivingEntity> targets) {
+    public boolean execute(final SkillContext context, LivingEntity caster,  int level, List<LivingEntity> targets) {
         if (caster instanceof Player) {
             Player player = (Player) caster;
-            int duration = (int) (20 * parseValues(caster, TIMER, level, 5));
-            double range = parseValues(caster, RANGE, level, 10);
+            int duration = (int) (20 * parseValues(context, caster, TIMER, level, 5));
+            double range = parseValues(context, caster, RANGE, level, 10);
             targets.forEach(it -> {
                 Location location = it.getLocation();
                 me.neon.arena.manager.GameManager gameManager = me.neon.arena.utils.GameUtilsKt.getGameManager(player);

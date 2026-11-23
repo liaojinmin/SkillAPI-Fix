@@ -1,5 +1,6 @@
 package com.sucy.skill.dynamic.condition;
 
+import com.sucy.skill.api.skills.SkillContext;
 import org.bukkit.Material;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
@@ -34,7 +35,7 @@ public class ShieldCondition  extends ConditionComponent {
     }
 
     @Override
-    public boolean test(LivingEntity caster, int level, LivingEntity target) {
+    public boolean test(final SkillContext context, LivingEntity caster, int level, LivingEntity target) {
         final boolean tar = settings.getBool(TARGET, false);
         Player player;
         if (tar) {

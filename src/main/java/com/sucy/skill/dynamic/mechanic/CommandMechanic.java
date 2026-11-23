@@ -58,7 +58,7 @@ public class CommandMechanic extends MechanicComponent {
      * @return true if applied to something, false otherwise
      */
     @Override
-    public boolean execute(LivingEntity caster, SkillContext context, int level, List<LivingEntity> targets) {
+    public boolean execute(final SkillContext context, LivingEntity caster, int level, List<LivingEntity> targets) {
         if (targets.isEmpty() || !settings.has(COMMAND)) {
             return false;
         }
@@ -72,7 +72,7 @@ public class CommandMechanic extends MechanicComponent {
         String type = settings.getString(TYPE).toLowerCase();
         for (LivingEntity target : targets) {
             for (String cmd : commands) {
-                final String finalCommand = filter(caster, target, cmd);
+                final String finalCommand = filter(context, caster, target, cmd);
                 if (target instanceof Player) {
                     Player p = (Player) target;
                     if (type.equals("op")) {

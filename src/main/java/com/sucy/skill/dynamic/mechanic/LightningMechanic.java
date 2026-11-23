@@ -58,13 +58,13 @@ public class LightningMechanic extends MechanicComponent {
      * @return true if applied to something, false otherwise
      */
     @Override
-    public boolean execute(LivingEntity caster, SkillContext context, int level, List<LivingEntity> targets) {
-        if (targets.size() == 0) {
+    public boolean execute(final SkillContext context, LivingEntity caster, int level, List<LivingEntity> targets) {
+        if (targets.isEmpty()) {
             return false;
         }
         boolean damage = settings.getBool(DAMAGE, true);
-        double forward = parseValues(caster, FORWARD, level, 0);
-        double right = parseValues(caster, RIGHT, level, 0);
+        double forward = parseValues(context, caster, FORWARD, level, 0);
+        double right = parseValues(context, caster, RIGHT, level, 0);
         for (LivingEntity target : targets) {
             Vector dir = target.getLocation().getDirection().setY(0).normalize();
             Vector nor = dir.clone().crossProduct(up);
@@ -73,6 +73,6 @@ public class LightningMechanic extends MechanicComponent {
                 target.getWorld().strikeLightningEffect(loc);
             }
         }
-        return targets.size() > 0;
+        return !targets.isEmpty();
     }
 }

@@ -3,9 +3,7 @@ package com.sucy.skill.dynamic.target;
 import com.sucy.skill.api.armorstand.ArmorStandInstance;
 import com.sucy.skill.api.armorstand.ArmorStandManager;
 import com.sucy.skill.api.skills.SkillContext;
-import com.sucy.skill.cast.IIndicator;
 import org.bukkit.entity.LivingEntity;
-import org.bukkit.entity.Player;
 
 import java.util.*;
 
@@ -50,12 +48,6 @@ public class ContextArmorStandTarget extends TargetComponent {
         } else {
             return get(caster, list, lock);
         }
-    }
-
-    /** {@inheritDoc} */
-    @Override
-    void makeIndicators(final SkillContext context, final List<IIndicator> list, final Player caster, final LivingEntity target, final int level) {
-        makeCircleIndicator(context, list, caster, 0.5);
     }
 
     @Override

@@ -65,53 +65,39 @@ public class PurgeMechanic extends MechanicComponent
      * @return true if applied to something, false otherwise
      */
     @Override
-    public boolean execute(LivingEntity caster, SkillContext context, int level, List<LivingEntity> targets)
+    public boolean execute(final SkillContext context, LivingEntity caster, int level, List<LivingEntity> targets)
     {
         boolean worked = false;
         String status = settings.getString(STATUS, "None").toLowerCase();
         String potion = settings.getString(POTION).toUpperCase().replace(' ', '_');
         PotionEffectType type = null;
-        try
-        {
+        try {
             type = PotionEffectType.getByName(potion);
-        }
-        catch (Exception ex)
-        {
+        } catch (Exception ex) {
             // Invalid potion type
         }
 
-        for (LivingEntity target : targets)
-        {
-            if (status.equals("all"))
-            {
-                for (String flag : StatusFlag.POSITIVE)
-                {
-                    if (FlagManager.hasFlag(target, flag))
-                    {
+        for (LivingEntity target : targets) {
+            if (status.equals("all")) {
+                for (String flag : StatusFlag.POSITIVE) {
+                    if (FlagManager.hasFlag(target, flag)) {
                         FlagManager.removeFlag(target, flag);
                         worked = true;
                     }
                 }
-            }
-            else if (FlagManager.hasFlag(target, status))
-            {
+            } else if (FlagManager.hasFlag(target, status)) {
                 FlagManager.removeFlag(target, status);
                 worked = true;
             }
 
-            if (potion.equals("ALL"))
-            {
-                for (PotionEffectType p : PotionEffectType.values())
-                {
-                    if (target.hasPotionEffect(p) && POTIONS.contains(p.getName()))
-                    {
+            if (potion.equals("ALL")) {
+                for (PotionEffectType p : PotionEffectType.values()) {
+                    if (target.hasPotionEffect(p) && POTIONS.contains(p.getName())) {
                         target.removePotionEffect(p);
                         worked = true;
                     }
                 }
-            }
-            else if (type != null && target.hasPotionEffect(type))
-            {
+            } else if (type != null && target.hasPotionEffect(type)) {
                 target.removePotionEffect(type);
                 worked = true;
             }

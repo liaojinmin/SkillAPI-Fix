@@ -26,6 +26,7 @@
  */
 package com.sucy.skill.dynamic.mechanic;
 
+import com.google.common.collect.ImmutableList;
 import com.sucy.skill.api.skills.SkillContext;
 import com.sucy.skill.dynamic.target.RememberTarget;
 import org.bukkit.Location;
@@ -56,15 +57,15 @@ public class PushMechanic extends MechanicComponent {
      * @return true if applied to something, false otherwise
      */
     @Override
-    public boolean execute(LivingEntity caster, SkillContext context, int level, List<LivingEntity> targets) {
-        if (targets.size() == 0) {
+    public boolean execute(final SkillContext context, LivingEntity caster, int level, List<LivingEntity> targets) {
+        if (targets.isEmpty()) {
             return false;
         }
 
-        final double speed = parseValues(caster, SPEED, level, 3.0);
+        final double speed = parseValues(context, caster, SPEED, level, 3.0);
         final String type = settings.getString("type", "scaled").toLowerCase();
 
-        final List<LivingEntity> sources = RememberTarget.remember(caster, settings.getString(SOURCE, "_none"));
+        final List<LivingEntity> sources = remember(context, caster, settings.getString(SOURCE, "_none"));
         final Location center = sources.isEmpty() ? caster.getLocation() : sources.get(0).getLocation();
 
         boolean worked = false;
@@ -82,5 +83,11 @@ public class PushMechanic extends MechanicComponent {
             worked = true;
         }
         return worked;
+    }
+
+    public List<LivingEntity> remember(final SkillContext context, final LivingEntity caster, final String key) {
+        final Object data = context.get(caster, key, this.useGlobalContext);
+        //noinspection unchecked - proper skill setup should cause this to work
+        return data == null ? ImmutableList.of() : (List<LivingEntity>) data;
     }
 }
